@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+::selection {
+  background: rgba(0, 194, 209, 0.2);
+  color: inherit;
+}
+
+* {
+  scrollbar-width: thin;
+}
