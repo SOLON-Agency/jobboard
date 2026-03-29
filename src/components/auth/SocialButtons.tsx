@@ -9,9 +9,9 @@ import type { Provider } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 
 const providers: { id: Provider; label: string; icon: React.ReactNode }[] = [
-  { id: "google", label: "Google", icon: <GoogleIcon /> },
-  { id: "facebook", label: "Facebook", icon: <FacebookIcon /> },
-  { id: "twitter", label: "X", icon: <XIcon /> },
+  { id: "google", label: "Continuă cu Google", icon: <GoogleIcon /> },
+  { id: "facebook", label: "Continuă cu Facebook", icon: <FacebookIcon /> },
+  { id: "twitter", label: "Continuă cu X", icon: <XIcon /> },
 ];
 
 export const SocialButtons: React.FC = () => {
@@ -33,14 +33,14 @@ export const SocialButtons: React.FC = () => {
             fullWidth
             sx={{ py: 1.2, justifyContent: "flex-start", pl: 3 }}
           >
-            Continue with {p.label}
+            {p.label}
           </Button>
         ))}
       </Stack>
 
       <Divider sx={{ my: 3 }}>
         <Typography variant="body2" color="text.secondary">
-          or
+          sau
         </Typography>
       </Divider>
     </>

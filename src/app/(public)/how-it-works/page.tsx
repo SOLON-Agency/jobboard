@@ -30,8 +30,8 @@ const steps = [
   },
 ];
 
-const numberGradient = "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)";
-const badgeBg = "linear-gradient(135deg, rgba(0,194,209,0.12) 0%, rgba(123,47,247,0.12) 100%)";
+const numberGradient = "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)";
+const badgeBg = "linear-gradient(135deg, rgba(3,23,12,0.08) 0%, rgba(62,92,118,0.1) 100%)";
 
 export default function HowItWorksPage() {
 

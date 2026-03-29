@@ -17,19 +17,26 @@ export const components: Components<Theme> = {
         letterSpacing: "0.02em",
       },
       containedPrimary: {
-        background: "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)",
-        boxShadow: "0 2px 8px rgba(0, 194, 209, 0.25)",
-        color: "#ffffff",
+        background: "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)",
+        boxShadow: "0 2px 8px rgba(3, 23, 12, 0.3)",
+        color: "#F0EBD8",
         "&:hover": {
-          background: "linear-gradient(135deg, #33d4e0 0%, #a66bfa 100%)",
-          boxShadow: "0 4px 16px rgba(0, 194, 209, 0.35)",
+          background: "linear-gradient(135deg, #0f4024 0%, #4d6e8a 100%)",
+          boxShadow: "0 4px 16px rgba(3, 23, 12, 0.4)",
+        },
+      },
+      containedSecondary: {
+        background: "#3E5C76",
+        color: "#F0EBD8",
+        "&:hover": {
+          background: "#4d6e8a",
         },
       },
       outlined: {
-        borderColor: "rgba(15, 23, 42, 0.2)",
+        borderColor: "rgba(3, 23, 12, 0.22)",
         "&:hover": {
-          borderColor: "#00c2d1",
-          backgroundColor: "rgba(0, 194, 209, 0.04)",
+          borderColor: "#3E5C76",
+          backgroundColor: "rgba(62, 92, 118, 0.05)",
         },
       },
     },
@@ -38,12 +45,12 @@ export const components: Components<Theme> = {
     styleOverrides: {
       root: {
         borderRadius: 16,
-        border: "1px solid rgba(15, 23, 42, 0.12)",
+        border: "1px solid rgba(3, 23, 12, 0.1)",
         backgroundImage: "none",
         transition: "border-color 0.2s ease, box-shadow 0.2s ease",
         "&:hover": {
-          borderColor: "rgba(0, 194, 209, 0.3)",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.06)",
+          borderColor: "rgba(62, 92, 118, 0.4)",
+          boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)",
         },
       },
     },
@@ -56,7 +63,7 @@ export const components: Components<Theme> = {
         fontSize: "0.75rem",
       },
       outlined: {
-        borderColor: "rgba(15, 23, 42, 0.25)",
+        borderColor: "rgba(62, 92, 118, 0.3)",
       },
     },
   },
@@ -66,13 +73,13 @@ export const components: Components<Theme> = {
         "& .MuiOutlinedInput-root": {
           borderRadius: 8,
           "& fieldset": {
-            borderColor: "rgba(15, 23, 42, 0.12)",
+            borderColor: "rgba(3, 23, 12, 0.15)",
           },
           "&:hover fieldset": {
-            borderColor: "#009aa6",
+            borderColor: "#748CAB",
           },
           "&.Mui-focused fieldset": {
-            borderColor: "#00c2d1",
+            borderColor: "#3E5C76",
           },
         },
       },
@@ -88,25 +95,40 @@ export const components: Components<Theme> = {
   MuiAppBar: {
     styleOverrides: {
       root: {
-        backgroundColor: "rgba(248, 250, 252, 0.85)",
+        backgroundColor: "rgba(245, 242, 234, 0.88)",
         backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(15, 23, 42, 0.06)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-        color: "#0f172a",
+        borderBottom: "1px solid rgba(3, 23, 12, 0.08)",
+        boxShadow: "0 1px 3px rgba(3,23,12,0.05)",
+        color: "#03170C",
       },
     },
   },
   MuiDrawer: {
     styleOverrides: {
       paper: {
-        borderRight: "1px solid rgba(15, 23, 42, 0.06)",
+        borderRight: "1px solid rgba(3, 23, 12, 0.08)",
       },
     },
   },
   MuiDivider: {
     styleOverrides: {
       root: {
-        borderColor: "rgba(15, 23, 42, 0.08)",
+        borderColor: "rgba(3, 23, 12, 0.1)",
+      },
+    },
+  },
+  MuiSelect: {
+    styleOverrides: {
+      outlined: {
+        "& .MuiOutlinedInput-notchedOutline": {
+          borderColor: "rgba(3, 23, 12, 0.15)",
+        },
+        "&:hover .MuiOutlinedInput-notchedOutline": {
+          borderColor: "#748CAB",
+        },
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+          borderColor: "#3E5C76",
+        },
       },
     },
   },

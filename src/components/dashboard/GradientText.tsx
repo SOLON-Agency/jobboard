@@ -12,8 +12,8 @@ export const GradientText: React.FC<TypographyProps> = ({
   const theme = useTheme();
   const gradient =
     theme.palette.mode === "dark"
-      ? "linear-gradient(135deg, #00f0ff 0%, #7b2ff7 100%)"
-      : "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)";
+      ? "linear-gradient(135deg, #748CAB 0%, #c3ae61 100%)"
+      : "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)";
 
   return (
     <Typography

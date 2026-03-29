@@ -4,8 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { Box, Container, Typography, Button, Stack } from "@mui/material";
 
-const headingGradient = "linear-gradient(135deg, #0f172a 0%, #00c2d1 50%, #7b2ff7 100%)";
-const glowGradient = "radial-gradient(circle, rgba(0,194,209,0.1) 0%, rgba(123,47,247,0.05) 50%, transparent 70%)";
+const headingGradient = "linear-gradient(135deg, #03170C 0%, #3E5C76 55%, #748CAB 100%)";
+const glowGradient = "radial-gradient(circle, rgba(195,174,97,0.12) 0%, rgba(62,92,118,0.06) 50%, transparent 70%)";
 
 export const HeroSection: React.FC = () => {
 
@@ -43,7 +43,7 @@ export const HeroSection: React.FC = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Your Legal Career Platform
+          Platforma ta de carieră juridică
         </Typography>
 
         <Typography
@@ -51,8 +51,8 @@ export const HeroSection: React.FC = () => {
           color="text.secondary"
           sx={{ mb: 5, fontWeight: 400, maxWidth: 600, mx: "auto" }}
         >
-          Browse hundreds of legal positions from top firms. Apply directly,
-          set up alerts, and take control of your career.
+          Explorează sute de posturi juridice de la firme de top. Aplică direct,
+          setează alerte și preia controlul carierei tale.
         </Typography>
 
         <Stack
@@ -67,7 +67,7 @@ export const HeroSection: React.FC = () => {
             size="large"
             sx={{ px: 4, py: 1.5 }}
           >
-            Browse Jobs
+            Explorează locuri de muncă
           </Button>
           <Button
             component={Link}
@@ -76,7 +76,7 @@ export const HeroSection: React.FC = () => {
             size="large"
             sx={{ px: 4, py: 1.5 }}
           >
-            Create Account
+            Creează cont
           </Button>
         </Stack>
       </Container>

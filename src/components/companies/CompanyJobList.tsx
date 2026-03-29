@@ -13,7 +13,7 @@ export const CompanyJobList: React.FC<CompanyJobListProps> = ({ jobs }) => {
   if (jobs.length === 0) {
     return (
       <Typography color="text.secondary" sx={{ textAlign: "center", py: 4 }}>
-        No open positions at this time.
+        Nu există posturi disponibile în acest moment.
       </Typography>
     );
   }

@@ -118,7 +118,7 @@ export default async function CompanyPage({ params }: Props) {
                 {company.website && (
                   <Chip
                     icon={<LanguageIcon />}
-                    label="Website"
+                    label="Site web"
                     size="small"
                     variant="outlined"
                     component="a"
@@ -142,7 +142,7 @@ export default async function CompanyPage({ params }: Props) {
         </Paper>
 
         <Typography variant="h3" sx={{ mb: 3 }}>
-          Open Positions ({jobs.length})
+          Posturi disponibile ({jobs.length})
         </Typography>
 
         <CompanyJobList jobs={jobs} />

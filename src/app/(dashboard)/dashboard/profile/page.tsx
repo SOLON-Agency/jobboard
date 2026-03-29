@@ -29,7 +29,7 @@ import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import type { Tables } from "@/types/database";
 
 const schema = z.object({
-  full_name: z.string().min(2, "Name must be at least 2 characters"),
+  full_name: z.string().min(2, "Numele trebuie să aibă cel puțin 2 caractere"),
   headline: z.string().max(120).optional().or(z.literal("")),
   bio: z.string().max(2000).optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
@@ -102,7 +102,7 @@ export default function ProfilePage() {
       setMessage({ type: "error", text: error.message });
     } else {
       await loadProfile();
-      setMessage({ type: "success", text: "Profile updated successfully." });
+      setMessage({ type: "success", text: "Profil actualizat cu succes." });
       setTimeout(closeDrawer, 900);
     }
   };
@@ -115,14 +115,14 @@ export default function ProfilePage() {
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
 
       if (error) {
-        setMessage({ type: "error", text: "Failed to upload avatar." });
+        setMessage({ type: "error", text: "Eroare la încărcarea avatarului." });
         return;
       }
 
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", user.id);
       await loadProfile();
-      setMessage({ type: "success", text: "Avatar updated." });
+      setMessage({ type: "success", text: "Avatar actualizat." });
     },
     [user, supabase, loadProfile]
   );
@@ -132,20 +132,20 @@ export default function ProfilePage() {
       if (!user || !e.target.files?.[0]) return;
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) {
-        setMessage({ type: "error", text: "CV must be smaller than 5MB." });
+        setMessage({ type: "error", text: "CV-ul trebuie să fie mai mic de 5MB." });
         return;
       }
       const path = `${user.id}/${Date.now()}-${file.name}`;
       const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
 
       if (error) {
-        setMessage({ type: "error", text: "Failed to upload CV." });
+        setMessage({ type: "error", text: "Eroare la încărcarea CV-ului." });
         return;
       }
 
       const { data: urlData } = supabase.storage.from("cvs").getPublicUrl(path);
       await supabase.from("profiles").update({ cv_url: urlData.publicUrl }).eq("id", user.id);
-      setMessage({ type: "success", text: "CV uploaded successfully." });
+      setMessage({ type: "success", text: "CV încărcat cu succes." });
     },
     [user, supabase]
   );
@@ -153,9 +153,9 @@ export default function ProfilePage() {
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3">Profile</Typography>
+        <Typography variant="h3">Profil</Typography>
         <Button variant="contained" startIcon={<EditIcon />} onClick={openEdit} disabled={loading}>
-          Edit Profile
+          Editează profilul
         </Button>
       </Stack>
 
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                   border: "1px solid",
                   borderColor: "divider",
                 }}
-                title="Change avatar"
+                title="Schimbă avatarul"
               >
                 <EditIcon fontSize="inherit" />
                 <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} />
@@ -196,7 +196,7 @@ export default function ProfilePage() {
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h5" fontWeight={700}>
-                {profile.full_name ?? user?.email ?? "Unknown"}
+                {profile.full_name ?? user?.email ?? "Necunoscut"}
               </Typography>
               {profile.headline && (
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
@@ -227,19 +227,19 @@ export default function ProfilePage() {
 
           <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              CV / Resume
+              CV / Curriculum Vitae
             </Typography>
             {profile.cv_url ? (
               <Stack direction="row" spacing={2} alignItems="center">
-                <Typography variant="body2" color="text.secondary">CV uploaded</Typography>
+                <Typography variant="body2" color="text.secondary">CV încărcat</Typography>
                 <Button variant="outlined" size="small" component="label">
-                  Replace
+                  Înlocuiește
                   <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
                 </Button>
               </Stack>
             ) : (
               <Button variant="outlined" size="small" component="label">
-                Upload CV (PDF, max 5MB)
+                Încarcă CV (PDF, max 5MB)
                 <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
               </Button>
             )}
@@ -250,7 +250,7 @@ export default function ProfilePage() {
       <EditSideDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title="Edit Profile"
+        title="Editează profilul"
         message={message}
         onMessageClose={() => setMessage(null)}
       >
@@ -258,7 +258,7 @@ export default function ProfilePage() {
           <Stack spacing={2.5}>
             <TextField
               {...register("full_name")}
-              label="Full Name"
+              label="Nume complet"
               fullWidth
               required
               error={!!errors.full_name}
@@ -266,30 +266,30 @@ export default function ProfilePage() {
             />
             <TextField
               {...register("headline")}
-              label="Headline"
+              label="Titlu profesional"
               fullWidth
-              placeholder="e.g. Senior Legal Counsel"
+              placeholder="ex. Consilier juridic senior"
               error={!!errors.headline}
               helperText={errors.headline?.message}
             />
             <TextField
               {...register("bio")}
-              label="Bio"
+              label="Biografie"
               fullWidth
               multiline
               rows={4}
               error={!!errors.bio}
               helperText={errors.bio?.message}
             />
-            <TextField {...register("location")} label="Location" fullWidth />
+            <TextField {...register("location")} label="Locație" fullWidth />
             <Controller
               name="experience_level"
               control={control}
               render={({ field }) => (
                 <FormControl fullWidth>
-                  <InputLabel>Experience Level</InputLabel>
-                  <Select {...field} label="Experience Level" value={field.value ?? ""}>
-                    <MenuItem value="">Not specified</MenuItem>
+                  <InputLabel>Nivel de experiență</InputLabel>
+                  <Select {...field} label="Nivel de experiență" value={field.value ?? ""}>
+                    <MenuItem value="">Nespecificat</MenuItem>
                     {Object.entries(experienceLevelLabels).map(([val, label]) => (
                       <MenuItem key={val} value={val}>{label}</MenuItem>
                     ))}
@@ -299,9 +299,9 @@ export default function ProfilePage() {
             />
             <Stack direction="row" spacing={2}>
               <Button type="submit" variant="contained" disabled={isSubmitting} sx={{ px: 4 }}>
-                {isSubmitting ? "Saving..." : "Save Profile"}
+                {isSubmitting ? "Se salvează..." : "Salvează profilul"}
               </Button>
-              <Button variant="outlined" onClick={closeDrawer}>Cancel</Button>
+              <Button variant="outlined" onClick={closeDrawer}>Anulează</Button>
             </Stack>
           </Stack>
         </Box>

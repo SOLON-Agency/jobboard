@@ -1,4 +1,5 @@
 import type { Tables } from "@/types/database";
+import appSettings from "@/config/app.settings.json";
 
 type JobWithCompany = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;
@@ -35,7 +36,7 @@ export const generateJobPostingJsonLd = (job: JobWithCompany) => ({
     job.salary_min || job.salary_max
       ? {
           "@type": "MonetaryAmount",
-          currency: job.salary_currency ?? "EUR",
+          currency: job.salary_currency ?? appSettings.currency.code,
           value: {
             "@type": "QuantitativeValue",
             minValue: job.salary_min ?? undefined,

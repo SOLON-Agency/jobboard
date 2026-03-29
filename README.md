@@ -116,13 +116,25 @@ supabase/
   functions/        # Edge Functions (scrape-jobs)
 ```
 
-## UI Conventions
+## Limbă
 
-### Create & Edit — Right-Side Drawer
+Toată interfața utilizatorului este în **limba română**. Textele vizibile utilizatorului (etichete, mesaje, butoane, placeholder-uri, validări Zod, mesaje de eroare) sunt definite direct în cod și scrise în română. Nu există un sistem i18n — dacă în viitor se dorește suport multi-limbă, se recomandă integrarea `next-intl`.
 
-All create and edit flows in the dashboard use a right-side `EditSideDrawer` (`src/components/layout/EditSideDrawer.tsx`) instead of separate pages or inline forms.
+Fișiere cheie pentru mesajele de interfață:
+- `src/lib/utils.ts` — etichete pentru tipul contractului, nivelul de experiență, formatare dată/salariu/timp
+- `src/components/layout/` — Navbar, Footer, HeroSection, FeaturesSection, JobCtaBanner
+- `src/components/jobs/` — JobFilters, JobList, JobDetail, JobRow, JobCard, RelatedJobsCarousel
+- `src/components/auth/` — LoginForm, SocialButtons
+- `src/app/(auth)/register/page.tsx` — înregistrare
+- `src/app/(dashboard)/dashboard/` — toate paginile din tabloul de bord
 
-**Rule:** Whenever a user triggers a create or edit action on any entity (company, job listing, profile, etc.), open the `EditSideDrawer` with the relevant form inside.
+## Convenții UI
+
+### Creare & Editare — Panou lateral dreapta
+
+Toate fluxurile de creare și editare din tabloul de bord folosesc componenta `EditSideDrawer` (`src/components/layout/EditSideDrawer.tsx`) în loc de pagini separate sau formulare inline.
+
+**Regulă:** Ori de câte ori un utilizator declanșează o acțiune de creare sau editare pe orice entitate (companie, anunț de muncă, profil etc.), deschide `EditSideDrawer` cu formularul relevant în interior.
 
 ```tsx
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
@@ -130,7 +142,7 @@ import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 <EditSideDrawer
   open={drawerOpen}
   onClose={closeDrawer}
-  title="Edit Company"
+  title="Editează compania"
   message={message}
   onMessageClose={() => setMessage(null)}
 >
@@ -138,12 +150,12 @@ import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 </EditSideDrawer>
 ```
 
-**Pattern used across:**
-- `dashboard/company/page.tsx` — create & edit company
-- `dashboard/jobs/page.tsx` — create & edit job listings
-- `dashboard/profile/page.tsx` — edit profile
+**Pattern utilizat în:**
+- `dashboard/company/page.tsx` — creare & editare companie
+- `dashboard/jobs/page.tsx` — creare & editare anunțuri de muncă
+- `dashboard/profile/page.tsx` — editare profil
 
-**Do not create separate `/new` or `/[id]/edit` pages** for entities managed in the dashboard. Redirect any such routes back to the parent listing page.
+**Nu crea pagini separate `/new` sau `/[id]/edit`** pentru entitățile gestionate în tabloul de bord. Redirecționează orice astfel de rute înapoi la pagina listei principale.
 
 ## Deployment
 

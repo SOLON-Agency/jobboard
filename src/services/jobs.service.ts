@@ -11,11 +11,19 @@ export const getPublishedJobs = async (
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  const sortMap: Record<string, { column: string; ascending: boolean }> = {
+    newest:      { column: "published_at", ascending: false },
+    oldest:      { column: "published_at", ascending: true },
+    salary_high: { column: "salary_max",   ascending: false },
+    salary_low:  { column: "salary_min",   ascending: true },
+  };
+  const { column, ascending } = sortMap[filters.sort ?? "newest"];
+
   let query = supabase
     .from("job_listings")
     .select("*, companies(*)", { count: "exact" })
     .eq("status", "published")
-    .order("published_at", { ascending: false })
+    .order(column, { ascending, nullsFirst: false })
     .range(from, to);
 
   if (filters.q) {
@@ -51,6 +59,41 @@ export const getPublishedJobs = async (
     page,
     totalPages: Math.ceil((count ?? 0) / limit),
   };
+};
+
+export const getRelatedJobs = async (
+  supabase: SupabaseClient<Database>,
+  currentJobId: string,
+  jobType: string | null,
+  limit = 6
+): Promise<(Tables<"job_listings"> & { companies: Tables<"companies"> | null })[]> => {
+  let query = supabase
+    .from("job_listings")
+    .select("*, companies(*)")
+    .eq("status", "published")
+    .neq("id", currentJobId)
+    .order("published_at", { ascending: false })
+    .limit(limit);
+
+  if (jobType) query = query.eq("job_type", jobType);
+
+  const { data } = await query;
+
+  // If not enough same-type results, backfill with any published jobs
+  if ((data?.length ?? 0) < limit) {
+    const needed = limit - (data?.length ?? 0);
+    const existingIds = [currentJobId, ...(data ?? []).map((j) => j.id)];
+    const { data: extra } = await supabase
+      .from("job_listings")
+      .select("*, companies(*)")
+      .eq("status", "published")
+      .not("id", "in", `(${existingIds.join(",")})`)
+      .order("published_at", { ascending: false })
+      .limit(needed);
+    return [...(data ?? []), ...(extra ?? [])] as (Tables<"job_listings"> & { companies: Tables<"companies"> | null })[];
+  }
+
+  return (data ?? []) as (Tables<"job_listings"> & { companies: Tables<"companies"> | null })[];
 };
 
 export const getJobBySlug = async (

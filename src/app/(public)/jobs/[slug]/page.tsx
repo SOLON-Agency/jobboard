@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
-import { Container, Box } from "@mui/material";
+import { Container, Divider } from "@mui/material";
 import { createClient } from "@/lib/supabase/server";
 import { createStaticClient } from "@/lib/supabase/static";
-import { getJobBySlug, getAllJobSlugs } from "@/services/jobs.service";
+import { getJobBySlug, getAllJobSlugs, getRelatedJobs } from "@/services/jobs.service";
 import { generateJobPostingJsonLd } from "@/lib/seo";
 import { JobDetailWrapper } from "@/components/jobs/JobDetailWrapper";
+import { RelatedJobsCarousel } from "@/components/jobs/RelatedJobsCarousel";
+import { JobCtaBanner } from "@/components/layout/JobCtaBanner";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -54,7 +56,10 @@ export default async function JobPage({ params }: Props) {
     notFound();
   }
 
-  const jsonLd = generateJobPostingJsonLd(job);
+  const [jsonLd, relatedJobs] = await Promise.all([
+    Promise.resolve(generateJobPostingJsonLd(job)),
+    getRelatedJobs(supabase, job.id, job.job_type, 6),
+  ]);
 
   return (
     <>
@@ -62,11 +67,12 @@ export default async function JobPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box sx={{ mb: 4 }}>
-          <JobDetailWrapper job={job} />
-        </Box>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <JobDetailWrapper job={job} />
+        <Divider sx={{ mt: 6 }} />
+        <RelatedJobsCarousel jobs={relatedJobs} />
       </Container>
+      <JobCtaBanner />
     </>
   );
 }

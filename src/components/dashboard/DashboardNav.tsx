@@ -20,13 +20,13 @@ import ChatIcon from "@mui/icons-material/Chat";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 
 const navItems = [
-  { label: "Overview", href: "/dashboard", icon: <DashboardIcon /> },
-  { label: "Profile", href: "/dashboard/profile", icon: <PersonIcon /> },
-  { label: "Company", href: "/dashboard/company", icon: <BusinessIcon /> },
-  { label: "Jobs", href: "/dashboard/jobs", icon: <WorkIcon /> },
-  { label: "Applications", href: "/dashboard/applications", icon: <DescriptionIcon /> },
-  { label: "Messages", href: "/dashboard/messages", icon: <ChatIcon /> },
-  { label: "Alerts", href: "/dashboard/alerts", icon: <NotificationsIcon /> },
+  { label: "Prezentare generală", href: "/dashboard", icon: <DashboardIcon /> },
+  { label: "Profil", href: "/dashboard/profile", icon: <PersonIcon /> },
+  { label: "Companie", href: "/dashboard/company", icon: <BusinessIcon /> },
+  { label: "Locuri de muncă", href: "/dashboard/jobs", icon: <WorkIcon /> },
+  { label: "Aplicații", href: "/dashboard/applications", icon: <DescriptionIcon /> },
+  { label: "Mesaje", href: "/dashboard/messages", icon: <ChatIcon /> },
+  { label: "Alerte", href: "/dashboard/alerts", icon: <NotificationsIcon /> },
 ];
 
 export const DashboardNav: React.FC = () => {

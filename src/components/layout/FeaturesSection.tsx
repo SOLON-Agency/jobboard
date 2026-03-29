@@ -16,27 +16,27 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 const features = [
   {
     icon: <SearchIcon sx={{ fontSize: 40 }} />,
-    title: "Smart Job Search",
+    title: "Căutare inteligentă",
     description:
-      "Filter by location, salary, experience level, and more. Full-text search across all listings.",
+      "Filtrează după locație, salariu, nivel de experiență și altele. Căutare completă în toate anunțurile.",
   },
   {
     icon: <BusinessIcon sx={{ fontSize: 40 }} />,
-    title: "Company Profiles",
+    title: "Profiluri de companii",
     description:
-      "Explore top law firms, read about their culture, and browse all their open positions.",
+      "Explorează firmele de top, citește despre cultura lor și răsfoiește toate posturile disponibile.",
   },
   {
     icon: <NotificationsActiveIcon sx={{ fontSize: 40 }} />,
-    title: "Job Alerts",
+    title: "Alerte de locuri de muncă",
     description:
-      "Save your search filters and get notified when new matching positions are posted.",
+      "Salvează filtrele de căutare și fii notificat când apar posturi noi compatibile.",
   },
   {
     icon: <TrendingUpIcon sx={{ fontSize: 40 }} />,
-    title: "Career Growth",
+    title: "Creștere în carieră",
     description:
-      "From internships to senior roles, find opportunities that match your career stage.",
+      "De la stagii la roluri senior, găsește oportunități potrivite stadiului carierei tale.",
   },
 ];
 

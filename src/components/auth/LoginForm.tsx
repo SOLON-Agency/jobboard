@@ -19,8 +19,8 @@ import { SocialButtons } from "@/components/auth/SocialButtons";
 import { useAuth } from "@/hooks/useAuth";
 
 const schema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Introduceți o adresă de e-mail validă"),
+  password: z.string().min(6, "Parola trebuie să aibă cel puțin 6 caractere"),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -30,7 +30,7 @@ export const LoginForm: React.FC = () => {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
   const [error, setError] = useState<string | null>(
-    searchParams.get("error") ? "Authentication failed. Please try again." : null
+    searchParams.get("error") ? "Autentificare eșuată. Te rugăm să încerci din nou." : null
   );
   const { signIn } = useAuth();
 
@@ -64,14 +64,14 @@ export const LoginForm: React.FC = () => {
         }}
       >
         <Typography variant="h3" sx={{ mb: 1, textAlign: "center" }}>
-          Welcome back
+          Bine ai revenit
         </Typography>
         <Typography
           variant="body2"
           color="text.secondary"
           sx={{ mb: 4, textAlign: "center" }}
         >
-          Sign in to your LegalJobs account
+          Conectează-te la contul tău LegalJobs
         </Typography>
 
         {error && (
@@ -85,7 +85,7 @@ export const LoginForm: React.FC = () => {
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <TextField
             {...register("email")}
-            label="Email"
+            label="E-mail"
             type="email"
             fullWidth
             error={!!errors.email}
@@ -94,7 +94,7 @@ export const LoginForm: React.FC = () => {
           />
           <TextField
             {...register("password")}
-            label="Password"
+            label="Parolă"
             type="password"
             fullWidth
             error={!!errors.password}
@@ -109,19 +109,19 @@ export const LoginForm: React.FC = () => {
             disabled={isSubmitting}
             sx={{ py: 1.5 }}
           >
-            {isSubmitting ? "Signing in..." : "Sign In"}
+            {isSubmitting ? "Se conectează..." : "Conectare"}
           </Button>
         </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 3, textAlign: "center" }}>
-          Don&apos;t have an account?{" "}
+          Nu ai cont?{" "}
           <Typography
             component={Link}
             href="/register"
             variant="body2"
             sx={{ color: "primary.main", textDecoration: "none" }}
           >
-            Create one
+            Creează unul
           </Typography>
         </Typography>
       </Paper>

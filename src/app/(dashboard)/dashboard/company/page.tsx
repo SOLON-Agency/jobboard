@@ -20,14 +20,14 @@ import { z } from "zod";
 import BusinessIcon from "@mui/icons-material/Business";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LanguageIcon from "@mui/icons-material/Language";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   getUserCompaniesWithJobCount,
-  createCompany,
   updateCompany,
   type CompanyWithJobCount,
 } from "@/services/companies.service";
@@ -35,9 +35,9 @@ import { slugify, parseSupabaseError } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 
 const schema = z.object({
-  name: z.string().min(2, "Company name is required"),
+  name: z.string().min(2, "Numele companiei este obligatoriu"),
   description: z.string().optional().or(z.literal("")),
-  website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  website: z.string().url("Introduceți un URL valid").optional().or(z.literal("")),
   industry: z.string().optional().or(z.literal("")),
   size: z.string().optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
@@ -56,6 +56,8 @@ export default function CompanyPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyWithJobCount | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
 
   const {
     handleSubmit,
@@ -73,9 +75,18 @@ export default function CompanyPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFile(file);
+    setLogoPreviewUrl(URL.createObjectURL(file));
+  };
+
   const openCreate = () => {
     setEditing(null);
     setMessage(null);
+    setLogoFile(null);
+    setLogoPreviewUrl(null);
     reset({ name: "", description: "", website: "", industry: "", size: "", location: "", founded_year: "" });
     setDrawerOpen(true);
   };
@@ -83,6 +94,8 @@ export default function CompanyPage() {
   const openEdit = (company: CompanyWithJobCount) => {
     setEditing(company);
     setMessage(null);
+    setLogoFile(null);
+    setLogoPreviewUrl(company.logo_url ?? null);
     reset({
       name: company.name,
       description: company.description ?? "",
@@ -98,7 +111,24 @@ export default function CompanyPage() {
   const closeDrawer = () => {
     setDrawerOpen(false);
     setMessage(null);
+    setLogoFile(null);
+    setLogoPreviewUrl(null);
   };
+
+  const uploadLogo = useCallback(
+    async (companyId: string): Promise<string | null> => {
+      if (!logoFile) return null;
+      const ext = logoFile.name.split(".").pop();
+      const path = `${companyId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from("logos")
+        .upload(path, logoFile, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from("logos").getPublicUrl(path);
+      return data.publicUrl;
+    },
+    [supabase, logoFile]
+  );
 
   const onSubmit = useCallback(
     async (data: FormData) => {
@@ -106,6 +136,7 @@ export default function CompanyPage() {
       setMessage(null);
       try {
         if (editing) {
+          const logoUrl = await uploadLogo(editing.id);
           await updateCompany(supabase, editing.id, {
             name: data.name,
             slug: slugify(data.name),
@@ -115,14 +146,16 @@ export default function CompanyPage() {
             size: data.size || null,
             location: data.location || null,
             founded_year: data.founded_year ? Number(data.founded_year) : null,
+            ...(logoUrl ? { logo_url: logoUrl } : {}),
           });
-          setMessage({ type: "success", text: "Company updated." });
+          setMessage({ type: "success", text: "Companie actualizată." });
         } else {
-          await createCompany(
-            supabase,
-            {
+          const slug = slugify(data.name);
+          const { data: newCompany } = await supabase
+            .from("companies")
+            .insert({
               name: data.name,
-              slug: slugify(data.name),
+              slug,
               description: data.description || null,
               website: data.website || null,
               industry: data.industry || null,
@@ -130,10 +163,27 @@ export default function CompanyPage() {
               location: data.location || null,
               founded_year: data.founded_year ? Number(data.founded_year) : null,
               created_by: user.id,
-            },
-            user.id
-          );
-          setMessage({ type: "success", text: "Company created." });
+            })
+            .select("id")
+            .single();
+
+          if (!newCompany) throw new Error("Failed to create company");
+
+          await supabase
+            .from("company_users")
+            .insert({ company_id: newCompany.id, user_id: user.id, role: "owner" });
+
+          if (logoFile) {
+            const logoUrl = await uploadLogo(newCompany.id);
+            if (logoUrl) {
+              await supabase
+                .from("companies")
+                .update({ logo_url: logoUrl })
+                .eq("id", newCompany.id);
+            }
+          }
+
+          setMessage({ type: "success", text: "Companie creată." });
         }
         await load();
         setTimeout(closeDrawer, 900);
@@ -141,7 +191,7 @@ export default function CompanyPage() {
         setMessage({ type: "error", text: parseSupabaseError(err) });
       }
     },
-    [user, supabase, editing, load]
+    [user, supabase, editing, load, uploadLogo, logoFile]
   );
 
   if (loading) {
@@ -161,9 +211,9 @@ export default function CompanyPage() {
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3">Companies</Typography>
+        <Typography variant="h3">Companii</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          New Company
+          Companie nouă
         </Button>
       </Stack>
 
@@ -171,13 +221,13 @@ export default function CompanyPage() {
         <Paper sx={{ p: 5, textAlign: "center", border: "1px solid", borderColor: "divider" }}>
           <BusinessIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
           <Typography variant="h5" sx={{ mb: 1 }}>
-            No companies yet
+            Nicio companie
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Create a company to start posting jobs.
+            Creează o companie pentru a publica locuri de muncă.
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Create Company
+            Creează companie
           </Button>
         </Paper>
       ) : (
@@ -244,9 +294,9 @@ export default function CompanyPage() {
                         href={company.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        sx={{ color: "primary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                        sx={{ color: "text.secondary", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
                       >
-                        Website
+                        {company.website}
                       </Typography>
                     </Stack>
                   )}
@@ -275,14 +325,24 @@ export default function CompanyPage() {
               >
      
                 <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: "0.65rem" }}>
-                  {company.jobCount}{" "}{company.jobCount === 1 ? "job" : "jobs"}
+                  {company.jobCount}{" "}{company.jobCount === 1 ? "anunț" : "anunțuri"}
                 </Typography>
               </Stack>
 
               <IconButton
                 size="small"
+                component={Link}
+                href={`/companies/${company.slug}`}
+                target="_blank"
+                title="Previzualizează profilul public"
+                sx={{ flexShrink: 0 }}
+              >
+                <OpenInNewIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
                 onClick={() => openEdit(company)}
-                title="Edit company"
+                title="Editează compania"
                 sx={{ flexShrink: 0 }}
               >
                 <EditIcon fontSize="small" />
@@ -295,19 +355,67 @@ export default function CompanyPage() {
       <EditSideDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editing ? `Edit: ${editing.name}` : "Create Company"}
+        title={editing ? `Editează: ${editing.name}` : "Creează companie"}
         message={message}
         onMessageClose={() => setMessage(null)}
       >
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2.5}>
+            {/* Logo upload */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ position: "relative" }}>
+                <Avatar
+                  src={logoPreviewUrl ?? undefined}
+                  sx={{
+                    width: 72,
+                    height: 72,
+                    bgcolor: "background.default",
+                    border: "2px dashed",
+                    borderColor: "divider",
+                  }}
+                >
+                  <BusinessIcon sx={{ fontSize: 32, color: "text.secondary" }} />
+                </Avatar>
+                <IconButton
+                  component="label"
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    bottom: -4,
+                    right: -4,
+                    bgcolor: "background.paper",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    "&:hover": { bgcolor: "action.hover" },
+                  }}
+                  title="Încarcă logo"
+                >
+                  <CameraAltIcon sx={{ fontSize: 14 }} />
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                  />
+                </IconButton>
+              </Box>
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  Logo companie
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  JPG, PNG sau SVG. Recomandat 200×200 px.
+                </Typography>
+              </Box>
+            </Box>
+
             <Controller
               name="name"
               control={control}
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Company Name"
+                  label="Numele companiei"
                   fullWidth
                   required
                   error={!!errors.name}
@@ -319,7 +427,7 @@ export default function CompanyPage() {
               name="description"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Description" fullWidth multiline rows={4} />
+                <TextField {...field} label="Descriere" fullWidth multiline rows={4} />
               )}
             />
             <Controller
@@ -328,7 +436,7 @@ export default function CompanyPage() {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Website"
+                  label="Site web"
                   fullWidth
                   error={!!errors.website}
                   helperText={errors.website?.message}
@@ -339,13 +447,13 @@ export default function CompanyPage() {
               <Controller
                 name="industry"
                 control={control}
-                render={({ field }) => <TextField {...field} label="Industry" fullWidth />}
+                render={({ field }) => <TextField {...field} label="Industrie" fullWidth />}
               />
               <Controller
                 name="size"
                 control={control}
                 render={({ field }) => (
-                  <TextField {...field} label="Company Size" fullWidth placeholder="e.g. 10-50" />
+                  <TextField {...field} label="Dimensiunea companiei" fullWidth placeholder="ex. 10-50" />
                 )}
               />
             </Stack>
@@ -353,7 +461,7 @@ export default function CompanyPage() {
               <Controller
                 name="location"
                 control={control}
-                render={({ field }) => <TextField {...field} label="Location" fullWidth />}
+                render={({ field }) => <TextField {...field} label="Locație" fullWidth />}
               />
               <Controller
                 name="founded_year"
@@ -361,7 +469,7 @@ export default function CompanyPage() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Founded Year"
+                    label="Anul fondării"
                     type="number"
                     fullWidth
                     error={!!errors.founded_year}
@@ -372,10 +480,10 @@ export default function CompanyPage() {
             </Stack>
             <Stack direction="row" spacing={2}>
               <Button type="submit" variant="contained" disabled={isSubmitting} sx={{ px: 4 }}>
-                {isSubmitting ? "Saving..." : editing ? "Update Company" : "Create Company"}
+                {isSubmitting ? "Se salvează..." : editing ? "Actualizează compania" : "Creează companie"}
               </Button>
               <Button variant="outlined" onClick={closeDrawer}>
-                Cancel
+                Anulează
               </Button>
             </Stack>
           </Stack>

@@ -25,14 +25,14 @@ export default async function DashboardPage() {
     .eq("user_id", user.id);
 
   const stats = [
-    { label: "Applications", value: applicationCount ?? 0 },
-    { label: "Saved Jobs", value: favoriteCount ?? 0 },
+    { label: "Aplicații", value: applicationCount ?? 0 },
+    { label: "Locuri de muncă salvate", value: favoriteCount ?? 0 },
   ];
 
   return (
     <>
       <Typography variant="h3" sx={{ mb: 3 }}>
-        Welcome back{profile?.full_name ? `, ${profile.full_name}` : ""}
+        Bine ai revenit{profile?.full_name ? `, ${profile.full_name}` : ""}
       </Typography>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 4 }}>
@@ -59,10 +59,10 @@ export default async function DashboardPage() {
 
       <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
         <Typography variant="h5" sx={{ mb: 1 }}>
-          Quick Actions
+          Acțiuni rapide
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Complete your profile, browse jobs, and set up alerts to stay updated on new opportunities.
+          Completează profilul, răsfoiește locuri de muncă și setează alerte pentru a fi la curent cu noile oportunități.
         </Typography>
       </Paper>
     </>

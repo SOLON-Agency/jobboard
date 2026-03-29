@@ -76,9 +76,23 @@ export const JobCard: React.FC<JobCardProps> = ({
           >
             {job.title}
           </Typography>
-          <Typography variant="body2" color="text.secondary" noWrap>
-            {job.companies?.name}
-          </Typography>
+          {job.companies?.slug ? (
+            <Typography
+              component={Link}
+              href={`/companies/${job.companies.slug}`}
+              variant="body2"
+              color="text.secondary"
+              noWrap
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              sx={{ textDecoration: "none", "&:hover": { color: "primary.main" } }}
+            >
+              {job.companies.name}
+            </Typography>
+          ) : (
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {job.companies?.name}
+            </Typography>
+          )}
         </Box>
       </Stack>
 
@@ -94,7 +108,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           <Chip label="Remote" size="small" color="primary" variant="outlined" />
         )}
         {job.is_external && (
-          <Chip label="External" size="small" variant="outlined" />
+          <Chip label="Extern" size="small" variant="outlined" />
         )}
       </Stack>
 
@@ -108,7 +122,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           </Stack>
         )}
         <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 600 }}>
-          {formatSalary(job.salary_min, job.salary_max, job.salary_currency ?? "EUR")}
+          {formatSalary(job.salary_min, job.salary_max, job.salary_currency)}
         </Typography>
       </Stack>
     </CardContent>
@@ -123,7 +137,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       }}
     >
       <Typography variant="caption" color="text.secondary">
-        {job.published_at ? timeAgo(job.published_at) : "Draft"}
+        {job.published_at ? timeAgo(job.published_at) : "Ciornă"}
       </Typography>
       {onToggleFavorite && (
         <IconButton

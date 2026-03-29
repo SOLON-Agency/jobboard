@@ -39,12 +39,18 @@ import { getUserCompanies } from "@/services/companies.service";
 import { createJob, updateJob, deleteJob } from "@/services/jobs.service";
 import { slugify, formatDate, jobTypeLabels, experienceLevelLabels, parseSupabaseError } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
+import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import type { Tables } from "@/types/database";
 
 const schema = z.object({
-  company_id: z.string().min(1, "Please select a company"),
-  title: z.string().min(3, "Title is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  company_id: z.string().min(1, "Selectează o companie"),
+  title: z.string().min(3, "Titlul este obligatoriu"),
+  description: z
+    .string()
+    .refine(
+      (v) => v.replace(/<[^>]*>/g, "").trim().length >= 10,
+      "Descrierea trebuie să aibă cel puțin 10 caractere"
+    ),
   location: z.string().optional().or(z.literal("")),
   job_type: z.string().optional().or(z.literal("")),
   experience_level: z.string().optional().or(z.literal("")),
@@ -174,7 +180,7 @@ export default function JobsPage() {
             is_remote: data.is_remote,
             application_url: data.application_url || null,
           });
-          setMessage({ type: "success", text: "Job updated." });
+          setMessage({ type: "success", text: "Anunț actualizat." });
         } else {
           await createJob(supabase, {
             company_id: data.company_id,
@@ -190,7 +196,7 @@ export default function JobsPage() {
             application_url: data.application_url || null,
             status: "draft",
           });
-          setMessage({ type: "success", text: "Job created as draft." });
+          setMessage({ type: "success", text: "Anunț creat ca ciornă." });
         }
         await loadJobs();
         setTimeout(closeDrawer, 900);
@@ -212,7 +218,7 @@ export default function JobsPage() {
   const handleDuplicate = async (job: JobWithCompany) => {
     await createJob(supabase, {
       company_id: job.company_id,
-      title: `${job.title} (Copy)`,
+      title: `${job.title} (Copie)`,
       slug: `${job.slug}-copy-${Date.now()}`,
       description: job.description,
       location: job.location,
@@ -229,7 +235,7 @@ export default function JobsPage() {
   };
 
   const handleDelete = async (job: JobWithCompany) => {
-    if (!confirm(`Delete "${job.title}"? This cannot be undone.`)) return;
+    if (!confirm(`Ștergi "${job.title}"? Această acțiune nu poate fi anulată.`)) return;
     await deleteJob(supabase, job.id);
     await loadJobs();
   };
@@ -239,10 +245,10 @@ export default function JobsPage() {
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3">Job Listings</Typography>
+        <Typography variant="h3">Anunțuri de muncă</Typography>
         {companies.length > 0 && (
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            New Job
+            Anunț nou
           </Button>
         )}
       </Stack>
@@ -250,23 +256,23 @@ export default function JobsPage() {
       {companies.length === 0 ? (
         <Paper sx={{ p: 4, border: "1px solid", borderColor: "divider", textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
-          <Typography variant="h5" sx={{ mb: 1 }}>No companies yet</Typography>
+          <Typography variant="h5" sx={{ mb: 1 }}>Nicio companie</Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Create a company first to manage job listings.
+            Creează mai întâi o companie pentru a gestiona anunțurile de muncă.
           </Typography>
           <Button component={Link} href="/dashboard/company" variant="outlined">
-            Create Company
+            Creează companie
           </Button>
         </Paper>
       ) : jobs.length === 0 ? (
         <Paper sx={{ p: 4, border: "1px solid", borderColor: "divider", textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
-          <Typography variant="h5" sx={{ mb: 1 }}>No job listings yet</Typography>
+          <Typography variant="h5" sx={{ mb: 1 }}>Nicio ofertă de muncă</Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Create your first job listing to start attracting candidates.
+            Creează primul tău anunț pentru a atrage candidați.
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Create Job
+            Creează anunț
           </Button>
         </Paper>
       ) : (
@@ -274,10 +280,10 @@ export default function JobsPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Title</TableCell>
+                <TableCell>Titlu</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>Creat</TableCell>
+                <TableCell align="right">Acțiuni</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -291,7 +297,7 @@ export default function JobsPage() {
                   <TableCell>
                     <Typography variant="body2" fontWeight={600}>{job.title}</Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {job.location ?? "No location"}
+                      {job.location ?? "Fără locație"}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -302,19 +308,19 @@ export default function JobsPage() {
                   </TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                      <IconButton size="small" onClick={() => openEdit(job)} title="Edit">
+                      <IconButton size="small" onClick={() => openEdit(job)} title="Editează">
                         <EditIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" onClick={() => handleDuplicate(job)} title="Duplicate">
+                      <IconButton size="small" onClick={() => handleDuplicate(job)} title="Duplică">
                         <ContentCopyIcon fontSize="small" />
                       </IconButton>
                       {job.status === "draft" && (
-                        <IconButton size="small" color="success" onClick={() => handleStatusChange(job.id, "published")} title="Publish">
+                        <IconButton size="small" color="success" onClick={() => handleStatusChange(job.id, "published")} title="Publică">
                           <PublishIcon fontSize="small" />
                         </IconButton>
                       )}
                       {job.status === "published" && (
-                        <IconButton size="small" onClick={() => handleStatusChange(job.id, "archived")} title="Archive">
+                        <IconButton size="small" onClick={() => handleStatusChange(job.id, "archived")} title="Arhivează">
                           <ArchiveIcon fontSize="small" />
                         </IconButton>
                       )}
@@ -330,7 +336,7 @@ export default function JobsPage() {
       <EditSideDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editingJob ? `Edit: ${editingJob.title}` : "Create Job"}
+        title={editingJob ? `Editează: ${editingJob.title}` : "Creează anunț"}
         message={message}
         onMessageClose={() => setMessage(null)}
         width={540}
@@ -343,8 +349,8 @@ export default function JobsPage() {
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth required error={!!errors.company_id}>
-                    <InputLabel>Company</InputLabel>
-                    <Select {...field} label="Company">
+                    <InputLabel>Companie</InputLabel>
+                    <Select {...field} label="Companie">
                       {companies.map((c) => (
                         <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
                       ))}
@@ -360,32 +366,36 @@ export default function JobsPage() {
             )}
             <TextField
               {...register("title")}
-              label="Job Title"
+              label="Titlul postului"
               fullWidth
               required
               error={!!errors.title}
               helperText={errors.title?.message}
             />
-            <TextField
-              {...register("description")}
-              label="Description (Markdown supported)"
-              fullWidth
-              multiline
-              rows={8}
-              required
-              error={!!errors.description}
-              helperText={errors.description?.message}
+            <Controller
+              name="description"
+              control={control}
+              render={({ field }) => (
+                <RichTextEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Descrie rolul, responsabilitățile, cerințele..."
+                  error={!!errors.description}
+                  helperText={errors.description?.message}
+                  minHeight={240}
+                />
+              )}
             />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField {...register("location")} label="Location" fullWidth />
+              <TextField {...register("location")} label="Locație" fullWidth />
               <Controller
                 name="job_type"
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth>
-                    <InputLabel>Job Type</InputLabel>
-                    <Select {...field} label="Job Type" value={field.value ?? ""}>
-                      <MenuItem value="">Not specified</MenuItem>
+                    <InputLabel>Tip de contract</InputLabel>
+                    <Select {...field} label="Tip de contract" value={field.value ?? ""}>
+                      <MenuItem value="">Nespecificat</MenuItem>
                       {Object.entries(jobTypeLabels).map(([val, label]) => (
                         <MenuItem key={val} value={val}>{label}</MenuItem>
                       ))}
@@ -400,9 +410,9 @@ export default function JobsPage() {
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth>
-                    <InputLabel>Experience Level</InputLabel>
-                    <Select {...field} label="Experience Level" value={field.value ?? ""}>
-                      <MenuItem value="">Not specified</MenuItem>
+                    <InputLabel>Nivel de experiență</InputLabel>
+                    <Select {...field} label="Nivel de experiență" value={field.value ?? ""}>
+                      <MenuItem value="">Nespecificat</MenuItem>
                       {Object.entries(experienceLevelLabels).map(([val, label]) => (
                         <MenuItem key={val} value={val}>{label}</MenuItem>
                       ))}
@@ -416,26 +426,26 @@ export default function JobsPage() {
                 render={({ field }) => (
                   <FormControlLabel
                     control={<Switch checked={field.value} onChange={field.onChange} color="primary" />}
-                    label="Remote Position"
+                    label="Poziție la distanță"
                     sx={{ mt: 1 }}
                   />
                 )}
               />
             </Stack>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-              <TextField {...register("salary_min")} label="Min Salary" type="number" fullWidth />
-              <TextField {...register("salary_max")} label="Max Salary" type="number" fullWidth />
+              <TextField {...register("salary_min")} label="Salariu minim" type="number" fullWidth />
+              <TextField {...register("salary_max")} label="Salariu maxim" type="number" fullWidth />
             </Stack>
             <TextField
               {...register("application_url")}
-              label="External Application URL (optional)"
+              label="URL extern pentru aplicare (opțional)"
               fullWidth
               error={!!errors.application_url}
-              helperText={errors.application_url?.message ?? "Leave empty to use internal application form"}
+              helperText={errors.application_url?.message ?? "Lasă gol pentru a folosi formularul intern"}
             />
             <Stack direction="row" spacing={2}>
               <Button type="submit" variant="contained" disabled={isSubmitting} sx={{ px: 4 }}>
-                {isSubmitting ? "Saving..." : editingJob ? "Update Job" : "Create Job (Draft)"}
+                {isSubmitting ? "Se salvează..." : editingJob ? "Actualizează anunțul" : "Creează anunț (Ciornă)"}
               </Button>
               {editingJob && (
                 <Button
@@ -443,10 +453,10 @@ export default function JobsPage() {
                   color="error"
                   onClick={() => handleDelete(editingJob)}
                 >
-                  Delete
+                  Șterge
                 </Button>
               )}
-              <Button variant="outlined" onClick={closeDrawer}>Cancel</Button>
+              <Button variant="outlined" onClick={closeDrawer}>Anulează</Button>
             </Stack>
           </Stack>
         </Box>

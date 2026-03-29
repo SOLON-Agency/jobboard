@@ -73,7 +73,7 @@ export const CompanyCard: React.FC<CompanyCardProps> = ({
       </Box>
       {jobCount !== undefined && (
         <Chip
-          label={`${jobCount} jobb${jobCount !== 1 ? "s" : ""}`}
+          label={`${jobCount} ${jobCount === 1 ? "anunț" : "anunțuri"}`}
           size="small"
           color="primary"
           variant="outlined"

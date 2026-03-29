@@ -4,21 +4,21 @@ interface SupabaseErrorLike {
 }
 
 const CONSTRAINT_MESSAGES: Record<string, string> = {
-  companies_slug_key: "A company with this name already exists. Please choose a different name.",
-  companies_pkey: "This company already exists.",
-  company_users_pkey: "This user is already a member of the company.",
-  job_listings_pkey: "This job listing already exists.",
+  companies_slug_key: "O companie cu acest nume există deja. Te rugăm să alegi un alt nume.",
+  companies_pkey: "Această companie există deja.",
+  company_users_pkey: "Acest utilizator este deja membru al companiei.",
+  job_listings_pkey: "Acest anunț de muncă există deja.",
 };
 
 const PG_CODE_MESSAGES: Record<string, string> = {
-  "23505": "A record with this information already exists.",
-  "23503": "This operation references a record that doesn't exist.",
-  "23502": "A required field is missing.",
-  "42501": "You don't have permission to perform this action.",
+  "23505": "Un înregistrare cu aceste informații există deja.",
+  "23503": "Această operațiune face referire la o înregistrare inexistentă.",
+  "23502": "Un câmp obligatoriu lipsește.",
+  "42501": "Nu ai permisiunea de a efectua această acțiune.",
 };
 
 export const parseSupabaseError = (err: unknown): string => {
-  if (!err || typeof err !== "object") return "Something went wrong. Please try again.";
+  if (!err || typeof err !== "object") return "A apărut o eroare. Te rugăm să încerci din nou.";
   const { code, message } = err as SupabaseErrorLike;
   if (message) {
     for (const [constraint, friendly] of Object.entries(CONSTRAINT_MESSAGES)) {
@@ -26,7 +26,7 @@ export const parseSupabaseError = (err: unknown): string => {
     }
   }
   if (code && code in PG_CODE_MESSAGES) return PG_CODE_MESSAGES[code];
-  return "Something went wrong. Please try again.";
+  return "A apărut o eroare. Te rugăm să încerci din nou.";
 };
 
 export const slugify = (text: string): string =>
@@ -37,25 +37,30 @@ export const slugify = (text: string): string =>
     .replace(/[\s_]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+import appSettings from "@/config/app.settings.json";
+
 export const formatSalary = (
   min: number | null,
   max: number | null,
-  currency = "EUR"
+  currency?: string | null
 ): string => {
-  const fmt = new Intl.NumberFormat("en-US", {
+  const code = currency ?? appSettings.config.currency;
+  const locale = appSettings.config.locale;
+
+  const fmt = new Intl.NumberFormat(locale, {
     style: "currency",
-    currency,
+    currency: code,
     maximumFractionDigits: 0,
   });
 
   if (min && max) return `${fmt.format(min)} – ${fmt.format(max)}`;
-  if (min) return `From ${fmt.format(min)}`;
-  if (max) return `Up to ${fmt.format(max)}`;
-  return "Not specified";
+  if (min) return `De la ${fmt.format(min)}`;
+  if (max) return `Până la ${fmt.format(max)}`;
+  return "Nespecificat";
 };
 
 export const formatDate = (date: string): string =>
-  new Intl.DateTimeFormat("en-US", {
+  new Intl.DateTimeFormat("ro-RO", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -66,35 +71,35 @@ export const timeAgo = (date: string): string => {
     (Date.now() - new Date(date).getTime()) / 1000
   );
   const intervals = [
-    { label: "year", seconds: 31536000 },
-    { label: "month", seconds: 2592000 },
-    { label: "week", seconds: 604800 },
-    { label: "day", seconds: 86400 },
-    { label: "hour", seconds: 3600 },
-    { label: "minute", seconds: 60 },
+    { singular: "an", plural: "ani", seconds: 31536000 },
+    { singular: "lună", plural: "luni", seconds: 2592000 },
+    { singular: "săptămână", plural: "săptămâni", seconds: 604800 },
+    { singular: "zi", plural: "zile", seconds: 86400 },
+    { singular: "oră", plural: "ore", seconds: 3600 },
+    { singular: "minut", plural: "minute", seconds: 60 },
   ] as const;
 
   for (const interval of intervals) {
     const count = Math.floor(seconds / interval.seconds);
     if (count >= 1) {
-      return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+      return `acum ${count} ${count === 1 ? interval.singular : interval.plural}`;
     }
   }
-  return "Just now";
+  return "Chiar acum";
 };
 
 export const jobTypeLabels: Record<string, string> = {
-  "full-time": "Full Time",
-  "part-time": "Part Time",
+  "full-time": "Normă întreagă",
+  "part-time": "Normă parțială",
   contract: "Contract",
-  internship: "Internship",
+  internship: "Stagiu",
   freelance: "Freelance",
 };
 
 export const experienceLevelLabels: Record<string, string> = {
-  entry: "Entry Level",
-  mid: "Mid Level",
+  entry: "Nivel de intrare",
+  mid: "Nivel mediu",
   senior: "Senior",
-  lead: "Lead",
-  executive: "Executive",
+  lead: "Lider",
+  executive: "Executiv",
 };

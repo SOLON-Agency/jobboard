@@ -4,6 +4,8 @@ export type JobType = "full-time" | "part-time" | "contract" | "internship" | "f
 
 export type ExperienceLevel = "entry" | "mid" | "senior" | "lead" | "executive";
 
+export type JobSortOption = "newest" | "oldest" | "salary_high" | "salary_low";
+
 export interface JobSearchFilters {
   q?: string;
   location?: string;
@@ -12,6 +14,7 @@ export interface JobSearchFilters {
   salaryMin?: number;
   salaryMax?: number;
   remote?: boolean;
+  sort?: JobSortOption;
 }
 
 export interface PaginationParams {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   AppBar,
@@ -20,18 +20,21 @@ import {
   Menu,
   MenuItem,
   Divider,
+  Skeleton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
+import ChatIcon from "@mui/icons-material/Chat";
 import { useAuth } from "@/hooks/useAuth";
+import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const navLinks = [
-  { label: "Jobs", href: "/jobs" },
-  { label: "How It Works", href: "/how-it-works" },
+  { label: "Locuri de muncă", href: "/jobs" },
+  { label: "Cum funcționează", href: "/how-it-works" },
 ];
 
 export const Navbar: React.FC = () => {
@@ -39,7 +42,19 @@ export const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { user, signOut } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const supabase = useSupabase();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setAvatarUrl(null); return; }
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
+  }, [user, supabase]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -76,7 +91,7 @@ export const Navbar: React.FC = () => {
               variant="h6"
               sx={{
                 fontWeight: 800,
-                background: "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)",
+                background: "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 letterSpacing: "-0.02em",
@@ -105,7 +120,12 @@ export const Navbar: React.FC = () => {
 
           {!isMobile && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {user ? (
+              {authLoading ? (
+                <>
+                  <Skeleton variant="rounded" width={100} height={30} sx={{ borderRadius: 1 }} />
+                  <Skeleton variant="circular" width={32} height={32} />
+                </>
+              ) : user ? (
                 <>
                   <Button
                     component={Link}
@@ -114,11 +134,15 @@ export const Navbar: React.FC = () => {
                     variant="outlined"
                     size="small"
                   >
-                    Dashboard
+                    Tablou de bord
                   </Button>
                   <NotificationBell />
+                  <IconButton component={Link} href="/dashboard/messages" size="small" title="Mesaje" sx={{ color: "text.secondary" }}>
+                    <ChatIcon fontSize="small" />
+                  </IconButton>
                   <IconButton onClick={handleMenuOpen} size="small">
                     <Avatar
+                      src={avatarUrl ?? undefined}
                       sx={{ width: 32, height: 32, bgcolor: "primary.dark", fontSize: 14 }}
                     >
                       {user.email?.[0]?.toUpperCase() ?? "U"}
@@ -132,21 +156,21 @@ export const Navbar: React.FC = () => {
                     anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                   >
                     <MenuItem component={Link} href="/dashboard/profile" onClick={handleMenuClose}>
-                      <PersonIcon sx={{ mr: 1, fontSize: 20 }} /> Profile
+                      <PersonIcon sx={{ mr: 1, fontSize: 20 }} /> Profil
                     </MenuItem>
                     <Divider />
                     <MenuItem onClick={handleSignOut}>
-                      <LogoutIcon sx={{ mr: 1, fontSize: 20 }} /> Sign Out
+                      <LogoutIcon sx={{ mr: 1, fontSize: 20 }} /> Deconectare
                     </MenuItem>
                   </Menu>
                 </>
               ) : (
                 <>
                   <Button component={Link} href="/login" sx={{ color: "text.secondary" }}>
-                    Sign In
+                    Conectare
                   </Button>
                   <Button component={Link} href="/register" variant="contained" size="small">
-                    Get Started
+                    Începe acum
                   </Button>
                 </>
               )}
@@ -180,7 +204,14 @@ export const Navbar: React.FC = () => {
             </ListItem>
           ))}
           <Divider sx={{ my: 1 }} />
-          {user ? (
+          {authLoading ? (
+            <ListItem>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1, width: "100%" }}>
+                <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1 }} />
+                <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1 }} />
+              </Box>
+            </ListItem>
+          ) : user ? (
             <>
               <ListItem disablePadding>
                 <ListItemButton
@@ -188,12 +219,21 @@ export const Navbar: React.FC = () => {
                   href="/dashboard"
                   onClick={() => setDrawerOpen(false)}
                 >
-                  <ListItemText primary="Dashboard" />
+                  <ListItemText primary="Tablou de bord" />
+                </ListItemButton>
+              </ListItem>
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  href="/dashboard/messages"
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  <ListItemText primary="Mesaje" />
                 </ListItemButton>
               </ListItem>
               <ListItem disablePadding>
                 <ListItemButton onClick={handleSignOut}>
-                  <ListItemText primary="Sign Out" />
+                  <ListItemText primary="Deconectare" />
                 </ListItemButton>
               </ListItem>
             </>
@@ -205,7 +245,7 @@ export const Navbar: React.FC = () => {
                   href="/login"
                   onClick={() => setDrawerOpen(false)}
                 >
-                  <ListItemText primary="Sign In" />
+                  <ListItemText primary="Conectare" />
                 </ListItemButton>
               </ListItem>
               <ListItem disablePadding>
@@ -214,7 +254,7 @@ export const Navbar: React.FC = () => {
                   href="/register"
                   onClick={() => setDrawerOpen(false)}
                 >
-                  <ListItemText primary="Get Started" />
+                  <ListItemText primary="Începe acum" />
                 </ListItemButton>
               </ListItem>
             </>

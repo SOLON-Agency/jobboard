@@ -1,0 +1,20 @@
+{
+  "config": {
+    "currency": "RON",
+    "locale": "ro",
+    "salaryMin": 5000,
+    "salaryMax": 30000
+  },
+  "features": {
+    "favouriteJobs": false,
+    "favouriteCompanies": true
+  },
+  "brand": {
+    "primary": "#03170C",
+    "secondary": "#3E5C76",
+    "secondaryLight": "#748CAB",
+    "tertiary": "#F0EBD8",
+    "tertiaryDarker": "#d7c996",
+    "accentGold": "#c3ae61"
+  }
+}

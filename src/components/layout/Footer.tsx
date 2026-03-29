@@ -6,17 +6,17 @@ import { Box, Container, Typography, Stack, useTheme } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 
 const footerLinks = [
-  { label: "Jobs", href: "/jobs" },
-  { label: "How It Works", href: "/how-it-works" },
-  { label: "Privacy Policy", href: "/policy" },
+  { label: "Locuri de muncă", href: "/jobs" },
+  { label: "Cum funcționează", href: "/how-it-works" },
+  { label: "Politică de confidențialitate", href: "/policy" },
 ];
 
 export const Footer: React.FC = () => {
   const theme = useTheme();
   const brandGradient =
     theme.palette.mode === "dark"
-      ? "linear-gradient(135deg, #00f0ff 0%, #7b2ff7 100%)"
-      : "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)";
+      ? "linear-gradient(135deg, #748CAB 0%, #c3ae61 100%)"
+      : "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)";
 
   return (
     <Box

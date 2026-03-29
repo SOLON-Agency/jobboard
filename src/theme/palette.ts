@@ -1,36 +1,47 @@
 export const lightPalette = {
   primary: {
-    main: "#00c2d1",
-    light: "#33d4e0",
-    dark: "#009aa6",
-    contrastText: "#ffffff",
+    main: "#03170C",
+    light: "#0f4024",
+    dark: "#010c07",
+    contrastText: "#F0EBD8",
   },
   secondary: {
-    main: "#7b2ff7",
-    light: "#a66bfa",
-    dark: "#5a1db8",
-    contrastText: "#ffffff",
+    main: "#3E5C76",
+    light: "#748CAB",
+    dark: "#2c4357",
+    contrastText: "#F0EBD8",
   },
   error: {
-    main: "#ef4444",
+    main: "#c0392b",
+    contrastText: "#ffffff",
   },
   warning: {
-    main: "#f59e0b",
+    main: "#a0882a",
+    contrastText: "#ffffff",
   },
   success: {
-    main: "#10b981",
+    main: "#2d6a4f",
+    contrastText: "#ffffff",
   },
   info: {
-    main: "#3b82f6",
+    main: "#3E5C76",
+    contrastText: "#F0EBD8",
   },
   background: {
-    default: "#f8fafc",
-    paper: "#ffffff",
+    default: "#F5F2EA",
+    paper: "#FFFEFB",
   },
   text: {
-    primary: "#0f172a",
-    secondary: "#475569",
-    disabled: "#94a3b8",
+    primary: "#03170C",
+    secondary: "#3E5C76",
+    disabled: "#748CAB",
   },
-  divider: "rgba(15, 23, 42, 0.08)",
+  divider: "rgba(3, 23, 12, 0.1)",
 } as const;
+
+/** Shared brand gradients — import where hardcoded hex is required */
+export const brandGradient = "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)";
+export const brandGradientDark = "linear-gradient(135deg, #748CAB 0%, #c3ae61 100%)";
+export const accentGold = "#c3ae61";
+export const accentGoldLight = "#d7c996";
+export const cream = "#F0EBD8";
