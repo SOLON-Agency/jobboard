@@ -123,7 +123,7 @@ Toată interfața utilizatorului este în **limba română**. Textele vizibile u
 Fișiere cheie pentru mesajele de interfață:
 - `src/lib/utils.ts` — etichete pentru tipul contractului, nivelul de experiență, formatare dată/salariu/timp
 - `src/components/layout/` — Navbar, Footer, HeroSection, FeaturesSection, JobCtaBanner
-- `src/components/jobs/` — JobFilters, JobList, JobDetail, JobRow, JobCard, RelatedJobsCarousel
+- `src/components/jobs/` — JobFilters, JobList, JobDetail, JobRow, JobCard, JobsCarousel
 - `src/components/auth/` — LoginForm, SocialButtons
 - `src/app/(auth)/register/page.tsx` — înregistrare
 - `src/app/(dashboard)/dashboard/` — toate paginile din tabloul de bord

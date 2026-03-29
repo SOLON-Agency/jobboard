@@ -31,6 +31,11 @@ import ChatIcon from "@mui/icons-material/Chat";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+
+const CREAM = "#F0EBD8";
+const CREAM_MUTED = "rgba(240, 235, 216, 0.65)";
+const CREAM_HOVER = "rgba(240, 235, 216, 0.12)";
 
 const navLinks = [
   { label: "Locuri de muncă", href: "/jobs" },
@@ -73,7 +78,16 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <AppBar position="sticky" elevation={0}>
-        <Toolbar sx={{ maxWidth: 1200, width: "100%", mx: "auto", px: { xs: 2, md: 3 } }}>
+        <Toolbar
+          sx={{
+            maxWidth: 1200,
+            width: "100%",
+            mx: "auto",
+            px: { xs: 2, md: 4 },
+            minHeight: { xs: 60, md: 68 },
+          }}
+        >
+          {/* Logo */}
           <Box
             component={Link}
             href="/"
@@ -83,32 +97,48 @@ export const Navbar: React.FC = () => {
               gap: 1,
               textDecoration: "none",
               color: "inherit",
-              mr: 4,
+              mr: 5,
+              flexShrink: 0,
             }}
           >
-            <WorkOutlineIcon sx={{ color: "primary.main", fontSize: 28 }} />
+            <WorkOutlineIcon sx={{ color: CREAM, fontSize: 22, opacity: 0.9 }} />
             <Typography
               variant="h6"
               sx={{
                 fontWeight: 800,
-                background: "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                letterSpacing: "-0.02em",
+                color: CREAM,
+                letterSpacing: "0.06em",
+                fontSize: "1rem",
+                textTransform: "uppercase",
               }}
             >
               LegalJobs
             </Typography>
           </Box>
 
+          {/* Desktop nav links */}
           {!isMobile && (
-            <Box sx={{ display: "flex", gap: 1, flexGrow: 1 }}>
+            <Box sx={{ display: "flex", gap: 0.5, flexGrow: 1 }}>
               {navLinks.map((link) => (
                 <Button
                   key={link.href}
                   component={Link}
                   href={link.href}
-                  sx={{ color: "text.secondary", "&:hover": { color: "primary.main" } }}
+                  disableRipple
+                  sx={{
+                    color: CREAM_MUTED,
+                    fontWeight: 400,
+                    fontSize: "0.875rem",
+                    letterSpacing: "0.01em",
+                    px: 1.5,
+                    py: 0.75,
+                    minWidth: 0,
+                    bgcolor: "transparent",
+                    "&:hover": {
+                      color: CREAM,
+                      bgcolor: CREAM_HOVER,
+                    },
+                  }}
                 >
                   {link.label}
                 </Button>
@@ -118,32 +148,64 @@ export const Navbar: React.FC = () => {
 
           <Box sx={{ flexGrow: isMobile ? 1 : 0 }} />
 
+          {/* Desktop auth section */}
           {!isMobile && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               {authLoading ? (
                 <>
-                  <Skeleton variant="rounded" width={100} height={30} sx={{ borderRadius: 1 }} />
-                  <Skeleton variant="circular" width={32} height={32} />
+                  <Skeleton
+                    variant="rounded"
+                    width={110}
+                    height={32}
+                    sx={{ borderRadius: 5, bgcolor: "rgba(240,235,216,0.1)" }}
+                  />
+                  <Skeleton
+                    variant="circular"
+                    width={32}
+                    height={32}
+                    sx={{ bgcolor: "rgba(240,235,216,0.1)" }}
+                  />
                 </>
               ) : user ? (
                 <>
                   <Button
                     component={Link}
                     href="/dashboard"
-                    startIcon={<DashboardIcon />}
-                    variant="outlined"
-                    size="small"
+                    startIcon={<DashboardIcon sx={{ fontSize: "16px !important" }} />}
+                    sx={{
+                      color: CREAM_MUTED,
+                      fontWeight: 400,
+                      fontSize: "0.875rem",
+                      px: 1.5,
+                      "&:hover": { color: CREAM, bgcolor: CREAM_HOVER },
+                    }}
                   >
-                    Tablou de bord
+                    Dashboard
                   </Button>
-                  <NotificationBell />
-                  <IconButton component={Link} href="/dashboard/messages" size="small" title="Mesaje" sx={{ color: "text.secondary" }}>
+                  <IconButton sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
+                    <NotificationsOutlinedIcon />
+                  </IconButton>
+                  <IconButton
+                    component={Link}
+                    href="/dashboard/messages"
+                    size="small"
+                    title="Mesaje"
+                    sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}
+                  >
                     <ChatIcon fontSize="small" />
                   </IconButton>
-                  <IconButton onClick={handleMenuOpen} size="small">
+                  <IconButton onClick={handleMenuOpen}>
                     <Avatar
                       src={avatarUrl ?? undefined}
-                      sx={{ width: 32, height: 32, bgcolor: "primary.dark", fontSize: 14 }}
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        bgcolor: "rgba(62,92,118,0.6)",
+                        color: CREAM,
+                        fontSize: 13,
+                        fontWeight: 700,
+                        border: "1.5px solid rgba(240,235,216,0.3)",
+                      }}
                     >
                       {user.email?.[0]?.toUpperCase() ?? "U"}
                     </Avatar>
@@ -154,22 +216,66 @@ export const Navbar: React.FC = () => {
                     onClose={handleMenuClose}
                     transformOrigin={{ horizontal: "right", vertical: "top" }}
                     anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          mt: 1,
+                          bgcolor: "#03170C",
+                          border: "1px solid rgba(240,235,216,0.12)",
+                          color: CREAM,
+                          "& .MuiMenuItem-root": {
+                            color: CREAM_MUTED,
+                            fontSize: "0.875rem",
+                            "&:hover": { bgcolor: CREAM_HOVER, color: CREAM },
+                          },
+                        },
+                      },
+                    }}
                   >
                     <MenuItem component={Link} href="/dashboard/profile" onClick={handleMenuClose}>
-                      <PersonIcon sx={{ mr: 1, fontSize: 20 }} /> Profil
+                      <PersonIcon sx={{ mr: 1, fontSize: 18 }} /> Profil
                     </MenuItem>
-                    <Divider />
+                    <Divider sx={{ borderColor: "rgba(240,235,216,0.1)" }} />
                     <MenuItem onClick={handleSignOut}>
-                      <LogoutIcon sx={{ mr: 1, fontSize: 20 }} /> Deconectare
+                      <LogoutIcon sx={{ mr: 1, fontSize: 18 }} /> Deconectare
                     </MenuItem>
                   </Menu>
                 </>
               ) : (
                 <>
-                  <Button component={Link} href="/login" sx={{ color: "text.secondary" }}>
+                  <Button
+                    component={Link}
+                    href="/login"
+                    sx={{
+                      color: CREAM_MUTED,
+                      fontWeight: 400,
+                      fontSize: "0.875rem",
+                      px: 1.5,
+                      "&:hover": { color: CREAM, bgcolor: CREAM_HOVER },
+                    }}
+                  >
                     Conectare
                   </Button>
-                  <Button component={Link} href="/register" variant="contained" size="small">
+                  <Button
+                    component={Link}
+                    href="/register"
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      color: CREAM,
+                      borderColor: "rgba(240,235,216,0.45)",
+                      borderRadius: 5,
+                      px: 2.5,
+                      py: 0.75,
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
+                      whiteSpace: "nowrap",
+                      "&:hover": {
+                        borderColor: CREAM,
+                        bgcolor: CREAM_HOVER,
+                      },
+                    }}
+                  >
                     Începe acum
                   </Button>
                 </>
@@ -177,19 +283,32 @@ export const Navbar: React.FC = () => {
             </Box>
           )}
 
+          {/* Mobile hamburger */}
           {isMobile && (
-            <IconButton onClick={() => setDrawerOpen(true)} sx={{ color: "text.primary" }}>
+            <IconButton
+              onClick={() => setDrawerOpen(true)}
+              sx={{ color: CREAM, ml: 0.5 }}
+            >
               <MenuIcon />
             </IconButton>
           )}
         </Toolbar>
       </AppBar>
 
+      {/* Mobile Drawer */}
       <Drawer
         anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: 280, pt: 2 } }}
+        PaperProps={{
+          sx: {
+            width: 280,
+            pt: 2,
+            bgcolor: "#03170C",
+            color: CREAM,
+            borderLeft: "1px solid rgba(240,235,216,0.08)",
+          },
+        }}
       >
         <List>
           {navLinks.map((link) => (
@@ -198,17 +317,21 @@ export const Navbar: React.FC = () => {
                 component={Link}
                 href={link.href}
                 onClick={() => setDrawerOpen(false)}
+                sx={{
+                  "&:hover": { bgcolor: CREAM_HOVER },
+                  "& .MuiListItemText-primary": { color: CREAM_MUTED, fontSize: "0.9rem" },
+                }}
               >
                 <ListItemText primary={link.label} />
               </ListItemButton>
             </ListItem>
           ))}
-          <Divider sx={{ my: 1 }} />
+          <Divider sx={{ my: 1, borderColor: "rgba(240,235,216,0.1)" }} />
           {authLoading ? (
             <ListItem>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1, width: "100%" }}>
-                <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1 }} />
-                <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1 }} />
+                <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1, bgcolor: "rgba(240,235,216,0.1)" }} />
+                <Skeleton variant="rounded" height={36} sx={{ borderRadius: 1, bgcolor: "rgba(240,235,216,0.1)" }} />
               </Box>
             </ListItem>
           ) : user ? (
@@ -218,6 +341,7 @@ export const Navbar: React.FC = () => {
                   component={Link}
                   href="/dashboard"
                   onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": { bgcolor: CREAM_HOVER }, "& .MuiListItemText-primary": { color: CREAM_MUTED } }}
                 >
                   <ListItemText primary="Tablou de bord" />
                 </ListItemButton>
@@ -227,12 +351,16 @@ export const Navbar: React.FC = () => {
                   component={Link}
                   href="/dashboard/messages"
                   onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": { bgcolor: CREAM_HOVER }, "& .MuiListItemText-primary": { color: CREAM_MUTED } }}
                 >
                   <ListItemText primary="Mesaje" />
                 </ListItemButton>
               </ListItem>
               <ListItem disablePadding>
-                <ListItemButton onClick={handleSignOut}>
+                <ListItemButton
+                  onClick={handleSignOut}
+                  sx={{ "&:hover": { bgcolor: CREAM_HOVER }, "& .MuiListItemText-primary": { color: CREAM_MUTED } }}
+                >
                   <ListItemText primary="Deconectare" />
                 </ListItemButton>
               </ListItem>
@@ -244,18 +372,28 @@ export const Navbar: React.FC = () => {
                   component={Link}
                   href="/login"
                   onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": { bgcolor: CREAM_HOVER }, "& .MuiListItemText-primary": { color: CREAM_MUTED } }}
                 >
                   <ListItemText primary="Conectare" />
                 </ListItemButton>
               </ListItem>
-              <ListItem disablePadding>
-                <ListItemButton
+              <ListItem sx={{ pt: 1.5 }}>
+                <Button
                   component={Link}
                   href="/register"
+                  variant="outlined"
+                  fullWidth
                   onClick={() => setDrawerOpen(false)}
+                  sx={{
+                    color: CREAM,
+                    borderColor: "rgba(240,235,216,0.4)",
+                    borderRadius: 5,
+                    fontWeight: 500,
+                    "&:hover": { borderColor: CREAM, bgcolor: CREAM_HOVER },
+                  }}
                 >
-                  <ListItemText primary="Începe acum" />
-                </ListItemButton>
+                  Începe acum
+                </Button>
               </ListItem>
             </>
           )}

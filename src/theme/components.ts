@@ -95,11 +95,11 @@ export const components: Components<Theme> = {
   MuiAppBar: {
     styleOverrides: {
       root: {
-        backgroundColor: "rgba(245, 242, 234, 0.88)",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(3, 23, 12, 0.08)",
-        boxShadow: "0 1px 3px rgba(3,23,12,0.05)",
-        color: "#03170C",
+        backgroundColor: "#03170C",
+        backdropFilter: "none",
+        borderBottom: "1px solid rgba(240, 235, 216, 0.08)",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.3)",
+        color: "#F0EBD8",
       },
     },
   },

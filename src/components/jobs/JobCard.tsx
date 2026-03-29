@@ -13,11 +13,12 @@ import {
   IconButton,
 } from "@mui/material";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import FavoriteIcon from "@mui/icons-material/Favorite";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import type { Tables } from "@/types/database";
 import { formatSalary, timeAgo, jobTypeLabels } from "@/lib/utils";
+import appSettings from "@/config/app.settings.json";
 
 interface JobCardProps {
   job: Tables<"job_listings"> & { companies: Tables<"companies"> | null };
@@ -122,7 +123,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           </Stack>
         )}
         <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 600 }}>
-          {formatSalary(job.salary_min, job.salary_max, job.salary_currency)}
+          {formatSalary(job.salary_min, job.salary_max)}
         </Typography>
       </Stack>
     </CardContent>
@@ -139,7 +140,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       <Typography variant="caption" color="text.secondary">
         {job.published_at ? timeAgo(job.published_at) : "Ciornă"}
       </Typography>
-      {onToggleFavorite && (
+      {appSettings.features.favouriteJobs && onToggleFavorite && (
         <IconButton
           size="small"
           onClick={(e) => {
@@ -148,7 +149,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           }}
           sx={{ color: isFavorite ? "error.main" : "text.secondary" }}
         >
-          {isFavorite ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+          {isFavorite ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
         </IconButton>
       )}
     </Box>

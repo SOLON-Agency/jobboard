@@ -30,8 +30,8 @@ export const Footer: React.FC = () => {
         bgcolor: "background.paper",
         borderTop: "1px solid",
         borderColor: "divider",
-        pt: 3,
-        pb: 2,
+        pt: 1.5,
+        pb: 1.5,
       }}
     >
       <Container maxWidth="lg">

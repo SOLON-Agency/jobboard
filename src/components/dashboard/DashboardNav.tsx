@@ -22,9 +22,9 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 const navItems = [
   { label: "Prezentare generală", href: "/dashboard", icon: <DashboardIcon /> },
   { label: "Profil", href: "/dashboard/profile", icon: <PersonIcon /> },
-  { label: "Companie", href: "/dashboard/company", icon: <BusinessIcon /> },
-  { label: "Locuri de muncă", href: "/dashboard/jobs", icon: <WorkIcon /> },
-  { label: "Aplicații", href: "/dashboard/applications", icon: <DescriptionIcon /> },
+  { label: "Companii", href: "/dashboard/company", icon: <BusinessIcon /> },
+  { label: "Anunțuri", href: "/dashboard/jobs", icon: <WorkIcon /> },
+  { label: "Aplicațiile mele", href: "/dashboard/applications", icon: <DescriptionIcon /> },
   { label: "Mesaje", href: "/dashboard/messages", icon: <ChatIcon /> },
   { label: "Alerte", href: "/dashboard/alerts", icon: <NotificationsIcon /> },
 ];

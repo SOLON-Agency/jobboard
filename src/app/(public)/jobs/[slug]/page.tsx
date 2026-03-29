@@ -5,7 +5,7 @@ import { createStaticClient } from "@/lib/supabase/static";
 import { getJobBySlug, getAllJobSlugs, getRelatedJobs } from "@/services/jobs.service";
 import { generateJobPostingJsonLd } from "@/lib/seo";
 import { JobDetailWrapper } from "@/components/jobs/JobDetailWrapper";
-import { RelatedJobsCarousel } from "@/components/jobs/RelatedJobsCarousel";
+import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import { JobCtaBanner } from "@/components/layout/JobCtaBanner";
 import type { Metadata } from "next";
 
@@ -67,10 +67,9 @@ export default async function JobPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4, mb: 2 }}>
         <JobDetailWrapper job={job} />
-        <Divider sx={{ mt: 6 }} />
-        <RelatedJobsCarousel jobs={relatedJobs} />
+        <JobsCarousel title="Posturi similare" jobs={relatedJobs} />
       </Container>
       <JobCtaBanner />
     </>

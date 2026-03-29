@@ -32,10 +32,12 @@ const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary"
 const VISIBLE = 3; // cards visible at once on desktop
 
 interface Props {
+  title: string;
+  description?: string;
   jobs: JobWithCompany[];
 }
 
-export const RelatedJobsCarousel: React.FC<Props> = ({ jobs }) => {
+export const JobsCarousel: React.FC<Props> = ({ title, description, jobs }) => {
   const [start, setStart] = useState(0);
 
   if (jobs.length === 0) return null;
@@ -45,12 +47,17 @@ export const RelatedJobsCarousel: React.FC<Props> = ({ jobs }) => {
   const visible = jobs.slice(start, start + VISIBLE);
 
   return (
-    <Box sx={{ py: { xs: 5, md: 7 } }}>
+    <Box sx={{ py: { xs: 3, md: 2 } }}>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3" fontWeight={700}>
-          Locuri de muncă similare
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+        <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>
+          {title}
         </Typography>
+        {description && (
+          <Typography variant="body1" color="text.secondary">
+            {description}
+          </Typography>
+        )}
         <Stack direction="row" spacing={1}>
           <IconButton
             onClick={() => setStart((s) => Math.max(0, s - 1))}
@@ -144,7 +151,6 @@ export const RelatedJobsCarousel: React.FC<Props> = ({ jobs }) => {
                   color: "text.primary",
                   lineHeight: 1.35,
                   overflow: "hidden",
-                  display: "-webkit-box",
                   WebkitLineClamp: 2,
                   WebkitBoxOrient: "vertical",
                   "&:hover": { color: "primary.main" },

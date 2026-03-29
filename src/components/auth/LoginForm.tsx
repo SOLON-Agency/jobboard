@@ -80,7 +80,7 @@ export const LoginForm: React.FC = () => {
           </Alert>
         )}
 
-        <SocialButtons />
+        {/* <SocialButtons /> */}
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <TextField

@@ -16,13 +16,14 @@ import {
   Snackbar,
   Tooltip,
 } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import type { Tables } from "@/types/database";
 import {
   formatSalary,
@@ -30,6 +31,7 @@ import {
   jobTypeLabels,
   experienceLevelLabels,
 } from "@/lib/utils";
+import { JobTags } from "@/components/jobs/JobTags";
 import appSettings from "@/config/app.settings.json";
 
 type JobWithCompany = Tables<"job_listings"> & {
@@ -82,10 +84,17 @@ export const JobDetail: React.FC<JobDetailProps> = ({
     setSnackOpen(true);
   };
 
-  const shareUrl = encodeURIComponent(
-    typeof window !== "undefined" ? window.location.href : ""
-  );
-  const shareTitle = encodeURIComponent(job.title);
+  const handleShare = async () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: job.title, url: window.location.href });
+      } catch {
+        // user cancelled — no-op
+      }
+    } else {
+      await copyLink();
+    }
+  };
 
   const isHtml = job.description?.trimStart().startsWith("<");
   const sections = isHtml ? parseSections(job.description ?? "") : null;
@@ -132,76 +141,128 @@ export const JobDetail: React.FC<JobDetailProps> = ({
           <CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
           <Typography variant="caption" color="text.secondary">
             {job.published_at ? formatDate(job.published_at) : "Ciornă"}
-            {job.companies && (
-              <>
-                {" "}de{" "}
-                <Typography
-                  component={Link}
-                  href={`/companies/${job.companies.slug}`}
-                  variant="caption"
-                  fontWeight={700}
-                  sx={{ color: "text.primary", textDecoration: "none", "&:hover": { color: "primary.main" } }}
-                >
-                  {job.companies.name}
-                </Typography>
-              </>
-            )}
           </Typography>
+          <JobTags job={job} sx={{ ml: 1 }} />
         </Stack>
 
-        {/* Title */}
-        <Typography variant="h2" sx={{ mb: 2, lineHeight: 1.2 }}>
-          {job.title}
-        </Typography>
 
-        {/* Share + bookmark row */}
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 3 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ borderRadius: 5, fontSize: "0.75rem" }}
-          >
-            Facebook
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            href={`https://twitter.com/intent/tweet?text=${shareTitle}&url=${shareUrl}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{ borderRadius: 5, fontSize: "0.75rem" }}
-          >
-            Twitter / X
-          </Button>
-          <Tooltip title="Copiază link">
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<ContentCopyIcon sx={{ fontSize: "14px !important" }} />}
-              onClick={copyLink}
-              sx={{ borderRadius: 5, fontSize: "0.75rem" }}
-            >
-              Copiază
-            </Button>
-          </Tooltip>
-          {appSettings.features.favouriteJobs && onToggleFavorite && (
-            <IconButton
-              onClick={onToggleFavorite}
-              size="small"
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 5,
-                px: 1.5,
-                color: isFavorite ? "primary.main" : "text.secondary",
-              }}
-            >
-              {isFavorite ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
-            </IconButton>
-          )}
+        {/* Title + action buttons */}
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{ mb: 3, gap: 2 }}
+        >
+          <Typography variant="h2" sx={{ lineHeight: 1.2, flex: 1 }}>
+            {job.title}
+          </Typography>
+
+          <Stack direction="row" spacing={1} sx={{ flexShrink: 0, pt: 0.5 }}>
+            {/* Bookmark */}
+            {appSettings.features.favouriteJobs && onToggleFavorite && (
+              <Tooltip title={isFavorite ? "Eliminați din salvate" : "Salvează"}>
+                <IconButton
+                  onClick={onToggleFavorite}
+                  size="small"
+                  sx={{
+                    border: "1px solid",
+                    borderColor: "divider",
+                    color: isFavorite ? "primary.main" : "text.secondary",
+                  }}
+                >
+                  {isFavorite ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* Share — desktop: text button; mobile: icon only */}
+            <Tooltip title="Trimite">
+              <Button
+                variant="outlined"
+                size="medium"
+                startIcon={<ShareOutlinedIcon />}
+                onClick={handleShare}
+                sx={{ borderRadius: 2, display: { xs: "none", sm: "inline-flex" } }}
+              >
+                Trimite
+              </Button>
+            </Tooltip>
+            <Tooltip title="Trimite">
+              <IconButton
+                size="small"
+                onClick={handleShare}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  display: { xs: "inline-flex", sm: "none" },
+                }}
+              >
+                <ShareOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            {/* Apply — desktop: text button; mobile: icon only */}
+            {job.application_url ? (
+              <>
+                <Button
+                  variant="contained"
+                  size="medium"
+                  component="a"
+                  href={job.application_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  endIcon={<OpenInNewIcon />}
+                  sx={{ borderRadius: 2, display: { xs: "none", sm: "inline-flex" } }}
+                >
+                  Aplicăa
+                </Button>
+                <Tooltip title="Aplică">
+                  <IconButton
+                    component="a"
+                    href={job.application_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    sx={{
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                      "&:hover": { bgcolor: "primary.dark" },
+                      display: { xs: "inline-flex", sm: "none" },
+                    }}
+                  >
+                    <SendOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  size="medium"
+                  component={Link}
+                  href={`/jobs/${job.slug}#apply`}
+                  sx={{ borderRadius: 2, display: { xs: "none", sm: "inline-flex" } }}
+                >
+                  Aplicăa
+                </Button>
+                <Tooltip title="Aplică">
+                  <IconButton
+                    component={Link}
+                    href={`/jobs/${job.slug}#apply`}
+                    size="small"
+                    sx={{
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                      "&:hover": { bgcolor: "primary.dark" },
+                      display: { xs: "inline-flex", sm: "none" },
+                    }}
+                  >
+                    Aplică
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+          </Stack>
         </Stack>
 
         {/* Job description — numbered sections */}
@@ -351,13 +412,12 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 endIcon={<OpenInNewIcon sx={{ fontSize: "14px !important" }} />}
                 sx={{ mt: 2, borderRadius: 5, px: 3, fontWeight: 700 }}
               >
-                Vizitează site-ul
+                Vizitează website
               </Button>
             )}
           </Box>
 
           <Box sx={{ p: 2.5 }}>
-            <Divider sx={{ mb: 2 }} />
 
             {/* Metadata grid */}
             <Box
@@ -370,7 +430,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
             >
               <MetaItem
                 label="Salariu"
-                value={formatSalary(job.salary_min, job.salary_max, job.salary_currency)}
+                value={formatSalary(job.salary_min, job.salary_max)}
               />
               <MetaItem
                 label="Experiență"
@@ -402,40 +462,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               />
             </Box>
 
-            {/* Tags / chips */}
-            {(job.job_type || job.experience_level || job.location) && (
-              <>
-                <Divider sx={{ mb: 2 }} />
-                <Stack direction="row" flexWrap="wrap" gap={0.75} sx={{ mb: 2.5 }}>
-                  {job.job_type && (
-                    <Chip
-                      label={jobTypeLabels[job.job_type] ?? job.job_type}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                  {job.experience_level && (
-                    <Chip
-                      label={experienceLevelLabels[job.experience_level] ?? job.experience_level}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                  {job.is_remote && (
-                    <Chip label="Remote" size="small" color="primary" variant="outlined" />
-                  )}
-
-                  {job.location && (
-                    <Chip
-                      icon={<LocationOnOutlinedIcon />}
-                      label={job.location}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                </Stack>
-              </>
-            )}
+            <JobTags job={job} sx={{ mb: 2.5 }} />
 
             {/* Apply button */}
             {applyButton}

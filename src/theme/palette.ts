@@ -28,8 +28,8 @@ export const lightPalette = {
     contrastText: "#F0EBD8",
   },
   background: {
-    default: "#F5F2EA",
-    paper: "#FFFEFB",
+    default: "#ffffff",
+    paper: "#ffffff",
   },
   text: {
     primary: "#03170C",

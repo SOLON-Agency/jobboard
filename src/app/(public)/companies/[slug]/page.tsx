@@ -5,14 +5,18 @@ import {
   Box,
   Paper,
   Stack,
-  Chip,
   Avatar,
   Divider,
+  Button,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import LanguageIcon from "@mui/icons-material/Language";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { createClient } from "@/lib/supabase/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import {
@@ -20,7 +24,7 @@ import {
   getAllCompanySlugs,
 } from "@/services/companies.service";
 import { generateOrganizationJsonLd } from "@/lib/seo";
-import { CompanyJobList } from "@/components/companies/CompanyJobList";
+import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -28,6 +32,43 @@ export const revalidate = 60;
 interface Props {
   params: Promise<{ slug: string }>;
 }
+
+interface MetaItemProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
+
+const MetaItem = ({ icon, label, value }: MetaItemProps) => (
+  <Box>
+    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0 }}>
+      <Box
+        sx={{
+          display: "flex",
+          color: "text.disabled",
+          "& svg": { fontSize: 13 },
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        sx={{ fontWeight: 600, letterSpacing: 0.4 }}
+      >
+        {label}
+      </Typography>
+    </Stack>
+    <Typography
+      variant="body2"
+      fontWeight={700}
+      color="text.primary"
+      sx={{ pl: 0.25 }}
+    >
+      {value}
+    </Typography>
+  </Box>
+);
 
 export async function generateStaticParams() {
   try {
@@ -48,10 +89,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: company.name,
       description:
         company.description?.slice(0, 160) ??
-        `${company.name} company profile and job listings.`,
+        `${company.name} — profilul companiei și anunțuri de angajare.`,
     };
   } catch {
-    return { title: "Company Not Found" };
+    return { title: "Companie negăsită" };
   }
 }
 
@@ -70,82 +111,174 @@ export default async function CompanyPage({ params }: Props) {
 
   const jsonLd = generateOrganizationJsonLd(company);
 
+  const hasMeta =
+    company.location ||
+    company.size ||
+    company.industry ||
+    company.founded_year;
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Paper sx={{ p: { xs: 3, md: 4 }, border: "1px solid", borderColor: "divider", mb: 4 }}>
-          <Stack direction="row" spacing={3} alignItems="flex-start">
-            <Avatar
-              src={company.logo_url ?? undefined}
-              sx={{
-                width: 80,
-                height: 80,
-                bgcolor: "background.default",
-                border: "1px solid",
-                borderColor: "divider",
-              }}
+
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", lg: "1fr 300px" },
+            gap: { xs: 4, lg: 6 },
+            alignItems: "start",
+          }}
+        >
+          {/* ── LEFT: main content ── */}
+          <Box>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mb: company.description ? 2 : 4 }}
             >
-              <BusinessIcon sx={{ fontSize: 40, color: "text.secondary" }} />
-            </Avatar>
-            <Box>
-              <Typography variant="h2" sx={{ mb: 1 }}>
+              <Typography variant="h2" fontWeight={800}>
                 {company.name}
               </Typography>
-              <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
-                {company.location && (
-                  <Chip
-                    icon={<LocationOnOutlinedIcon />}
-                    label={company.location}
-                    size="small"
-                    variant="outlined"
-                  />
-                )}
-                {company.industry && (
-                  <Chip label={company.industry} size="small" variant="outlined" />
-                )}
-                {company.size && (
-                  <Chip
-                    icon={<PeopleOutlineIcon />}
-                    label={company.size}
-                    size="small"
-                    variant="outlined"
-                  />
-                )}
-                {company.website && (
-                  <Chip
-                    icon={<LanguageIcon />}
-                    label="Site web"
-                    size="small"
-                    variant="outlined"
+
+              {company.website && (
+                <>
+                  <Button
                     component="a"
                     href={company.website}
                     target="_blank"
-                    clickable
-                  />
-                )}
-              </Stack>
-            </Box>
-          </Stack>
+                    rel="noopener noreferrer"
+                    variant="contained"
+                    size="medium"
+                    endIcon={<OpenInNewIcon sx={{ fontSize: 15 }} />}
+                    sx={{
+                      borderRadius: 2,
+                      flexShrink: 0,
+                      ml: 2,
+                      display: { xs: "none", sm: "inline-flex" },
+                    }}
+                  >
+                    Vizitează site-ul
+                  </Button>
+                  <Tooltip title="Vizitează site-ul">
+                    <Button
+                      component="a"
+                      href={company.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="contained"
+                      size="medium"
+                      sx={{
+                        flexShrink: 0,
+                        ml: 1.5,
+                        display: { xs: "inline-flex", sm: "none" },
+                        border: "1px solid",
+                        borderRadius: 10,
+                      }}
+                    >
+                      <OpenInNewIcon fontSize="small" />
+                    </Button>
+                  </Tooltip>
+                </>
+              )}
+            </Stack>
 
-          {company.description && (
-            <>
-              <Divider sx={{ my: 3 }} />
-              <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
+            {company.description && (
+              <Typography
+                color="text.secondary"
+                sx={{ lineHeight: 1.85, fontSize: "1rem" }}
+              >
                 {company.description}
               </Typography>
-            </>
-          )}
-        </Paper>
+            )}
+          </Box>
 
-        <Typography variant="h3" sx={{ mb: 3 }}>
-          Posturi disponibile ({jobs.length})
-        </Typography>
+          {/* ── RIGHT: sticky sidebar ── */}
+          <Box sx={{ position: { lg: "sticky" }, top: 88 }}>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                bgcolor: "rgba(62, 92, 118, 0.04)",
+                borderColor: "divider",
+              }}
+            >
+              {/* Logo + company name */}
+              <Stack alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+                <Avatar
+                  src={company.logo_url ?? undefined}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    bgcolor: "background.paper",
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <BusinessIcon sx={{ fontSize: 40, color: "text.secondary" }} />
+                </Avatar>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={700}
+                  textAlign="center"
+                  sx={{ lineHeight: 1.3 }}
+                >
+                  {company.name}
+                </Typography>
+              </Stack>
 
-        <CompanyJobList jobs={jobs} />
+              {hasMeta && (
+                <>
+                  <Stack spacing={1}>
+                    {company.location && (
+                      <MetaItem
+                        icon={<LocationOnOutlinedIcon />}
+                        label="Locație"
+                        value={company.location}
+                      />
+                    )}
+                    {company.size && (
+                      <MetaItem
+                        icon={<PeopleOutlineIcon />}
+                        label="Dimensiune"
+                        value={company.size}
+                      />
+                    )}
+                    {company.industry && (
+                      <MetaItem
+                        icon={<WorkOutlineIcon />}
+                        label="Industrie"
+                        value={company.industry}
+                      />
+                    )}
+                    {company.founded_year && (
+                      <MetaItem
+                        icon={<CalendarTodayOutlinedIcon />}
+                        label="Fondată în"
+                        value={String(company.founded_year)}
+                      />
+                    )}
+                  </Stack>
+                </>
+              )}
+
+            </Paper>
+          </Box>
+        </Box>
+
+        {jobs.length > 0 && (
+          <>
+            <JobsCarousel
+              title="Posturi disponibile"
+              jobs={jobs.map((job) => ({ ...job, companies: company }))}
+            />
+          </>
+        )}
       </Container>
     </>
   );

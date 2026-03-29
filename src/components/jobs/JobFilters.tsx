@@ -312,7 +312,7 @@ export const JobFilters: React.FC = () => {
             fullWidth
             onClick={clearFilters}
             disabled={activeFilterCount === 0}
-            sx={{ borderRadius: 2, py: 1 }}
+            sx={{ borderRadius: 2, py: 1, "&.Mui-disabled": { color: "white", cursor: "not-allowed" } }}
           >
             Resetează filtrele{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </Button>

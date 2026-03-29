@@ -121,7 +121,7 @@ export const JobRow: React.FC<JobRowProps> = ({
         </Stack>
       )}
       <Typography variant="caption" sx={{ color: "primary.main", fontWeight: 700, display: "block" }}>
-        {formatSalary(job.salary_min, job.salary_max, job.salary_currency)}
+        {formatSalary(job.salary_min, job.salary_max)}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {job.published_at ? timeAgo(job.published_at) : "Ciornă"}
