@@ -36,7 +36,7 @@ export const generateJobPostingJsonLd = (job: JobWithCompany) => ({
     job.salary_min || job.salary_max
       ? {
           "@type": "MonetaryAmount",
-          currency: job.salary_currency ?? appSettings.currency.code,
+          currency: job.salary_currency ?? appSettings.config.currency,
           value: {
             "@type": "QuantitativeValue",
             minValue: job.salary_min ?? undefined,
