@@ -2,19 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { Box, Container, Typography, Button, Stack, useTheme } from "@mui/material";
+import { Box, Container, Typography, Button, Stack } from "@mui/material";
+
+const headingGradient = "linear-gradient(135deg, #0f172a 0%, #00c2d1 50%, #7b2ff7 100%)";
+const glowGradient = "radial-gradient(circle, rgba(0,194,209,0.1) 0%, rgba(123,47,247,0.05) 50%, transparent 70%)";
 
 export const HeroSection: React.FC = () => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-
-  const headingGradient = isDark
-    ? "linear-gradient(135deg, #e2e8f0 0%, #00f0ff 50%, #7b2ff7 100%)"
-    : "linear-gradient(135deg, #0f172a 0%, #00c2d1 50%, #7b2ff7 100%)";
-
-  const glowGradient = isDark
-    ? "radial-gradient(circle, rgba(0,240,255,0.08) 0%, rgba(123,47,247,0.04) 50%, transparent 70%)"
-    : "radial-gradient(circle, rgba(0,194,209,0.1) 0%, rgba(123,47,247,0.05) 50%, transparent 70%)";
 
   return (
     <Box
@@ -50,7 +43,7 @@ export const HeroSection: React.FC = () => {
             WebkitTextFillColor: "transparent",
           }}
         >
-          Your Next Legal Career Move Starts Here
+          Your Legal Career Platform
         </Typography>
 
         <Typography

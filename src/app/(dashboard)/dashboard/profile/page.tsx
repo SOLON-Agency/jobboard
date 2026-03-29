@@ -7,20 +7,26 @@ import {
   Button,
   Paper,
   Stack,
-  Alert,
   Avatar,
   Box,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Chip,
+  IconButton,
+  Skeleton,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import PersonIcon from "@mui/icons-material/Person";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { experienceLevelLabels } from "@/lib/utils";
+import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
+import type { Tables } from "@/types/database";
 
 const schema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
@@ -35,8 +41,11 @@ type FormData = z.infer<typeof schema>;
 export default function ProfilePage() {
   const { user } = useAuth();
   const supabase = useSupabase();
+
+  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -48,26 +57,32 @@ export default function ProfilePage() {
     resolver: zodResolver(schema),
   });
 
-  useEffect(() => {
+  const loadProfile = useCallback(async () => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          reset({
-            full_name: data.full_name ?? "",
-            headline: data.headline ?? "",
-            bio: data.bio ?? "",
-            location: data.location ?? "",
-            experience_level: data.experience_level ?? "",
-          });
-          setAvatarUrl(data.avatar_url);
-        }
-      });
-  }, [user, supabase, reset]);
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    if (data) setProfile(data);
+    setLoading(false);
+  }, [user, supabase]);
+
+  useEffect(() => { loadProfile(); }, [loadProfile]);
+
+  const openEdit = () => {
+    if (!profile) return;
+    setMessage(null);
+    reset({
+      full_name: profile.full_name ?? "",
+      headline: profile.headline ?? "",
+      bio: profile.bio ?? "",
+      location: profile.location ?? "",
+      experience_level: profile.experience_level ?? "",
+    });
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setMessage(null);
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!user) return;
@@ -83,11 +98,13 @@ export default function ProfilePage() {
       })
       .eq("id", user.id);
 
-    setMessage(
-      error
-        ? { type: "error", text: error.message }
-        : { type: "success", text: "Profile updated successfully." }
-    );
+    if (error) {
+      setMessage({ type: "error", text: error.message });
+    } else {
+      await loadProfile();
+      setMessage({ type: "success", text: "Profile updated successfully." });
+      setTimeout(closeDrawer, 900);
+    }
   };
 
   const handleAvatarUpload = useCallback(
@@ -95,9 +112,7 @@ export default function ProfilePage() {
       if (!user || !e.target.files?.[0]) return;
       const file = e.target.files[0];
       const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
 
       if (error) {
         setMessage({ type: "error", text: "Failed to upload avatar." });
@@ -106,10 +121,10 @@ export default function ProfilePage() {
 
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
       await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", user.id);
-      setAvatarUrl(urlData.publicUrl);
+      await loadProfile();
       setMessage({ type: "success", text: "Avatar updated." });
     },
-    [user, supabase]
+    [user, supabase, loadProfile]
   );
 
   const handleCvUpload = useCallback(
@@ -121,9 +136,7 @@ export default function ProfilePage() {
         return;
       }
       const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage
-        .from("cvs")
-        .upload(path, file, { upsert: true });
+      const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
 
       if (error) {
         setMessage({ type: "error", text: "Failed to upload CV." });
@@ -139,33 +152,115 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Typography variant="h3" sx={{ mb: 3 }}>
-        Edit Profile
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Typography variant="h3">Profile</Typography>
+        <Button variant="contained" startIcon={<EditIcon />} onClick={openEdit} disabled={loading}>
+          Edit Profile
+        </Button>
+      </Stack>
 
-      {message && (
-        <Alert severity={message.type} sx={{ mb: 3 }}>
-          {message.text}
-        </Alert>
-      )}
+      {loading ? (
+        <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
+          <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 3 }}>
+            <Skeleton variant="circular" width={80} height={80} />
+            <Box sx={{ flex: 1 }}>
+              <Skeleton variant="text" width="40%" height={32} />
+              <Skeleton variant="text" width="60%" />
+            </Box>
+          </Stack>
+          <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 1 }} />
+        </Paper>
+      ) : profile ? (
+        <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
+          <Stack direction="row" spacing={3} alignItems="flex-start">
+            <Box sx={{ position: "relative" }}>
+              <Avatar src={profile.avatar_url ?? undefined} sx={{ width: 80, height: 80 }}>
+                <PersonIcon />
+              </Avatar>
+              <IconButton
+                component="label"
+                size="small"
+                sx={{
+                  position: "absolute",
+                  bottom: -4,
+                  right: -4,
+                  bgcolor: "background.paper",
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+                title="Change avatar"
+              >
+                <EditIcon fontSize="inherit" />
+                <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} />
+              </IconButton>
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="h5" fontWeight={700}>
+                {profile.full_name ?? user?.email ?? "Unknown"}
+              </Typography>
+              {profile.headline && (
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                  {profile.headline}
+                </Typography>
+              )}
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {profile.location && <Chip size="small" label={profile.location} />}
+                {profile.experience_level && (
+                  <Chip
+                    size="small"
+                    label={experienceLevelLabels[profile.experience_level as keyof typeof experienceLevelLabels] ?? profile.experience_level}
+                    color="primary"
+                    variant="outlined"
+                  />
+                )}
+              </Stack>
+            </Box>
+          </Stack>
 
-      <Paper sx={{ p: 3, mb: 3, border: "1px solid", borderColor: "divider" }}>
-        <Stack direction="row" spacing={3} alignItems="center" sx={{ mb: 3 }}>
-          <Avatar src={avatarUrl ?? undefined} sx={{ width: 80, height: 80 }} />
-          <Box>
-            <Button variant="outlined" component="label" size="small">
-              Upload Avatar
-              <input type="file" hidden accept="image/*" onChange={handleAvatarUpload} />
-            </Button>
+          {profile.bio && (
+            <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
+                {profile.bio}
+              </Typography>
+            </Box>
+          )}
+
+          <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              CV / Resume
+            </Typography>
+            {profile.cv_url ? (
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Typography variant="body2" color="text.secondary">CV uploaded</Typography>
+                <Button variant="outlined" size="small" component="label">
+                  Replace
+                  <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
+                </Button>
+              </Stack>
+            ) : (
+              <Button variant="outlined" size="small" component="label">
+                Upload CV (PDF, max 5MB)
+                <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
+              </Button>
+            )}
           </Box>
-        </Stack>
+        </Paper>
+      ) : null}
 
+      <EditSideDrawer
+        open={drawerOpen}
+        onClose={closeDrawer}
+        title="Edit Profile"
+        message={message}
+        onMessageClose={() => setMessage(null)}
+      >
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2.5}>
             <TextField
               {...register("full_name")}
               label="Full Name"
               fullWidth
+              required
               error={!!errors.full_name}
               helperText={errors.full_name?.message}
             />
@@ -196,35 +291,21 @@ export default function ProfilePage() {
                   <Select {...field} label="Experience Level" value={field.value ?? ""}>
                     <MenuItem value="">Not specified</MenuItem>
                     {Object.entries(experienceLevelLabels).map(([val, label]) => (
-                      <MenuItem key={val} value={val}>
-                        {label}
-                      </MenuItem>
+                      <MenuItem key={val} value={val}>{label}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               )}
             />
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isSubmitting}
-              sx={{ alignSelf: "flex-start", px: 4 }}
-            >
-              {isSubmitting ? "Saving..." : "Save Profile"}
-            </Button>
+            <Stack direction="row" spacing={2}>
+              <Button type="submit" variant="contained" disabled={isSubmitting} sx={{ px: 4 }}>
+                {isSubmitting ? "Saving..." : "Save Profile"}
+              </Button>
+              <Button variant="outlined" onClick={closeDrawer}>Cancel</Button>
+            </Stack>
           </Stack>
         </Box>
-      </Paper>
-
-      <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          CV / Resume
-        </Typography>
-        <Button variant="outlined" component="label">
-          Upload CV (PDF, max 5MB)
-          <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
-        </Button>
-      </Paper>
+      </EditSideDrawer>
     </>
   );
 }

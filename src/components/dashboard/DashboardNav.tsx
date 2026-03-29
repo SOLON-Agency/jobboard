@@ -23,7 +23,7 @@ const navItems = [
   { label: "Overview", href: "/dashboard", icon: <DashboardIcon /> },
   { label: "Profile", href: "/dashboard/profile", icon: <PersonIcon /> },
   { label: "Company", href: "/dashboard/company", icon: <BusinessIcon /> },
-  { label: "Jobs", href: "/dashboard/company/jobs", icon: <WorkIcon /> },
+  { label: "Jobs", href: "/dashboard/jobs", icon: <WorkIcon /> },
   { label: "Applications", href: "/dashboard/applications", icon: <DescriptionIcon /> },
   { label: "Messages", href: "/dashboard/messages", icon: <ChatIcon /> },
   { label: "Alerts", href: "/dashboard/alerts", icon: <NotificationsIcon /> },

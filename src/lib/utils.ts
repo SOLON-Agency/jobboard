@@ -1,3 +1,34 @@
+interface SupabaseErrorLike {
+  code?: string;
+  message?: string;
+}
+
+const CONSTRAINT_MESSAGES: Record<string, string> = {
+  companies_slug_key: "A company with this name already exists. Please choose a different name.",
+  companies_pkey: "This company already exists.",
+  company_users_pkey: "This user is already a member of the company.",
+  job_listings_pkey: "This job listing already exists.",
+};
+
+const PG_CODE_MESSAGES: Record<string, string> = {
+  "23505": "A record with this information already exists.",
+  "23503": "This operation references a record that doesn't exist.",
+  "23502": "A required field is missing.",
+  "42501": "You don't have permission to perform this action.",
+};
+
+export const parseSupabaseError = (err: unknown): string => {
+  if (!err || typeof err !== "object") return "Something went wrong. Please try again.";
+  const { code, message } = err as SupabaseErrorLike;
+  if (message) {
+    for (const [constraint, friendly] of Object.entries(CONSTRAINT_MESSAGES)) {
+      if (message.includes(constraint)) return friendly;
+    }
+  }
+  if (code && code in PG_CODE_MESSAGES) return PG_CODE_MESSAGES[code];
+  return "Something went wrong. Please try again.";
+};
+
 export const slugify = (text: string): string =>
   text
     .toLowerCase()

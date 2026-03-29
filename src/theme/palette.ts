@@ -1,4 +1,4 @@
-export const sharedPalette = {
+export const lightPalette = {
   primary: {
     main: "#00c2d1",
     light: "#33d4e0",
@@ -23,30 +23,6 @@ export const sharedPalette = {
   info: {
     main: "#3b82f6",
   },
-} as const;
-
-export const darkPalette = {
-  ...sharedPalette,
-  primary: {
-    main: "#00f0ff",
-    light: "#67f7ff",
-    dark: "#00b8c4",
-    contrastText: "#0a0e1a",
-  },
-  background: {
-    default: "#0a0e1a",
-    paper: "#111827",
-  },
-  text: {
-    primary: "#e2e8f0",
-    secondary: "#94a3b8",
-    disabled: "#475569",
-  },
-  divider: "rgba(226, 232, 240, 0.08)",
-} as const;
-
-export const lightPalette = {
-  ...sharedPalette,
   background: {
     default: "#f8fafc",
     paper: "#ffffff",

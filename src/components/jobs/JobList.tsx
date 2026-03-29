@@ -93,14 +93,14 @@ export const JobList: React.FC = () => {
 
   return (
     <>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      {/* <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {count} job{count !== 1 ? "s" : ""} found
-      </Typography>
+      </Typography> */}
 
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" },
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
           gap: 2,
         }}
       >

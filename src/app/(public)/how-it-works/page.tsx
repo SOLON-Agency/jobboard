@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Container, Typography, Box, Stack, Paper, useTheme } from "@mui/material";
+import { Container, Typography, Box, Stack, Paper } from "@mui/material";
 
 const steps = [
   {
@@ -30,17 +30,10 @@ const steps = [
   },
 ];
 
+const numberGradient = "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)";
+const badgeBg = "linear-gradient(135deg, rgba(0,194,209,0.12) 0%, rgba(123,47,247,0.12) 100%)";
+
 export default function HowItWorksPage() {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-
-  const numberGradient = isDark
-    ? "linear-gradient(135deg, #00f0ff 0%, #7b2ff7 100%)"
-    : "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)";
-
-  const badgeBg = isDark
-    ? "linear-gradient(135deg, rgba(0,240,255,0.15) 0%, rgba(123,47,247,0.15) 100%)"
-    : "linear-gradient(135deg, rgba(0,194,209,0.12) 0%, rgba(123,47,247,0.12) 100%)";
 
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>

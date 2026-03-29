@@ -98,6 +98,36 @@ export const getUserCompanies = async (
   return data ?? [];
 };
 
+export type CompanyWithJobCount = Tables<"companies"> & {
+  role: Database["public"]["Enums"]["company_role"];
+  jobCount: number;
+};
+
+export const getUserCompaniesWithJobCount = async (
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<CompanyWithJobCount[]> => {
+  const { data, error } = await supabase
+    .from("company_users")
+    .select("role, companies(*, job_listings(count))")
+    .eq("user_id", userId)
+    .not("accepted_at", "is", null);
+
+  if (error) throw error;
+
+  return (data ?? []).flatMap((row) => {
+    if (!row.companies) return [];
+    const company = row.companies as Tables<"companies"> & {
+      job_listings: { count: number }[];
+    };
+    return [{
+      ...company,
+      role: row.role,
+      jobCount: company.job_listings?.[0]?.count ?? 0,
+    }];
+  });
+};
+
 export const getCompanyMembers = async (
   supabase: SupabaseClient<Database>,
   companyId: string

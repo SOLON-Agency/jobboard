@@ -16,15 +16,12 @@ export default function JobsPage() {
       <Typography variant="h2" sx={{ mb: 1 }}>
         Browse Jobs
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Discover your next legal career opportunity
-      </Typography>
 
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "280px 1fr" },
-          gap: 3,
+          gridTemplateColumns: { xs: "1fr", md: "260px 1fr" },
+          gap: { xs: 2, md: 3 },
           alignItems: "start",
         }}
       >

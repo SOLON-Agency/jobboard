@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Typography, Paper, Stack, Box } from "@mui/material";
+import { Typography, Paper, Stack } from "@mui/material";
 import { GradientText } from "@/components/dashboard/GradientText";
 
 export default async function DashboardPage() {

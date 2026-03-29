@@ -20,17 +20,13 @@ import {
   Menu,
   MenuItem,
   Divider,
-  Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useAuth } from "@/hooks/useAuth";
-import { useColorMode } from "@/theme/ColorModeContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 const navLinks = [
@@ -44,7 +40,6 @@ export const Navbar: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { user, signOut } = useAuth();
-  const { mode, toggleColorMode } = useColorMode();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -57,12 +52,8 @@ export const Navbar: React.FC = () => {
   const handleSignOut = async () => {
     handleMenuClose();
     await signOut();
+    window.location.href = "/";
   };
-
-  const brandGradient =
-    mode === "dark"
-      ? "linear-gradient(135deg, #00f0ff 0%, #7b2ff7 100%)"
-      : "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)";
 
   return (
     <>
@@ -85,7 +76,7 @@ export const Navbar: React.FC = () => {
               variant="h6"
               sx={{
                 fontWeight: 800,
-                background: brandGradient,
+                background: "linear-gradient(135deg, #00c2d1 0%, #7b2ff7 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 letterSpacing: "-0.02em",
@@ -111,16 +102,6 @@ export const Navbar: React.FC = () => {
           )}
 
           <Box sx={{ flexGrow: isMobile ? 1 : 0 }} />
-
-          <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-            <IconButton onClick={toggleColorMode} size="small" sx={{ mr: 1 }}>
-              {mode === "dark" ? (
-                <LightModeIcon sx={{ fontSize: 20 }} />
-              ) : (
-                <DarkModeIcon sx={{ fontSize: 20 }} />
-              )}
-            </IconButton>
-          </Tooltip>
 
           {!isMobile && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -198,19 +179,6 @@ export const Navbar: React.FC = () => {
               </ListItemButton>
             </ListItem>
           ))}
-          <Divider sx={{ my: 1 }} />
-          <ListItem disablePadding>
-            <ListItemButton onClick={toggleColorMode}>
-              <ListItemText
-                primary={mode === "dark" ? "Light Mode" : "Dark Mode"}
-              />
-              {mode === "dark" ? (
-                <LightModeIcon sx={{ fontSize: 20, color: "text.secondary" }} />
-              ) : (
-                <DarkModeIcon sx={{ fontSize: 20, color: "text.secondary" }} />
-              )}
-            </ListItemButton>
-          </ListItem>
           <Divider sx={{ my: 1 }} />
           {user ? (
             <>

@@ -48,21 +48,32 @@ export const JobCard: React.FC<JobCardProps> = ({
       href={`/jobs/${job.slug}`}
       sx={{ textDecoration: "none", color: "inherit", flexGrow: 1, p: 3 }}
     >
-      <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ mb: 2 }}>
+      <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mb: 2 }}>
         <Avatar
           src={job.companies?.logo_url ?? undefined}
           sx={{
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
+            flexShrink: 0,
             bgcolor: "background.default",
             border: "1px solid",
             borderColor: "divider",
           }}
         >
-          <WorkOutlineIcon sx={{ color: "text.secondary" }} />
+          <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 20 }} />
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" noWrap>
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            sx={{
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              lineHeight: 1.3,
+            }}
+          >
             {job.title}
           </Typography>
           <Typography variant="body2" color="text.secondary" noWrap>

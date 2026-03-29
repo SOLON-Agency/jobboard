@@ -1,8 +1,6 @@
-"use client";
-
 import { createTheme } from "@mui/material/styles";
-import { darkPalette, lightPalette } from "./palette";
-import { getComponents } from "./components";
+import { lightPalette } from "./palette";
+import { components } from "./components";
 
 const typography = {
   fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -19,13 +17,12 @@ const typography = {
 
 const shape = { borderRadius: 8 };
 
-export const buildTheme = (mode: "light" | "dark") =>
-  createTheme({
-    palette: {
-      mode,
-      ...(mode === "dark" ? darkPalette : lightPalette),
-    },
-    typography,
-    shape,
-    components: getComponents(mode),
-  });
+export const theme = createTheme({
+  palette: {
+    mode: "light",
+    ...lightPalette,
+  },
+  typography,
+  shape,
+  components,
+});

@@ -116,6 +116,35 @@ supabase/
   functions/        # Edge Functions (scrape-jobs)
 ```
 
+## UI Conventions
+
+### Create & Edit — Right-Side Drawer
+
+All create and edit flows in the dashboard use a right-side `EditSideDrawer` (`src/components/layout/EditSideDrawer.tsx`) instead of separate pages or inline forms.
+
+**Rule:** Whenever a user triggers a create or edit action on any entity (company, job listing, profile, etc.), open the `EditSideDrawer` with the relevant form inside.
+
+```tsx
+import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
+
+<EditSideDrawer
+  open={drawerOpen}
+  onClose={closeDrawer}
+  title="Edit Company"
+  message={message}
+  onMessageClose={() => setMessage(null)}
+>
+  <YourForm onSubmit={handleSubmit(onSubmit)} />
+</EditSideDrawer>
+```
+
+**Pattern used across:**
+- `dashboard/company/page.tsx` — create & edit company
+- `dashboard/jobs/page.tsx` — create & edit job listings
+- `dashboard/profile/page.tsx` — edit profile
+
+**Do not create separate `/new` or `/[id]/edit` pages** for entities managed in the dashboard. Redirect any such routes back to the parent listing page.
+
 ## Deployment
 
 Deploy to Vercel:

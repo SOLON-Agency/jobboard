@@ -41,7 +41,7 @@ const features = [
 ];
 
 export const FeaturesSection: React.FC = () => (
-  <Container maxWidth="lg" sx={{ pb: 12 }}>
+  <Container maxWidth="lg" sx={{ pb: 10 }}>
     <Box
       sx={{
         display: "grid",
@@ -51,6 +51,7 @@ export const FeaturesSection: React.FC = () => (
           md: "repeat(4, 1fr)",
         },
         gap: 3,
+        mb: 6
       }}
     >
       {features.map((feature) => (

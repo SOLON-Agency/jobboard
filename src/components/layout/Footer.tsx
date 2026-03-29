@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Box, Container, Typography, Stack, Divider, useTheme } from "@mui/material";
+import { Box, Container, Typography, Stack, useTheme } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 
 const footerLinks = [
@@ -22,11 +22,16 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        mt: "auto",
-        pt: 6,
-        pb: 4,
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: "appBar",
+        bgcolor: "background.paper",
         borderTop: "1px solid",
         borderColor: "divider",
+        pt: 3,
+        pb: 2,
       }}
     >
       <Container maxWidth="lg">
@@ -70,11 +75,6 @@ export const Footer: React.FC = () => {
           </Stack>
         </Stack>
 
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="body2" color="text.secondary" textAlign="center">
-          &copy; {new Date().getFullYear()} LegalJobs. All rights reserved.
-        </Typography>
       </Container>
     </Box>
   );
