@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 export default function JobsPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h2" sx={{ mb: 1 }}>
+      {/* <Typography variant="h2" sx={{ mb: 1 }}>
         Browse Jobs
-      </Typography>
+      </Typography> */}
 
       <Box
         sx={{

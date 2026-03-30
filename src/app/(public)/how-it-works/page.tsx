@@ -6,27 +6,27 @@ import { Container, Typography, Box, Stack, Paper } from "@mui/material";
 const steps = [
   {
     number: "01",
-    title: "Create Your Profile",
+    title: "Creează-ți profilul",
     description:
-      "Sign up, upload your CV, and fill in your experience details. Your profile helps employers understand your qualifications at a glance.",
+      "Înregistrează-te, încarcă CV-ul și completează-ți experiența profesională. Profilul tău îi ajută pe angajatori să îți înțeleagă calificările dintr-o privire.",
   },
   {
     number: "02",
-    title: "Browse & Search Jobs",
+    title: "Caută și explorează joburi",
     description:
-      "Use our powerful search and filter system to find positions that match your skills, location, and salary expectations.",
+      "Folosește sistemul nostru avansat de căutare și filtrare pentru a găsi pozițiile care se potrivesc cu abilitățile, locația și așteptările tale salariale.",
   },
   {
     number: "03",
-    title: "Apply Directly",
+    title: "Aplică direct",
     description:
-      "Apply with one click using your saved profile, or fill out custom application forms. Track all your applications from your dashboard.",
+      "Aplică cu un singur click folosind profilul salvat sau completează formulare de candidatură personalizate. Urmărește toate aplicațiile din dashboard.",
   },
   {
     number: "04",
-    title: "Set Up Alerts",
+    title: "Configurează alerte",
     description:
-      "Save your search filters as alerts and receive notifications when new matching positions are posted.",
+      "Salvează filtrele de căutare ca alerte și primește notificări când apar noi poziții care corespund criteriilor tale.",
   },
 ];
 
@@ -38,14 +38,14 @@ export default function HowItWorksPage() {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Typography variant="h2" sx={{ mb: 2, textAlign: "center" }}>
-        How It Works
+        Cum funcționează
       </Typography>
       <Typography
         variant="body1"
         color="text.secondary"
         sx={{ mb: 6, textAlign: "center", maxWidth: 500, mx: "auto" }}
       >
-        Finding your next legal career opportunity is simple.
+        Găsirea următoarei oportunități în cariera ta juridică este simplă.
       </Typography>
 
       <Stack spacing={4}>

@@ -6,8 +6,13 @@
     "salaryMax": 30000
   },
   "features": {
+    "forms": false,
+    "alerts": false,
+    "messages": false,
+    "notifications": false,
     "favouriteJobs": false,
     "favouriteCompanies": true
+
   },
   "brand": {
     "primary": "#03170C",

@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import appSettings from "@/config/app.settings.json";
 
 const CREAM = "#F0EBD8";
 const CREAM_MUTED = "rgba(240, 235, 216, 0.65)";
@@ -182,10 +183,10 @@ export const Navbar: React.FC = () => {
                   >
                     Dashboard
                   </Button>
-                  <IconButton sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
+                  {appSettings.features.notifications && <IconButton sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
                     <NotificationsOutlinedIcon />
-                  </IconButton>
-                  <IconButton
+                  </IconButton>}  
+                  {appSettings.features.messages && <IconButton
                     component={Link}
                     href="/dashboard/messages"
                     size="small"
@@ -193,7 +194,7 @@ export const Navbar: React.FC = () => {
                     sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}
                   >
                     <ChatIcon fontSize="small" />
-                  </IconButton>
+                  </IconButton>}
                   <IconButton onClick={handleMenuOpen}>
                     <Avatar
                       src={avatarUrl ?? undefined}

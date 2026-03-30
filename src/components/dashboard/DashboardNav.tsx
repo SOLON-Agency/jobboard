@@ -18,15 +18,18 @@ import WorkIcon from "@mui/icons-material/Work";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ChatIcon from "@mui/icons-material/Chat";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import appSettings from "@/config/app.settings.json";
+import EditDocumentIcon from "@mui/icons-material/EditDocument";
 
 const navItems = [
-  { label: "Prezentare generală", href: "/dashboard", icon: <DashboardIcon /> },
-  { label: "Profil", href: "/dashboard/profile", icon: <PersonIcon /> },
-  { label: "Companii", href: "/dashboard/company", icon: <BusinessIcon /> },
-  { label: "Anunțuri", href: "/dashboard/jobs", icon: <WorkIcon /> },
+  { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
+  { label: "Profilul meu", href: "/dashboard/profile", icon: <PersonIcon /> },
+  { label: "Companiile mele", href: "/dashboard/company", icon: <BusinessIcon /> },
+  { label: "Anunțurile mele", href: "/dashboard/jobs", icon: <WorkIcon /> },
   { label: "Aplicațiile mele", href: "/dashboard/applications", icon: <DescriptionIcon /> },
-  { label: "Mesaje", href: "/dashboard/messages", icon: <ChatIcon /> },
-  { label: "Alerte", href: "/dashboard/alerts", icon: <NotificationsIcon /> },
+  ...(appSettings.features.forms ? [{ label: "Formularele mele", href: "/dashboard/forms", icon: <EditDocumentIcon /> }] : []),
+  ...(appSettings.features.messages ? [{ label: "Mesaje", href: "/dashboard/messages", icon: <ChatIcon /> }] : []),
+  ...(appSettings.features.alerts ? [{ label: "Alerte", href: "/dashboard/alerts", icon: <NotificationsIcon /> }] : []),
 ];
 
 export const DashboardNav: React.FC = () => {
