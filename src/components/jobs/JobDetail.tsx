@@ -32,7 +32,9 @@ import {
   experienceLevelLabels,
 } from "@/lib/utils";
 import { JobTags } from "@/components/jobs/JobTags";
+import { ApplyButton } from "@/components/jobs/ApplyButton";
 import appSettings from "@/config/app.settings.json";
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 type JobWithCompany = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;
@@ -99,30 +101,14 @@ export const JobDetail: React.FC<JobDetailProps> = ({
   const isHtml = job.description?.trimStart().startsWith("<");
   const sections = isHtml ? parseSections(job.description ?? "") : null;
 
-  const applyButton = job.application_url ? (
-    <Button
-      variant="contained"
+  const applyButton = (
+    <ApplyButton
+      job={job}
+      label="Aplică acum"
       size="large"
-      href={job.application_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      endIcon={<OpenInNewIcon />}
       fullWidth
-      sx={{ borderRadius: 5, py: 1.5, fontWeight: 700, fontSize: "1rem" }}
-    >
-      Aplică acum
-    </Button>
-  ) : (
-    <Button
-      variant="contained"
-      size="large"
-      component={Link}
-      href={`/jobs/${job.slug}#apply`}
-      fullWidth
-      sx={{ borderRadius: 5, py: 1.5, fontWeight: 700, fontSize: "1rem" }}
-    >
-      Aplică acum
-    </Button>
+      sx={{ py: 1.5, fontSize: "1rem" }}
+    />
   );
 
   return (
@@ -201,67 +187,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               </IconButton>
             </Tooltip>
 
-            {/* Apply — desktop: text button; mobile: icon only */}
-            {job.application_url ? (
-              <>
-                <Button
-                  variant="contained"
-                  size="medium"
-                  component="a"
-                  href={job.application_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  endIcon={<OpenInNewIcon />}
-                  sx={{ borderRadius: 2, display: { xs: "none", sm: "inline-flex" } }}
-                >
-                  Aplicăa
-                </Button>
-                <Tooltip title="Aplică">
-                  <IconButton
-                    component="a"
-                    href={job.application_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    size="small"
-                    sx={{
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
-                      "&:hover": { bgcolor: "primary.dark" },
-                      display: { xs: "inline-flex", sm: "none" },
-                    }}
-                  >
-                    <SendOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="contained"
-                  size="medium"
-                  component={Link}
-                  href={`/jobs/${job.slug}#apply`}
-                  sx={{ borderRadius: 2, display: { xs: "none", sm: "inline-flex" } }}
-                >
-                  Aplicăa
-                </Button>
-                <Tooltip title="Aplică">
-                  <IconButton
-                    component={Link}
-                    href={`/jobs/${job.slug}#apply`}
-                    size="small"
-                    sx={{
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
-                      "&:hover": { bgcolor: "primary.dark" },
-                      display: { xs: "inline-flex", sm: "none" },
-                    }}
-                  >
-                    Aplică
-                  </IconButton>
-                </Tooltip>
-              </>
-            )}
+            {/* Apply */}
+            <ApplyButton job={job} size="medium" sx={{ borderRadius: 2 }} />
           </Stack>
         </Stack>
 

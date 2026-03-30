@@ -27,6 +27,7 @@ const navItems = [
   { label: "Companiile mele", href: "/dashboard/company", icon: <BusinessIcon /> },
   { label: "Anunțurile mele", href: "/dashboard/jobs", icon: <WorkIcon /> },
   { label: "Aplicațiile mele", href: "/dashboard/applications", icon: <DescriptionIcon /> },
+  
   ...(appSettings.features.forms ? [{ label: "Formularele mele", href: "/dashboard/forms", icon: <EditDocumentIcon /> }] : []),
   ...(appSettings.features.messages ? [{ label: "Mesaje", href: "/dashboard/messages", icon: <ChatIcon /> }] : []),
   ...(appSettings.features.alerts ? [{ label: "Alerte", href: "/dashboard/alerts", icon: <NotificationsIcon /> }] : []),

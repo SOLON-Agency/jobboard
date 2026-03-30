@@ -1,92 +1,222 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Typography,
-  Paper,
-  Chip,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Box,
+  Chip,
+  Collapse,
+  IconButton,
+  Paper,
+  Skeleton,
+  Stack,
+  Typography,
 } from "@mui/material";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getUserApplications } from "@/services/applications.service";
 import { formatDate } from "@/lib/utils";
+import type { Tables } from "@/types/database";
+import type { Json } from "@/types/database";
 
-const statusColor: Record<string, "default" | "info" | "success" | "error"> = {
+type Application = Tables<"applications"> & {
+  job_listings: (Tables<"job_listings"> & { companies: Tables<"companies"> | null }) | null;
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "În așteptare",
+  reviewing: "În revizuire",
+  interview: "Interviu",
+  accepted: "Acceptat",
+  rejected: "Respins",
+};
+
+const STATUS_COLOR: Record<string, "default" | "warning" | "info" | "success" | "error"> = {
   pending: "default",
-  reviewed: "info",
-  shortlisted: "success",
+  reviewing: "warning",
+  interview: "info",
+  accepted: "success",
   rejected: "error",
 };
 
 export default function ApplicationsPage() {
   const { user } = useAuth();
   const supabase = useSupabase();
-  const [applications, setApplications] = useState<Awaited<ReturnType<typeof getUserApplications>>>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const load = useCallback(async () => {
     if (!user) return;
-    getUserApplications(supabase, user.id)
-      .then(setApplications)
-      .finally(() => setLoading(false));
+    const data = await getUserApplications(supabase, user.id);
+    setApplications(data as Application[]);
+    setLoading(false);
   }, [user, supabase]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const formDataEntries = (raw: Json | null): [string, string][] => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+    return Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, String(v ?? "")]);
+  };
 
   return (
     <>
-      <Typography variant="h3" sx={{ mb: 3 }}>
-        My Applications
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={700}>Aplicațiile mele</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Toate candidaturile trimise de tine.
+          </Typography>
+        </Box>
+      </Stack>
 
-      {loading ? null : applications.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: "center", border: "1px solid", borderColor: "divider" }}>
-          <Typography color="text.secondary">
-            You haven&apos;t applied to any jobs yet.
+      {/* Loading */}
+      {loading && (
+        <Stack spacing={1.5}>
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} variant="rounded" height={80} sx={{ borderRadius: 2 }} />
+          ))}
+        </Stack>
+      )}
+
+      {/* Empty state */}
+      {!loading && applications.length === 0 && (
+        <Paper
+          sx={{ p: 6, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 2 }}
+        >
+          <SendOutlinedIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
+          <Typography variant="h6" sx={{ mb: 0.5 }}>Nicio aplicație</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Nu ai trimis nicio candidatură încă. Răsfoiește locurile de muncă disponibile.
           </Typography>
         </Paper>
-      ) : (
-        <TableContainer component={Paper} sx={{ border: "1px solid", borderColor: "divider" }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Job</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Applied</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {applications.map((app) => (
-                <TableRow key={app.id} hover>
-                  <TableCell>
-                    <Box
-                      component={Link}
-                      href={`/jobs/${(app.job_listings as Record<string, unknown>)?.slug ?? ""}`}
-                      sx={{ textDecoration: "none", color: "primary.main" }}
-                    >
-                      <Typography variant="body2" fontWeight={600}>
-                        {(app.job_listings as Record<string, unknown>)?.title as string ?? "Job"}
+      )}
+
+      {/* Applications list */}
+      {!loading && applications.length > 0 && (
+        <Stack spacing={1.5}>
+          {applications.map((app) => {
+            const job = app.job_listings;
+            const isExpanded = expanded.has(app.id);
+            const entries = formDataEntries(app.form_data);
+
+            return (
+              <Paper
+                key={app.id}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  transition: "border-color 0.2s",
+                  "&:hover": { borderColor: "primary.main" },
+                }}
+              >
+                {/* Summary row */}
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={2}
+                  sx={{ px: 3, py: 2, cursor: entries.length > 0 ? "pointer" : "default" }}
+                  onClick={() => entries.length > 0 && toggle(app.id)}
+                >
+                  <WorkOutlineIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
+
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    {job ? (
+                      <Typography
+                        component={Link}
+                        href={`/jobs/${job.slug}`}
+                        variant="subtitle2"
+                        fontWeight={700}
+                        noWrap
+                        sx={{ textDecoration: "none", color: "text.primary", "&:hover": { color: "primary.main" } }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {job.title}
                       </Typography>
+                    ) : (
+                      <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+                        Loc de muncă șters
+                      </Typography>
+                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      {job?.companies?.name ?? "—"} • {formatDate(app.applied_at)}
+                    </Typography>
+                  </Box>
+
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+                    <Chip
+                      label={STATUS_LABEL[app.status] ?? app.status}
+                      size="small"
+                      color={STATUS_COLOR[app.status] ?? "default"}
+                      sx={{ fontWeight: 600, fontSize: "0.7rem" }}
+                    />
+                    {entries.length > 0 && (
+                      <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggle(app.id); }}>
+                        {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                      </IconButton>
+                    )}
+                  </Stack>
+                </Stack>
+
+                {/* Expandable form data */}
+                {entries.length > 0 && (
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Box
+                      sx={{
+                        px: 3,
+                        pb: 2.5,
+                        pt: 0.5,
+                        borderTop: "1px solid",
+                        borderColor: "divider",
+                        bgcolor: "action.hover",
+                      }}
+                    >
+                      <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+                        Răspunsuri formular
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
+                          gap: 1.5,
+                        }}
+                      >
+                        {entries.map(([label, value]) => (
+                          <Box key={label}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                              {label}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{ wordBreak: "break-word", fontWeight: 500 }}
+                            >
+                              {value || "—"}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
                     </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={app.status} size="small" color={statusColor[app.status]} />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption">{formatDate(app.applied_at)}</Typography>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                  </Collapse>
+                )}
+              </Paper>
+            );
+          })}
+        </Stack>
       )}
     </>
   );

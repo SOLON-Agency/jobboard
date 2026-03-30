@@ -89,15 +89,15 @@ export const timeAgo = (date: string): string => {
 };
 
 export const jobTypeLabels: Record<string, string> = {
-  "full-time": "Normă întreagă",
-  "part-time": "Normă parțială",
-  contract: "Contract",
-  internship: "Stagiu",
+  "full-time": "Fulltime",
+  "part-time": "Parttime",
+  contract: "Colaborator",
+  internship: "Practică",
   freelance: "Freelance",
 };
 
 export const experienceLevelLabels: Record<string, string> = {
-  entry: "Nivel de intrare",
+  entry: "Junior",
   mid: "Nivel mediu",
   senior: "Senior",
   lead: "Lider",

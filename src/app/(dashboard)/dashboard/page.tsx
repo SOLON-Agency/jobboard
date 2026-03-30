@@ -1,70 +1,140 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Typography, Paper, Stack } from "@mui/material";
-import { GradientText } from "@/components/dashboard/GradientText";
+import { DashboardContent } from "@/components/dashboard/DashboardContent";
+import type { DashboardStats } from "@/components/dashboard/DashboardContent";
+
+// Groups an array of ISO date strings into monthly buckets for the last N months.
+function groupByMonth(dates: (string | null)[], months = 6): { month: string; count: number }[] {
+  const now = new Date();
+  return Array.from({ length: months }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
+    const label = d.toLocaleDateString("ro-RO", { month: "short" });
+    const count = dates.filter((date) => {
+      if (!date) return false;
+      const dd = new Date(date);
+      return dd.getFullYear() === d.getFullYear() && dd.getMonth() === d.getMonth();
+    }).length;
+    return { month: label, count };
+  });
+}
+
+const APP_STATUS_LABELS: Record<string, string> = {
+  pending: "În așteptare",
+  reviewing: "În revizuire",
+  interview: "Interviu",
+  accepted: "Acceptat",
+  rejected: "Respins",
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+  // ── Fetch user context ────────────────────────────────────────────────────
+  const [{ data: profile }, { data: companyUsers }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase.from("company_users").select("company_id").eq("user_id", user.id),
+  ]);
 
-  const { count: applicationCount } = await supabase
-    .from("applications")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
+  const companyIds = companyUsers?.map((c) => c.company_id) ?? [];
 
-  const { count: favoriteCount } = await supabase
-    .from("favorites")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id);
+  // ── Parallel fetches ──────────────────────────────────────────────────────
+  const [
+    jobsRes,
+    appsSentRes,
+    savedCompaniesRes,
+    formsRes,
+  ] = await Promise.all([
+    companyIds.length > 0
+      ? supabase.from("job_listings").select("id, status, created_at").in("company_id", companyIds)
+      : Promise.resolve({ data: [] as { id: string; status: string; created_at: string }[] }),
 
-  const stats = [
-    { label: "Aplicații", value: applicationCount ?? 0 },
-    { label: "Locuri de muncă salvate", value: favoriteCount ?? 0 },
-  ];
+    supabase.from("applications").select("applied_at, status").eq("user_id", user.id),
 
-  return (
-    <>
-      <Typography variant="h3" sx={{ mb: 3 }}>
-        Bine ai revenit{profile?.full_name ? `, ${profile.full_name}` : ""}
-      </Typography>
+    supabase.from("favorites").select("id", { count: "exact", head: true }).eq("user_id", user.id),
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 4 }}>
-        {stats.map((stat) => (
-          <Paper
-            key={stat.label}
-            sx={{
-              p: 3,
-              flex: 1,
-              border: "1px solid",
-              borderColor: "divider",
-              textAlign: "center",
-            }}
-          >
-            <GradientText variant="h2">
-              {stat.value}
-            </GradientText>
-            <Typography variant="body2" color="text.secondary">
-              {stat.label}
-            </Typography>
-          </Paper>
-        ))}
-      </Stack>
+    companyIds.length > 0
+      ? supabase.from("forms").select("id, status").in("company_id", companyIds)
+      : Promise.resolve({ data: [] as { id: string; status: string }[] }),
+  ]);
 
-      <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
-        <Typography variant="h5" sx={{ mb: 1 }}>
-          Acțiuni rapide
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Completează profilul, răsfoiește locuri de muncă și setează alerte pentru a fi la curent cu noile oportunități.
-        </Typography>
-      </Paper>
-    </>
-  );
+  const jobs = jobsRes.data ?? [];
+  const jobIds = jobs.map((j) => j.id);
+  const applicationsSent = appsSentRes.data ?? [];
+  const forms = formsRes.data ?? [];
+  const formIds = forms.map((f) => f.id);
+
+  // Applications received and form responses require job/form IDs first
+  const [appsReceivedRes, formResponsesRes] = await Promise.all([
+    jobIds.length > 0
+      ? supabase.from("applications").select("applied_at").in("job_id", jobIds)
+      : Promise.resolve({ data: [] as { applied_at: string }[] }),
+
+    formIds.length > 0
+      ? supabase.from("form_responses").select("created_at").in("form_id", formIds)
+      : Promise.resolve({ data: [] as { created_at: string }[] }),
+  ]);
+
+  const applicationsReceived = appsReceivedRes.data ?? [];
+  const formResponses = formResponsesRes.data ?? [];
+
+  // ── Aggregate stats ───────────────────────────────────────────────────────
+  const publishedJobs = jobs.filter((j) => j.status === "published").length;
+  const draftJobs = jobs.filter((j) => j.status === "draft").length;
+  const archivedJobs = jobs.filter((j) => j.status === "archived").length;
+
+  const jobsByStatus = [
+    { name: "Publicate", value: publishedJobs },
+    { name: "Ciornă", value: draftJobs },
+    { name: "Arhivate", value: archivedJobs },
+  ].filter((s) => s.value > 0);
+
+  const appStatusMap = applicationsSent.reduce<Record<string, number>>((acc, a) => {
+    const key = a.status ?? "pending";
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const applicationsByStatus = Object.entries(appStatusMap).map(([key, value]) => ({
+    name: APP_STATUS_LABELS[key] ?? key,
+    value,
+  }));
+
+  // Monthly groupings
+  const sentMonths = groupByMonth(applicationsSent.map((a) => a.applied_at));
+  const receivedMonths = groupByMonth(applicationsReceived.map((a) => a.applied_at));
+
+  const activityByMonth = sentMonths.map((m, i) => ({
+    month: m.month,
+    sent: m.count,
+    received: receivedMonths[i]?.count ?? 0,
+  }));
+
+  const formResponsesByMonth = groupByMonth(formResponses.map((r) => r.created_at)).map((m) => ({
+    month: m.month,
+    count: m.count,
+  }));
+
+  // Profile completeness: name + headline + avatar
+  const profileComplete = !!(profile?.full_name && profile?.headline && profile?.avatar_url);
+
+  const stats: DashboardStats = {
+    profileName: profile?.full_name ?? null,
+    profileComplete,
+    publishedJobs,
+    draftJobs,
+    applicationsReceived: applicationsReceived.length,
+    applicationsSent: applicationsSent.length,
+    savedCompanies: savedCompaniesRes.count ?? 0,
+    formsTotal: forms.length,
+    formResponsesTotal: formResponses.length,
+    hasCompanies: companyIds.length > 0,
+    activityByMonth,
+    jobsByStatus,
+    applicationsByStatus,
+    formResponsesByMonth,
+  };
+
+  return <DashboardContent {...stats} />;
 }

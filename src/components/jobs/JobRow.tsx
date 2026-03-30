@@ -18,8 +18,8 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import type { Tables } from "@/types/database";
 import { formatSalary, timeAgo, jobTypeLabels } from "@/lib/utils";
+import { ApplyButton } from "@/components/jobs/ApplyButton";
 import appSettings from "@/config/app.settings.json";
-
 const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary" | "default"> = {
   "full-time":  "success",
   "part-time":  "warning",
@@ -28,16 +28,26 @@ const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary"
   freelance:    "default",
 };
 
+const statusColor: Record<string, "default" | "success" | "warning"> = {
+  draft: "warning",
+  published: "success",
+  archived: "default",
+};
+
 interface JobRowProps {
   job: Tables<"job_listings"> & { companies: Tables<"companies"> | null };
   isFavorite?: boolean;
   onToggleFavorite?: (jobId: string) => void;
+  showStatus?: boolean;
+  actions?: React.ReactNode;
 }
 
 export const JobRow: React.FC<JobRowProps> = ({
   job,
   isFavorite = false,
   onToggleFavorite,
+  showStatus = false,
+  actions,
 }) => (
   <Paper
     sx={{
@@ -110,59 +120,64 @@ export const JobRow: React.FC<JobRowProps> = ({
       </Typography>
     </Box>
 
-    {/* Right side meta — location + salary */}
+    {/* Right side meta — location + salary + optional status */}
     <Box sx={{ display: { xs: "none", md: "block" }, textAlign: "right", flexShrink: 0, minWidth: 140 }}>
-      {job.location && (
-        <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
-          <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {job.location}
-          </Typography>
-        </Stack>
+      {showStatus && (
+        <Chip
+          label={job.status}
+          size="small"
+          color={statusColor[job.status] ?? "default"}
+          sx={{ mb: 0.5 }}
+        />
       )}
+      <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+        <Typography variant="caption" color="text.secondary">
+          {job.published_at ? timeAgo(job.published_at) : ""} {job.location && "în "}
+        </Typography>
+        {job.location && (
+          <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+            <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {job.location}
+            </Typography>
+          </Stack>
+        )}
+      </Stack>
+
       <Typography variant="caption" sx={{ color: "primary.main", fontWeight: 700, display: "block" }}>
         {formatSalary(job.salary_min, job.salary_max)}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
-        {job.published_at ? timeAgo(job.published_at) : "Ciornă"}
-      </Typography>
     </Box>
 
-    {/* Actions */}
-    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
-      {appSettings.features.favouriteJobs && onToggleFavorite && (
-        <IconButton
+    {/* Actions — custom slot or default apply/bookmark */}
+    {actions != null ? (
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+        {actions}
+      </Stack>
+    ) : (
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+        {appSettings.features.favouriteJobs && onToggleFavorite && (
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.preventDefault();
+              onToggleFavorite(job.id);
+            }}
+            sx={{ color: isFavorite ? "primary.main" : "text.secondary" }}
+            title={isFavorite ? "Elimină din favorite" : "Salvează"}
+          >
+            {isFavorite
+              ? <BookmarkIcon fontSize="small" />
+              : <BookmarkBorderIcon fontSize="small" />
+            }
+          </IconButton>
+        )}
+        <ApplyButton
+          job={job}
           size="small"
-          onClick={(e) => {
-            e.preventDefault();
-            onToggleFavorite(job.id);
-          }}
-          sx={{ color: isFavorite ? "primary.main" : "text.secondary" }}
-          title={isFavorite ? "Elimină din favorite" : "Salvează"}
-        >
-          {isFavorite
-            ? <BookmarkIcon fontSize="small" />
-            : <BookmarkBorderIcon fontSize="small" />
-          }
-        </IconButton>
-      )}
-      <Button
-        component={Link}
-        href={`/jobs/${job.slug}`}
-        variant="contained"
-        size="small"
-        sx={{
-          borderRadius: 5,
-          px: 2.5,
-          py: 0.75,
-          fontWeight: 700,
-          fontSize: "0.75rem",
-          whiteSpace: "nowrap",
-          display: { xs: "none", sm: "inline-flex" },
-        }}
-      >
-        Aplică
-      </Button>
-    </Stack>
+          sx={{ px: 2.5, py: 0.75, fontSize: "0.75rem", whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
+        />
+      </Stack>
+    )}
   </Paper>
 );

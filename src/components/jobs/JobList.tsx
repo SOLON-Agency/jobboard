@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   Pagination,
-  CircularProgress,
   Stack,
   Select,
   MenuItem,
@@ -18,6 +17,10 @@ import {
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import PublishIcon from "@mui/icons-material/Publish";
+import ArchiveIcon from "@mui/icons-material/Archive";
 import { JobCard } from "./JobCard";
 import { JobRow } from "./JobRow";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -35,18 +38,57 @@ const SORT_OPTIONS: { value: JobSortOption; label: string }[] = [
   { value: "salary_low",  label: "Salariu: Mic → Mare" },
 ];
 
-export const JobList: React.FC = () => {
+interface JobListProps {
+  /** Controlled mode — pass jobs directly; skips internal fetching */
+  jobs?: JobWithCompany[];
+  /** Override the "jobs found" count shown in the controls bar */
+  totalCount?: number;
+  /** Show sort + view-toggle bar. Defaults to true in uncontrolled mode, false in controlled. */
+  showControls?: boolean;
+  /** Show pagination. Defaults to true in uncontrolled mode, false in controlled. */
+  showPagination?: boolean;
+  /** Enable favourite toggling. Defaults to true in uncontrolled mode, false in controlled. */
+  showFavorites?: boolean;
+  /** Custom empty-state content rendered when the jobs list is empty */
+  emptyState?: React.ReactNode;
+  /** Dashboard action callbacks — when provided, renders icon buttons per row */
+  onEdit?: (job: JobWithCompany) => void;
+  onDuplicate?: (job: JobWithCompany) => void;
+  onStatusChange?: (jobId: string, status: "published" | "archived" | "draft") => void;
+}
+
+export const JobList: React.FC<JobListProps> = ({
+  jobs: controlledJobs,
+  totalCount: controlledCount,
+  showControls,
+  showPagination,
+  showFavorites,
+  emptyState,
+  onEdit,
+  onDuplicate,
+  onStatusChange,
+}) => {
+  const isControlled = controlledJobs !== undefined;
+
   const supabase    = useSupabase();
   const { user }    = useAuth();
   const router      = useRouter();
   const pathname    = usePathname();
   const searchParams = useSearchParams();
 
-  const [jobs, setJobs]             = useState<JobWithCompany[]>([]);
-  const [count, setCount]           = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading]       = useState(true);
-  const [favorites, setFavorites]   = useState<Set<string>>(new Set());
+  const [fetchedJobs, setFetchedJobs]   = useState<JobWithCompany[]>([]);
+  const [count, setCount]               = useState(0);
+  const [totalPages, setTotalPages]     = useState(0);
+  const [loading, setLoading]           = useState(!isControlled);
+  const [favorites, setFavorites]       = useState<Set<string>>(new Set());
+
+  const jobs = isControlled ? controlledJobs : fetchedJobs;
+  const displayCount = controlledCount ?? count;
+
+  const shouldShowControls   = showControls   ?? !isControlled;
+  const shouldShowPagination = showPagination ?? !isControlled;
+  const shouldShowFavorites  = showFavorites  ?? !isControlled;
+  const hasActions = !!(onEdit || onDuplicate || onStatusChange);
 
   const page  = Number(searchParams.get("page") ?? "1");
   const sort  = (searchParams.get("sort") ?? "newest") as JobSortOption;
@@ -60,6 +102,7 @@ export const JobList: React.FC = () => {
   };
 
   const fetchJobs = useCallback(async () => {
+    if (isControlled) return;
     setLoading(true);
     const filters: JobSearchFilters & { page: number } = {
       q:          searchParams.get("q")          ?? undefined,
@@ -74,18 +117,20 @@ export const JobList: React.FC = () => {
     };
     try {
       const result = await getPublishedJobs(supabase, filters);
-      setJobs(result.data);
+      setFetchedJobs(result.data);
       setCount(result.count);
       setTotalPages(result.totalPages);
     } catch { /* query error */ }
     finally { setLoading(false); }
-  }, [supabase, searchParams, page, sort]);
+  }, [isControlled, supabase, searchParams, page, sort]);
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
   useEffect(() => {
-    if (user) getUserFavorites(supabase, user.id).then(setFavorites).catch(() => {});
-  }, [supabase, user]);
+    if (shouldShowFavorites && user) {
+      getUserFavorites(supabase, user.id).then(setFavorites).catch(() => {});
+    }
+  }, [shouldShowFavorites, supabase, user]);
 
   const handleToggleFavorite = async (jobId: string) => {
     if (!user) return;
@@ -113,93 +158,125 @@ export const JobList: React.FC = () => {
     </Box>
   );
 
-  return (
+  const renderJobActions = (job: JobWithCompany) => (
     <>
-      {/* Header bar */}
-      <Stack direction="column" gap={1} sx={{ mb: 2 }}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        flexWrap="wrap"
-        gap={1}
-        sx={{ mb: 2 }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          {loading ? (
-            <Skeleton variant="text" width={120} />
-          ) : (
-            <>Au fost găsite <strong>{count}</strong> {count === 1 ? "loc de muncă" : "locuri de muncă"}</>
-          )}
-        </Typography>
+      {onEdit && (
+        <IconButton size="small" onClick={() => onEdit(job)} title="Editează">
+          <EditIcon fontSize="small" />
+        </IconButton>
+      )}
+      {onDuplicate && (
+        <IconButton size="small" onClick={() => onDuplicate(job)} title="Duplică">
+          <ContentCopyIcon fontSize="small" />
+        </IconButton>
+      )}
+      {onStatusChange && job.status === "draft" && (
+        <IconButton size="small" color="success" onClick={() => onStatusChange(job.id, "published")} title="Publică">
+          <PublishIcon fontSize="small" />
+        </IconButton>
+      )}
+      {onStatusChange && job.status === "published" && (
+        <IconButton size="small" onClick={() => onStatusChange(job.id, "archived")} title="Arhivează">
+          <ArchiveIcon fontSize="small" />
+        </IconButton>
+      )}
+    </>
+  );
 
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
-            Sortare:
+  const activeView = isControlled ? "list" : view;
+
+  return (
+    <Stack direction="column" gap={1} sx={{ mb: 2 }}>
+      {/* Controls bar */}
+      {shouldShowControls && (
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          flexWrap="wrap"
+          gap={1}
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            {loading ? (
+              <Skeleton variant="text" width={120} />
+            ) : (
+              <>Au fost găsite <strong>{displayCount}</strong> {displayCount === 1 ? "loc de muncă" : "locuri de muncă"}</>
+            )}
           </Typography>
-          <FormControl size="small" sx={{ minWidth: 170 }}>
-            <Select
-              value={sort}
-              onChange={(e) => setParam("sort", e.target.value)}
-              displayEmpty
-              sx={{ fontSize: "0.8rem" }}
-            >
-              {SORT_OPTIONS.map((o) => (
-                <MenuItem key={o.value} value={o.value} sx={{ fontSize: "0.8rem" }}>
-                  {o.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
 
-          <Stack direction="row" sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, overflow: "hidden" }}>
-            <Tooltip title="Vizualizare listă">
-              <IconButton
-                size="small"
-                onClick={() => setParam("view", "list")}
-                sx={{
-                  borderRadius: 0,
-                  bgcolor: view === "list" ? "action.selected" : "transparent",
-                  color: view === "list" ? "primary.main" : "text.secondary",
-                }}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+              Sortare:
+            </Typography>
+            <FormControl size="small" sx={{ minWidth: 170 }}>
+              <Select
+                value={sort}
+                onChange={(e) => setParam("sort", e.target.value)}
+                displayEmpty
+                sx={{ fontSize: "0.8rem" }}
               >
-                <ViewListIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Vizualizare grilă">
-              <IconButton
-                size="small"
-                onClick={() => setParam("view", "grid")}
-                sx={{
-                  borderRadius: 0,
-                  bgcolor: view === "grid" ? "action.selected" : "transparent",
-                  color: view === "grid" ? "primary.main" : "text.secondary",
-                }}
-              >
-                <GridViewIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+                {SORT_OPTIONS.map((o) => (
+                  <MenuItem key={o.value} value={o.value} sx={{ fontSize: "0.8rem" }}>
+                    {o.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Stack direction="row" sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, overflow: "hidden" }}>
+              <Tooltip title="Vizualizare listă">
+                <IconButton
+                  size="small"
+                  onClick={() => setParam("view", "list")}
+                  sx={{
+                    borderRadius: 0,
+                    bgcolor: view === "list" ? "action.selected" : "transparent",
+                    color: view === "list" ? "primary.main" : "text.secondary",
+                  }}
+                >
+                  <ViewListIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Vizualizare grilă">
+                <IconButton
+                  size="small"
+                  onClick={() => setParam("view", "grid")}
+                  sx={{
+                    borderRadius: 0,
+                    bgcolor: view === "grid" ? "action.selected" : "transparent",
+                    color: view === "grid" ? "primary.main" : "text.secondary",
+                  }}
+                >
+                  <GridViewIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
           </Stack>
         </Stack>
-      </Stack>
+      )}
 
-        {/* Content */}
+      {/* Content */}
       {loading ? (
-        view === "list" ? <ListSkeleton /> : <GridSkeleton />
+        activeView === "list" ? <ListSkeleton /> : <GridSkeleton />
       ) : jobs.length === 0 ? (
-        <Box sx={{ textAlign: "center", py: 10 }}>
-          <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
-          <Typography variant="h5" sx={{ mb: 0.5 }}>Nu au fost găsite locuri de muncă</Typography>
-          <Typography color="text.secondary">Încearcă să ajustezi filtrele de căutare.</Typography>
-        </Box>
-      ) : view === "list" ? (
+        emptyState ?? (
+          <Box sx={{ textAlign: "center", py: 10 }}>
+            <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
+            <Typography variant="h5" sx={{ mb: 0.5 }}>Nu au fost găsite locuri de muncă</Typography>
+            <Typography color="text.secondary">Încearcă să ajustezi filtrele de căutare.</Typography>
+          </Box>
+        )
+      ) : activeView === "list" ? (
         <Stack spacing={1.5}>
           {jobs.map((job) => (
             <JobRow
               key={job.id}
               job={job}
               isFavorite={favorites.has(job.id)}
-              onToggleFavorite={user ? handleToggleFavorite : undefined}
+              onToggleFavorite={shouldShowFavorites && user ? handleToggleFavorite : undefined}
+              showStatus={hasActions}
+              actions={hasActions ? renderJobActions(job) : undefined}
             />
           ))}
         </Stack>
@@ -210,14 +287,14 @@ export const JobList: React.FC = () => {
               key={job.id}
               job={job}
               isFavorite={favorites.has(job.id)}
-              onToggleFavorite={user ? handleToggleFavorite : undefined}
+              onToggleFavorite={shouldShowFavorites && user ? handleToggleFavorite : undefined}
             />
           ))}
         </Box>
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {shouldShowPagination && totalPages > 1 && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <Pagination
             count={totalPages}
@@ -231,10 +308,6 @@ export const JobList: React.FC = () => {
           />
         </Box>
       )}
-      </Stack>
-
-
-      
-    </>
+    </Stack>
   );
 };

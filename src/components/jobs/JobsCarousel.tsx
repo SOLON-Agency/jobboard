@@ -18,6 +18,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import type { Tables } from "@/types/database";
 import { formatSalary, jobTypeLabels } from "@/lib/utils";
+import { ApplyButton } from "@/components/jobs/ApplyButton";
 
 type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
 
@@ -177,15 +178,7 @@ export const JobsCarousel: React.FC<Props> = ({ title, description, jobs }) => {
               ) : (
                 <Box />
               )}
-              <Button
-                component={Link}
-                href={`/jobs/${job.slug}`}
-                variant="contained"
-                size="small"
-                sx={{ borderRadius: 5, px: 2, fontWeight: 700, fontSize: "0.72rem" }}
-              >
-                Aplică
-              </Button>
+              <ApplyButton job={job} size="small" sx={{ px: 2, fontSize: "0.72rem" }} />
             </Stack>
           </Paper>
         ))}

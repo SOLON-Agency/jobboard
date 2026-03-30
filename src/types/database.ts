@@ -94,6 +94,7 @@ export type Database = {
           founded_year: number | null
           id: string
           industry: string | null
+          is_archived: boolean
           location: string | null
           logo_url: string | null
           name: string
@@ -109,6 +110,7 @@ export type Database = {
           founded_year?: number | null
           id?: string
           industry?: string | null
+          is_archived?: boolean
           location?: string | null
           logo_url?: string | null
           name: string
@@ -124,6 +126,7 @@ export type Database = {
           founded_year?: number | null
           id?: string
           industry?: string | null
+          is_archived?: boolean
           location?: string | null
           logo_url?: string | null
           name?: string
@@ -301,24 +304,108 @@ export type Database = {
           },
         ]
       }
+      form_response_values: {
+        Row: {
+          field_id: string
+          id: string
+          response_id: string
+          value: string | null
+        }
+        Insert: {
+          field_id: string
+          id?: string
+          response_id: string
+          value?: string | null
+        }
+        Update: {
+          field_id?: string
+          id?: string
+          response_id?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_response_values_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "form_fields"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_response_values_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "form_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_responses: {
+        Row: {
+          created_at: string
+          form_id: string
+          id: string
+          job_listing_id: string | null
+          respondent_email: string | null
+          respondent_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          form_id: string
+          id?: string
+          job_listing_id?: string | null
+          respondent_email?: string | null
+          respondent_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          form_id?: string
+          id?: string
+          job_listing_id?: string | null
+          respondent_email?: string | null
+          respondent_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_job_listing_id_fkey"
+            columns: ["job_listing_id"]
+            isOneToOne: false
+            referencedRelation: "job_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forms: {
         Row: {
           company_id: string
           created_at: string
+          description: string | null
           id: string
           name: string
+          status: string
         }
         Insert: {
           company_id: string
           created_at?: string
+          description?: string | null
           id?: string
           name: string
+          status?: string
         }
         Update: {
           company_id?: string
           created_at?: string
+          description?: string | null
           id?: string
           name?: string
+          status?: string
         }
         Relationships: [
           {
@@ -501,6 +588,7 @@ export type Database = {
           full_name: string | null
           headline: string | null
           id: string
+          is_public: boolean
           location: string | null
           slug: string | null
           updated_at: string
@@ -514,6 +602,7 @@ export type Database = {
           full_name?: string | null
           headline?: string | null
           id: string
+          is_public?: boolean
           location?: string | null
           slug?: string | null
           updated_at?: string
@@ -527,6 +616,7 @@ export type Database = {
           full_name?: string | null
           headline?: string | null
           id?: string
+          is_public?: boolean
           location?: string | null
           slug?: string | null
           updated_at?: string

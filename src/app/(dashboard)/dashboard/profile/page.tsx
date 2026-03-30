@@ -16,9 +16,13 @@ import {
   Chip,
   IconButton,
   Skeleton,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
+import PublicIcon from "@mui/icons-material/Public";
+import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,6 +31,8 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { experienceLevelLabels } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import type { Tables } from "@/types/database";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 
 const schema = z.object({
   full_name: z.string().min(2, "Numele trebuie să aibă cel puțin 2 caractere"),
@@ -34,6 +40,7 @@ const schema = z.object({
   bio: z.string().max(2000).optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
   experience_level: z.string().optional().or(z.literal("")),
+  is_public: z.boolean(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -75,6 +82,7 @@ export default function ProfilePage() {
       bio: profile.bio ?? "",
       location: profile.location ?? "",
       experience_level: profile.experience_level ?? "",
+      is_public: profile.is_public ?? false,
     });
     setDrawerOpen(true);
   };
@@ -95,6 +103,7 @@ export default function ProfilePage() {
         bio: data.bio || null,
         location: data.location || null,
         experience_level: data.experience_level || null,
+        is_public: data.is_public,
       })
       .eq("id", user.id);
 
@@ -149,14 +158,24 @@ export default function ProfilePage() {
     },
     [user, supabase]
   );
+  
+  const openViewProfile = () => {
+    if (!profile) return;
+    window.open(`/users/${profile.slug}`, "_blank");
+  };
 
   return (
     <>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Typography variant="h3">Profil</Typography>
-        <Button variant="contained" startIcon={<EditIcon />} onClick={openEdit} disabled={loading}>
-          Editează profilul
-        </Button>
+        <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
+          {profile?.is_public && profile?.slug && <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={openViewProfile} disabled={loading}>
+            Vizualizează profilul
+          </Button>}
+          <Button variant="contained" startIcon={<EditIcon />} onClick={openEdit} disabled={loading}>
+            Editează profilul
+          </Button>
+        </Stack>
       </Stack>
 
       {loading ? (
@@ -196,24 +215,50 @@ export default function ProfilePage() {
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h5" fontWeight={700}>
-                {profile.full_name ?? user?.email ?? "Necunoscut"}
-              </Typography>
-              {profile.headline && (
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-                  {profile.headline}
-                </Typography>
-              )}
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {profile.location && <Chip size="small" label={profile.location} />}
+                {profile.full_name ?? user?.email ?? "Necunoscut"} 
                 {profile.experience_level && (
                   <Chip
                     size="small"
                     label={experienceLevelLabels[profile.experience_level as keyof typeof experienceLevelLabels] ?? profile.experience_level}
                     color="primary"
                     variant="outlined"
+                    sx={{ ml: 1 }}
                   />
                 )}
-              </Stack>
+                {profile.is_public && profile.slug ? (
+                  <Chip
+                    icon={<PublicIcon />}
+                    size="small"
+                    label="Profil public"
+                    color="success"
+                    variant="outlined"
+                    component={Link}
+                    href={`/users/${profile.slug}`}
+                    target="_blank"
+                    clickable
+                    sx={{ ml: 1 }}
+                  />
+                ) : (
+                  <Chip
+                    icon={<PublicIcon />}
+                    size="small"
+                    label="Profil privat"
+                    variant="outlined"
+                    sx={{ color: "text.disabled", borderColor: "divider", ml: 1 }}
+                  />
+                )}
+              </Typography>
+              {profile.headline && (
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                  {profile.headline}
+                </Typography>
+              )}
+              {profile.location && <Stack direction="row" spacing={0.5}>
+                <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {profile.location}
+                </Typography>
+              </Stack>}
             </Box>
           </Stack>
 
@@ -295,6 +340,31 @@ export default function ProfilePage() {
                     ))}
                   </Select>
                 </FormControl>
+              )}
+            />
+            <Controller
+              name="is_public"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  }
+                  label={
+                    <Box>
+                      <Typography variant="body2" fontWeight={600}>
+                        Profil public
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Permite oricui să îți vizualizeze profilul prin link direct.
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ alignItems: "flex-start", mx: 0, gap: 1 }}
+                />
               )}
             />
             <Stack direction="row" spacing={2}>

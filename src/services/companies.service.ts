@@ -103,9 +103,22 @@ export type CompanyWithJobCount = Tables<"companies"> & {
   jobCount: number;
 };
 
+export const archiveCompany = async (
+  supabase: SupabaseClient<Database>,
+  id: string,
+  archived: boolean
+): Promise<void> => {
+  const { error } = await supabase
+    .from("companies")
+    .update({ is_archived: archived })
+    .eq("id", id);
+  if (error) throw error;
+};
+
 export const getUserCompaniesWithJobCount = async (
   supabase: SupabaseClient<Database>,
-  userId: string
+  userId: string,
+  includeArchived = false
 ): Promise<CompanyWithJobCount[]> => {
   const { data, error } = await supabase
     .from("company_users")
@@ -120,6 +133,7 @@ export const getUserCompaniesWithJobCount = async (
     const company = row.companies as Tables<"companies"> & {
       job_listings: { count: number }[];
     };
+    if (!includeArchived && company.is_archived) return [];
     return [{
       ...company,
       role: row.role,
