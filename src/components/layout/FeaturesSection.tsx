@@ -299,11 +299,11 @@ export const FeaturesSection: React.FC = () => (
                   borderRadius: 99,
                   fontWeight: 700,
                   bgcolor: "rgba(195,174,97,0.9)",
-                  color: "#03170C",
+                  color: "white",
                   "&:hover": { bgcolor: "rgba(195,174,97,1)", boxShadow: "0 6px 24px rgba(195,174,97,0.3)" },
                 }}
               >
-                Începe gratuit
+                Postează primul anunț gratuit
               </Button>
               <Button
                 component={Link}

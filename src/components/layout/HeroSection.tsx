@@ -298,7 +298,7 @@ export const HeroSection: React.FC = () => {
                   fontSize: "0.95rem",
                   letterSpacing: "0.04em",
                   bgcolor: "rgba(195,174,97,0.9)",
-                  color: "#03170C",
+                  color: "white",
                   "&:hover": { bgcolor: "rgba(195,174,97,1)", transform: "translateY(-1px)", boxShadow: "0 8px 32px rgba(195,174,97,0.35)" },
                   transition: "all 0.2s",
                 }}

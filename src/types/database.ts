@@ -842,6 +842,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_company_visits: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
+      increment_company_engages: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       alert_frequency: "daily" | "weekly"
