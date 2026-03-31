@@ -3,27 +3,28 @@ import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
+import appSettings from "@/config/app.settings.json";
 
 export const metadata: Metadata = {
   title: {
-    default: "LegalJobs — Legal Career Platform",
-    template: "%s | LegalJobs",
+    default: `${appSettings.name} — Platformă de carieră juridică`,
+    template: `%s | ${appSettings.name}`,
   },
   description:
-    "Find your next legal career opportunity. Browse jobs from top law firms, apply directly, and manage your legal career.",
+    "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură, aplică direct și gestionează-ți cariera.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
   ),
   openGraph: {
     type: "website",
-    siteName: "LegalJobs",
-    title: "LegalJobs — Legal Career Platform",
+    siteName: appSettings.name,
+    title: `${appSettings.name} — Platformă de carieră juridică`,
     description:
-      "Find your next legal career opportunity. Browse jobs from top law firms.",
+      "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "LegalJobs — Legal Career Platform",
+    title: `${appSettings.name} — Platformă de carieră juridică`,
   },
 };
 
@@ -34,11 +35,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/* <style dangerouslySetInnerHTML={{ __html: `
+        .main-content {
+          padding-bottom: 100px;
+        }
+        @media (min-width: 768px) {
+          .main-content {
+            padding-bottom: 30px;
+          }
+        }
+      `}} /> */}
       <body>
         <ThemeRegistry>
           <Navbar />
-          <main style={{ flex: 1 }}>{children}</main>
+          <main style={{ flex: 1 }} className="main-content">{children}</main>
           <Footer />
+          <br /> <br />
         </ThemeRegistry>
       </body>
     </html>

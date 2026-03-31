@@ -96,6 +96,45 @@ export const jobTypeLabels: Record<string, string> = {
   freelance: "Freelance",
 };
 
+/**
+ * Consistent outlined-chip styling for each job type, derived from the brand
+ * palette. Spread into the MUI Chip `sx` prop alongside any local overrides.
+ *
+ * Colors come from palette.ts:
+ *   full-time  → success   #2d6a4f (forest green)
+ *   part-time  → warning   #a0882a (amber)
+ *   contract   → secondary #3E5C76 (steel blue)
+ *   internship → secondary.light #748CAB (sky blue)
+ *   freelance  → accentGold #c3ae61 (gold, text darkened for contrast)
+ */
+export const jobTypeChipSx: Record<string, Record<string, string>> = {
+  "full-time": {
+    color: "#2d6a4f",
+    borderColor: "rgba(45,106,79,0.45)",
+    bgcolor: "rgba(45,106,79,0.08)",
+  },
+  "part-time": {
+    color: "#a0882a",
+    borderColor: "rgba(160,136,42,0.45)",
+    bgcolor: "rgba(160,136,42,0.08)",
+  },
+  contract: {
+    color: "#3E5C76",
+    borderColor: "rgba(62,92,118,0.45)",
+    bgcolor: "rgba(62,92,118,0.08)",
+  },
+  internship: {
+    color: "#5B7A94",
+    borderColor: "rgba(116,140,171,0.5)",
+    bgcolor: "rgba(116,140,171,0.1)",
+  },
+  freelance: {
+    color: "#8a6e10",
+    borderColor: "rgba(195,174,97,0.55)",
+    bgcolor: "rgba(195,174,97,0.12)",
+  },
+};
+
 export const experienceLevelLabels: Record<string, string> = {
   entry: "Junior",
   mid: "Nivel mediu",

@@ -8,3 +8,13 @@
 * {
   scrollbar-width: thin;
 }
+
+.main-content {
+  padding-bottom: 100px;
+}
+
+@media (min-width: 768px) {
+  .main-content {
+    padding-bottom: 30px;
+  }
+}

@@ -18,7 +18,7 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import type { Tables } from "@/types/database";
-import { formatSalary, timeAgo, jobTypeLabels } from "@/lib/utils";
+import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 interface JobCardProps {
@@ -90,6 +90,7 @@ export const JobCard: React.FC<JobCardProps> = ({
                   label={jobTypeLabels[job.job_type] ?? job.job_type}
                   size="small"
                   variant="outlined"
+                  sx={{ fontWeight: 600, fontSize: "0.7rem", ...jobTypeChipSx[job.job_type] }}
                 />
               )}
               {job.is_remote && (

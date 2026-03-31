@@ -25,6 +25,7 @@ export const getUserForms = async (
     .from("forms")
     .select("*, form_responses(count)")
     .in("company_id", companyIds)
+    .eq("is_archived", false)
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((f) => ({
@@ -152,6 +153,46 @@ export const getFormResponses = async (
   if (error) throw error;
 
   return (data ?? []) as FormResponseWithValues[];
+};
+
+export const archiveForm = async (
+  supabase: SupabaseClient<Database>,
+  id: string,
+  archived: boolean
+): Promise<void> => {
+  const { error } = await supabase
+    .from("forms")
+    .update({
+      is_archived: archived,
+      archived_at: archived ? new Date().toISOString() : null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+};
+
+export const getArchivedForms = async (
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<Tables<"forms">[]> => {
+  const { data: companies } = await supabase
+    .from("company_users")
+    .select("company_id")
+    .eq("user_id", userId)
+    .not("accepted_at", "is", null);
+
+  if (!companies?.length) return [];
+
+  const companyIds = companies.map((c) => c.company_id);
+
+  const { data, error } = await supabase
+    .from("forms")
+    .select("*")
+    .in("company_id", companyIds)
+    .eq("is_archived", true)
+    .order("archived_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
 };
 
 export const deleteFormResponse = async (

@@ -30,11 +30,19 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { experienceLevelLabels } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
+import { EditEducation } from "@/components/profile/EditEducation";
+import { EditExperience } from "@/components/profile/EditExperience";
+import { EditSkills } from "@/components/profile/EditSkills";
+import { getEducationItems, type EducationItem } from "@/services/education.service";
+import { getExperienceItems, type ExperienceItem } from "@/services/experience.service";
+import { getProfileSkills, type ProfileSkillWithName } from "@/services/skills.service";
 import type { Tables } from "@/types/database";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 
 const schema = z.object({
+  email: z.string().email("Introdu o adresă email validă"),
+  phone: z.string().optional().or(z.literal("")),
   full_name: z.string().min(2, "Numele trebuie să aibă cel puțin 2 caractere"),
   headline: z.string().max(120).optional().or(z.literal("")),
   bio: z.string().max(2000).optional().or(z.literal("")),
@@ -50,6 +58,9 @@ export default function ProfilePage() {
   const supabase = useSupabase();
 
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [education, setEducation] = useState<EducationItem[]>([]);
+  const [experience, setExperience] = useState<ExperienceItem[]>([]);
+  const [skills, setSkills] = useState<ProfileSkillWithName[]>([]);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -66,8 +77,16 @@ export default function ProfilePage() {
 
   const loadProfile = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    const [{ data }, eduData, expData, skillsData] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", user.id).single(),
+      getEducationItems(supabase, user.id).catch(() => [] as EducationItem[]),
+      getExperienceItems(supabase, user.id).catch(() => [] as ExperienceItem[]),
+      getProfileSkills(supabase, user.id).catch(() => [] as ProfileSkillWithName[]),
+    ]);
     if (data) setProfile(data);
+    setEducation(eduData);
+    setExperience(expData);
+    setSkills(skillsData);
     setLoading(false);
   }, [user, supabase]);
 
@@ -78,6 +97,8 @@ export default function ProfilePage() {
     setMessage(null);
     reset({
       full_name: profile.full_name ?? "",
+      email: user?.email ?? "",
+      phone: profile.phone ?? "",
       headline: profile.headline ?? "",
       bio: profile.bio ?? "",
       location: profile.location ?? "",
@@ -112,6 +133,10 @@ export default function ProfilePage() {
     } else {
       await loadProfile();
       setMessage({ type: "success", text: "Profil actualizat cu succes." });
+      // Fire-and-forget: send profile update confirmation email
+      supabase.functions
+        .invoke("notify-profile-update", { body: { user_id: user.id } })
+        .catch((e) => console.warn("notify-profile-update failed:", e));
       setTimeout(closeDrawer, 900);
     }
   };
@@ -292,6 +317,30 @@ export default function ProfilePage() {
         </Paper>
       ) : null}
 
+      <Box sx={{ mt: 3 }}>
+        <EditSkills
+          initialItems={skills}
+          loading={loading}
+          onReload={loadProfile}
+        />
+      </Box>
+
+      <Box sx={{ mt: 3 }}>
+        <EditExperience
+          initialItems={experience}
+          loading={loading}
+          onReload={loadProfile}
+        />
+      </Box>
+
+      <Box sx={{ mt: 3 }}>
+        <EditEducation
+          initialItems={education}
+          loading={loading}
+          onReload={loadProfile}
+        />
+      </Box>
+
       <EditSideDrawer
         open={drawerOpen}
         onClose={closeDrawer}
@@ -301,6 +350,14 @@ export default function ProfilePage() {
       >
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2.5}>
+            <TextField
+              {...register("email")}
+              label="Adresă email"
+              fullWidth
+              disabled={true}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+            />
             <TextField
               {...register("full_name")}
               label="Nume complet"

@@ -4,10 +4,15 @@ import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Checkbox,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Drawer,
   FormControl,
   FormControlLabel,
@@ -28,9 +33,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getFormWithFields } from "@/services/forms.service";
+import { trackCompanyEngage } from "@/services/companies.service";
 import { parseSupabaseError } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 
@@ -42,8 +51,10 @@ type FormWithFields = Tables<"forms"> & { form_fields: FormField[] };
 export interface ApplyButtonProps {
   job: Pick<
     Tables<"job_listings">,
-    "id" | "slug" | "title" | "application_url" | "application_form_id"
+    "id" | "slug" | "title" | "application_url" | "application_form_id" | "company_id"
+    | "location" | "job_type" | "salary_min" | "salary_max"
   >;
+  company?: Pick<Tables<"companies">, "name" | "logo_url" | "slug"> | null;
   label?: string;
   size?: "small" | "medium" | "large";
   fullWidth?: boolean;
@@ -176,6 +187,40 @@ const FormFieldInput: React.FC<FieldProps> = ({ field, value, fileValue, error, 
         </Box>
       );
 
+    case "email":
+      return (
+        <TextField
+          label={field.label}
+          placeholder={field.placeholder ?? "exemplu@email.com"}
+          required={field.is_required}
+          type="email"
+          inputMode="email"
+          fullWidth
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          error={!!error}
+          helperText={error}
+          size="small"
+        />
+      );
+
+    case "phone":
+      return (
+        <TextField
+          label={field.label}
+          placeholder={field.placeholder ?? "ex: 0721 000 000 sau +40 721 000 000"}
+          required={field.is_required}
+          type="tel"
+          inputMode="tel"
+          fullWidth
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          error={!!error}
+          helperText={error}
+          size="small"
+        />
+      );
+
     default: // "text"
       return (
         <TextField
@@ -193,10 +238,24 @@ const FormFieldInput: React.FC<FieldProps> = ({ field, value, fileValue, error, 
   }
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const notifyApplication = (
+  supabase: ReturnType<typeof useSupabase>,
+  job_id: string,
+  applicant_user_id: string
+) => {
+  // Fire-and-forget: notification failure must not block the application flow.
+  supabase.functions
+    .invoke("notify-application", { body: { job_id, applicant_user_id } })
+    .catch((err: unknown) => console.warn("notify-application:", err));
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export const ApplyButton: React.FC<ApplyButtonProps> = ({
   job,
+  company,
   label = "Aplică",
   size = "medium",
   fullWidth = false,
@@ -206,7 +265,8 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const { user } = useAuth();
   const supabase = useSupabase();
 
-  const [open, setOpen] = useState(false);
+  // ── Form drawer state ──
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [formSpec, setFormSpec] = useState<FormWithFields | null>(null);
   const [loadingForm, setLoadingForm] = useState(false);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -215,6 +275,12 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // ── External URL confirmation dialog state ──
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   const commonSx = { borderRadius: 5, fontWeight: 700, ...sx };
 
@@ -235,32 +301,49 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
     );
   }
 
-  // ── External URL → simple anchor ──────────────────────────────────────────
-  if (job.application_url && !job.application_form_id) {
-    return (
-      <Button
-        component="a"
-        href={job.application_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        variant={variant}
-        size={size}
-        fullWidth={fullWidth}
-        endIcon={<AutoAwesomeIcon />}
-        sx={commonSx}
-      >
-        {label}
-      </Button>
-    );
-  }
+  const isExternalUrl = !!job.application_url && !job.application_form_id;
 
-  // ── Form application ──────────────────────────────────────────────────────
+  // ── External URL: open confirmation dialog ────────────────────────────────
+  const handleConfirmOpen = () => {
+    setConfirmError(null);
+    setConfirmed(false);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmApply = async () => {
+    if (!user) {
+      setConfirmError("Trebuie să fii autentificat pentru a aplica.");
+      return;
+    }
+    setConfirming(true);
+    setConfirmError(null);
+    try {
+      const { error: appErr } = await supabase.from("applications").insert({
+        job_id: job.id,
+        user_id: user.id,
+        form_data: null,
+        status: "pending",
+      });
+      if (appErr) throw appErr;
+
+      notifyApplication(supabase, job.id, user.id);
+      trackCompanyEngage(supabase, job.company_id).catch(() => {});
+      setConfirmed(true);
+      window.open(job.application_url!, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setConfirmError(parseSupabaseError(err));
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  // ── Form: open drawer ─────────────────────────────────────────────────────
   const openDrawer = async () => {
-    setOpen(true);
+    setDrawerOpen(true);
     setSubmitted(false);
     setSubmitError(null);
     setErrors({});
-    if (formSpec) return; // already loaded
+    if (formSpec) return;
     setLoadingForm(true);
     try {
       const form = await getFormWithFields(supabase, job.application_form_id!);
@@ -282,10 +365,22 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     formSpec?.form_fields.forEach((f) => {
-      if (!f.is_required) return;
+      const val = fieldValues[f.id]?.trim() ?? "";
       if (f.field_type === "upload") {
-        if (!fileValues[f.id]) errs[f.id] = "Câmp obligatoriu";
-      } else if (!fieldValues[f.id]?.trim()) {
+        if (f.is_required && !fileValues[f.id]) errs[f.id] = "Câmp obligatoriu";
+      } else if (f.field_type === "email") {
+        if (f.is_required && !val) {
+          errs[f.id] = "Câmp obligatoriu";
+        } else if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          errs[f.id] = "Adresă de email invalidă";
+        }
+      } else if (f.field_type === "phone") {
+        if (f.is_required && !val) {
+          errs[f.id] = "Câmp obligatoriu";
+        } else if (val && !/^(\+?\d[\d\s\-().]{6,19}\d)$/.test(val)) {
+          errs[f.id] = "Număr de telefon invalid (ex: 0721 000 000 sau +40 721 000 000)";
+        }
+      } else if (f.is_required && !val) {
         errs[f.id] = "Câmp obligatoriu";
       }
     });
@@ -347,6 +442,10 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       });
       if (appErr) throw appErr;
 
+      // 4. Fire-and-forget email notifications + engagement tracking
+      notifyApplication(supabase, job.id, user.id);
+      trackCompanyEngage(supabase, job.company_id).catch(() => {});
+
       setSubmitted(true);
     } catch (err) {
       setSubmitError(parseSupabaseError(err));
@@ -359,7 +458,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   return (
     <>
       <Button
-        onClick={openDrawer}
+        onClick={isExternalUrl ? handleConfirmOpen : openDrawer}
         variant={variant}
         size={size}
         fullWidth={fullWidth}
@@ -369,26 +468,147 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
         {label}
       </Button>
 
+      {/* ── External URL confirmation dialog ──────────────────────────────── */}
+      <Dialog
+        open={confirmOpen}
+        onClose={() => !confirming && setConfirmOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+          {confirmed ? "Aplicație înregistrată!" : `Aplică la ${job.title}`}
+        </DialogTitle>
+
+        <DialogContent>
+          {confirmed ? (
+            <Stack alignItems="center" spacing={2} sx={{ py: 2, textAlign: "center" }}>
+              <CheckCircleOutlineIcon sx={{ fontSize: 52, color: "success.main" }} />
+              <Typography color="text.secondary">
+                Candidatura a fost înregistrată. Link-ul s-a deschis într-o fereastră nouă.
+              </Typography>
+            </Stack>
+          ) : (
+            <Stack spacing={2}>
+              {!user && (
+                <Alert severity="info">
+                  Trebuie să fii{" "}
+                  <Link href="/login" style={{ color: "inherit", fontWeight: 700 }}>
+                    autentificat
+                  </Link>{" "}
+                  pentru a aplica.
+                </Alert>
+              )}
+              <Typography variant="body2" color="text.secondary">
+                Vei fi redirecționat către site-ul extern al angajatorului pentru a finaliza aplicația:
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  px: 2,
+                  py: 1.5,
+                  bgcolor: "action.hover",
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  wordBreak: "break-all",
+                }}
+              >
+                <OpenInNewIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+                  {job.application_url}
+                </Typography>
+              </Box>
+              {confirmError && <Alert severity="error">{confirmError}</Alert>}
+            </Stack>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+          {confirmed ? (
+            <Button
+              variant="outlined"
+              onClick={() => setConfirmOpen(false)}
+              sx={{ borderRadius: 5 }}
+            >
+              Închide
+            </Button>
+          ) : (
+            <>
+              <Button
+                variant="outlined"
+                onClick={() => setConfirmOpen(false)}
+                disabled={confirming}
+                sx={{ borderRadius: 5 }}
+              >
+                Anulează
+              </Button>
+              <Button
+                variant="contained"
+                onClick={handleConfirmApply}
+                disabled={confirming || !user}
+                endIcon={confirming ? <CircularProgress size={14} color="inherit" /> : <OpenInNewIcon />}
+                sx={{ borderRadius: 5, fontWeight: 700 }}
+              >
+                {confirming ? "Se înregistrează..." : "Continuă"}
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* ── Form application drawer ───────────────────────────────────────── */}
       <Drawer
         anchor="right"
-        open={open}
-        onClose={() => !submitting && setOpen(false)}
+        open={drawerOpen}
+        onClose={() => !submitting && setDrawerOpen(false)}
         PaperProps={{ sx: { width: { xs: "100%", sm: 480 }, display: "flex", flexDirection: "column" } }}
       >
         {/* Header */}
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 3, py: 2, flexShrink: 0, borderBottom: "1px solid", borderColor: "divider" }}>
-          <Box>
-            <Typography variant="h6" fontWeight={700}>Aplică la</Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>{job.title}</Typography>
-          </Box>
-          <IconButton onClick={() => !submitting && setOpen(false)} size="small" disabled={submitting}>
-            <CloseIcon />
-          </IconButton>
-        </Stack>
+        <Box sx={{ flexShrink: 0, borderBottom: "1px solid", borderColor: "divider" }}>
+          {/* Close row */}
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 3, pt: 2, pb: 1.5 }}>
+            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1, lineHeight: 1 }}>
+              Aplică acum
+            </Typography>
+            <IconButton onClick={() => !submitting && setDrawerOpen(false)} size="small" disabled={submitting}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+
+          {/* Job + company card */}
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ px: 3, pb: 2.5 }}>
+            <Avatar
+              src={company?.logo_url ?? undefined}
+              variant="rounded"
+              sx={{ width: 52, height: 52, bgcolor: "action.hover", border: "1px solid", borderColor: "divider", flexShrink: 0 }}
+            >
+              <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 24 }} />
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.3 }}>
+                {job.title}
+              </Typography>
+              {company?.name && (
+                <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>
+                  {company.name}
+                </Typography>
+              )}
+              {job.location && (
+                <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.5 }}>
+                  <LocationOnOutlinedIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                  <Typography variant="caption" color="text.disabled" noWrap>
+                    {job.location}
+                  </Typography>
+                </Stack>
+              )}
+            </Box>
+          </Stack>
+        </Box>
 
         {/* Body */}
         <Box sx={{ flex: 1, overflow: "auto", px: 3, py: 3 }}>
-          {/* Success state */}
           {submitted ? (
             <Stack alignItems="center" spacing={2} sx={{ py: 6, textAlign: "center" }}>
               <CheckCircleOutlineIcon sx={{ fontSize: 56, color: "success.main" }} />
@@ -396,7 +616,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
               <Typography color="text.secondary">
                 Candidatura ta a fost înregistrată. Vei fi contactat dacă ești selectat.
               </Typography>
-              <Button variant="outlined" onClick={() => setOpen(false)} sx={{ mt: 1 }}>
+              <Button variant="outlined" onClick={() => setDrawerOpen(false)} sx={{ mt: 1 }}>
                 Închide
               </Button>
             </Stack>
@@ -413,7 +633,6 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
               {formSpec?.description && (
                 <Typography variant="body2" color="text.secondary">{formSpec.description}</Typography>
               )}
-
               {formSpec?.form_fields.map((field) => (
                 <FormFieldInput
                   key={field.id}
@@ -425,7 +644,6 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                   onFileChange={(file) => setFile(field.id, file)}
                 />
               ))}
-
               {submitError && <Alert severity="error">{submitError}</Alert>}
             </Stack>
           )}
@@ -444,7 +662,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
             >
               {submitting ? "Se trimite..." : "Trimite candidatura"}
             </Button>
-            <Button variant="outlined" onClick={() => setOpen(false)} disabled={submitting} sx={{ borderRadius: 5 }}>
+            <Button variant="outlined" onClick={() => setDrawerOpen(false)} disabled={submitting} sx={{ borderRadius: 5 }}>
               Anulează
             </Button>
           </Stack>

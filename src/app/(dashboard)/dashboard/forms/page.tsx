@@ -6,18 +6,33 @@ import {
   Box,
   Button,
   Chip,
+  Divider,
+  FormControl,
   IconButton,
+  InputLabel,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  MenuItem as MuiMenuItem,
   Paper,
+  Select,
   Skeleton,
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
+  type SelectChangeEvent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ArchiveIcon from "@mui/icons-material/Archive";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import appSettings from "@/config/app.settings.json";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getUserCompanies } from "@/services/companies.service";
@@ -26,6 +41,7 @@ import {
   createForm,
   updateForm,
   deleteForm,
+  archiveForm,
   getFormWithFields,
 } from "@/services/forms.service";
 import { parseSupabaseError, formatDate } from "@/lib/utils";
@@ -69,6 +85,103 @@ const dbFieldsToFormFields = (dbFields: Tables<"form_fields">[]): FormField[] =>
     sort_order: f.sort_order,
   }));
 
+interface FormActionsRowProps {
+  form: FormWithCount;
+  onEdit: (f: FormWithCount) => void;
+  onArchive: (f: FormWithCount) => void;
+  onDelete: (f: FormWithCount) => void;
+}
+
+const FormActionsRow: React.FC<FormActionsRowProps> = ({ form, onEdit, onArchive, onDelete }) => {
+  const theme = useTheme();
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const visibleCount = isMd ? 2 : 1;
+  const showEditAsButton = visibleCount >= 2;
+
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      {/* Răspunsuri — primary, always visible */}
+      <Tooltip title={!isSm ? "Răspunsuri" : ""}>
+        <Button
+          size="small"
+          variant="contained"
+          color="primary"
+          component={Link}
+          href={`/dashboard/forms/${form.id}/responses`}
+          startIcon={isSm ? <VisibilityOutlinedIcon fontSize="small" /> : undefined}
+          sx={{ minWidth: 0, px: isSm ? 1.5 : 1, fontWeight: 600, boxShadow: "none", "&:hover": { boxShadow: "none" }, whiteSpace: "nowrap" }}
+        >
+          {isSm ? "Vezi răspunsuri" : <VisibilityOutlinedIcon fontSize="small" />}
+        </Button>
+      </Tooltip>
+
+      {/* Editează — secondary, desktop only */}
+      {showEditAsButton && (
+        <Button
+          size="small"
+          variant="outlined"
+          color="secondary"
+          onClick={() => onEdit(form)}
+          startIcon={<EditIcon fontSize="small" />}
+          sx={{ fontWeight: 500, whiteSpace: "nowrap", boxShadow: "none" }}
+        >
+          Editează
+        </Button>
+      )}
+
+      {/* Overflow menu */}
+      <Tooltip title="Mai multe acțiuni">
+        <IconButton size="small" onClick={(e) => setMenuAnchor(e.currentTarget)} sx={{ color: "text.secondary" }}>
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { sx: { minWidth: 180, borderRadius: 2, mt: 0.5 } } }}
+      >
+        {/* Editează — only in menu on tablet/mobile */}
+        {!showEditAsButton && (
+          <MuiMenuItem onClick={() => { onEdit(form); setMenuAnchor(null); }} sx={{ gap: 1.5, py: 1 }}>
+            <ListItemIcon sx={{ minWidth: 0, color: "secondary.main" }}>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Editează" primaryTypographyProps={{ variant: "body2", color: "secondary.main", fontWeight: 500 }} />
+          </MuiMenuItem>
+        )}
+
+        {/* Arhivează — feature-gated */}
+        {appSettings.features.archiveJobs && (
+          <>
+            {!showEditAsButton && <Divider />}
+            <MuiMenuItem onClick={() => { onArchive(form); setMenuAnchor(null); }} sx={{ gap: 1.5, py: 1 }}>
+              <ListItemIcon sx={{ minWidth: 0, color: "warning.main" }}>
+                <ArchiveIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Arhivează" primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }} />
+            </MuiMenuItem>
+          </>
+        )}
+
+        {/* Șterge — destructive, always last */}
+        <Divider />
+        <MuiMenuItem onClick={() => { onDelete(form); setMenuAnchor(null); }} sx={{ gap: 1.5, py: 1 }}>
+          <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
+            <DeleteOutlineIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Șterge" primaryTypographyProps={{ variant: "body2", color: "error.main", fontWeight: 500 }} />
+        </MuiMenuItem>
+      </Menu>
+    </Stack>
+  );
+};
+
 export default function FormsPage() {
   const { user } = useAuth();
   const supabase = useSupabase();
@@ -76,6 +189,7 @@ export default function FormsPage() {
   const [forms, setForms] = useState<FormWithCount[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingForm, setEditingForm] = useState<FormWithFields | null>(null);
@@ -158,6 +272,20 @@ export default function FormsPage() {
     }
   };
 
+  const handleArchiveForm = async (form: FormWithCount) => {
+    try {
+      await archiveForm(supabase, form.id, true);
+      await load();
+    } catch (err) {
+      setMessage({ type: "error", text: parseSupabaseError(err) });
+    }
+  };
+
+  const filteredForms =
+    selectedCompanyId === "all"
+      ? forms
+      : forms.filter((f) => f.company_id === selectedCompanyId);
+
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
@@ -165,12 +293,30 @@ export default function FormsPage() {
         <Box>
           <Typography variant="h5" fontWeight={700}>Formularele mele</Typography>
           <Typography variant="body2" color="text.secondary">
-            Creează formulare de aplicare și urmărește răspunsurile.
+            Creează formulare de aplicare și urmărește răspunsurile pentru anunțurile tale.
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={companies.length === 0}>
-          Formular nou
-        </Button>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {companies.length > 1 && (
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Companie</InputLabel>
+              <Select
+                label="Companie"
+                value={selectedCompanyId}
+                onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
+              >
+                <MenuItem value="all">Toate companiile</MenuItem>
+                {companies.map((c) => (
+                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={companies.length === 0}>
+            Formular nou
+          </Button>
+        </Stack>
+        
       </Stack>
 
       {/* ── No companies warning ────────────────────────────────────────────── */}
@@ -197,12 +343,16 @@ export default function FormsPage() {
       )}
 
       {/* ── Empty state ─────────────────────────────────────────────────────── */}
-      {!loading && companies.length > 0 && forms.length === 0 && (
+      {!loading && companies.length > 0 && filteredForms.length === 0 && (
         <Paper sx={{ p: 6, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
           <ArticleOutlinedIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
-          <Typography variant="h6" sx={{ mb: 0.5 }}>Niciun formular creat</Typography>
+          <Typography variant="h6" sx={{ mb: 0.5 }}>
+            {selectedCompanyId === "all" ? "Niciun formular creat" : "Niciun formular pentru această companie"}
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-            Creează primul formular de aplicare și leagă-l de un anunț de muncă.
+            {selectedCompanyId === "all"
+              ? "Creează primul formular de aplicare și leagă-l de un anunț de muncă."
+              : "Adaugă un formular nou pentru compania selectată."}
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Creează primul formular
@@ -211,9 +361,9 @@ export default function FormsPage() {
       )}
 
       {/* ── Forms list ──────────────────────────────────────────────────────── */}
-      {!loading && forms.length > 0 && (
+      {!loading && filteredForms.length > 0 && (
         <Stack spacing={1.5}>
-          {forms.map((form) => (
+          {filteredForms.map((form) => (
             <Paper
               key={form.id}
               sx={{
@@ -248,27 +398,14 @@ export default function FormsPage() {
                 </Typography>
               </Box>
 
-              <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
-                <Tooltip title="Răspunsuri">
-                  <IconButton
-                    size="small"
-                    component={Link}
-                    href={`/dashboard/forms/${form.id}/responses`}
-                  >
-                    <VisibilityOutlinedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Editează">
-                  <IconButton size="small" onClick={() => openEdit(form)}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Șterge">
-                  <IconButton size="small" color="error" onClick={() => handleDelete(form)}>
-                    <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
+              <Box sx={{ flexShrink: 0 }}>
+                <FormActionsRow
+                  form={form}
+                  onEdit={openEdit}
+                  onArchive={handleArchiveForm}
+                  onDelete={handleDelete}
+                />
+              </Box>
             </Paper>
           ))}
         </Stack>

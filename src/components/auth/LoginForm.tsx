@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SocialButtons } from "@/components/auth/SocialButtons";
 import { useAuth } from "@/hooks/useAuth";
+import appSettings from "@/config/app.settings.json";
 
 const schema = z.object({
   email: z.string().email("Introduceți o adresă de e-mail validă"),
@@ -32,7 +33,11 @@ export const LoginForm: React.FC = () => {
   const [error, setError] = useState<string | null>(
     searchParams.get("error") ? "Autentificare eșuată. Te rugăm să încerci din nou." : null
   );
-  const { signIn } = useAuth();
+  const { user, signIn } = useAuth();
+
+  useEffect(() => {
+    if (user) router.replace("/dashboard");
+  }, [user, router]);
 
   const {
     register,
@@ -71,7 +76,7 @@ export const LoginForm: React.FC = () => {
           color="text.secondary"
           sx={{ mb: 4, textAlign: "center" }}
         >
-          Conectează-te la contul tău LegalJobs
+          Conectează-te la contul tău {appSettings.name}
         </Typography>
 
         {error && (

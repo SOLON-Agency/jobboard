@@ -5,7 +5,7 @@ import { Stack, Chip } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import type { Tables } from "@/types/database";
-import { jobTypeLabels, experienceLevelLabels } from "@/lib/utils";
+import { jobTypeLabels, jobTypeChipSx, experienceLevelLabels } from "@/lib/utils";
 
 type JobTagsJob = Pick<
   Tables<"job_listings">,
@@ -20,7 +20,8 @@ interface JobTagsProps {
 export const JobTags: React.FC<JobTagsProps> = ({ job, sx }) => {
   const { job_type, experience_level, is_remote, location } = job;
 
-  if (!job_type && !experience_level && !is_remote && !location) return null;
+  const hasExperience = experience_level && experience_level.length > 0;
+  if (!job_type && !hasExperience && !is_remote && !location) return null;
 
   return (
     <Stack direction="row" flexWrap="wrap" gap={0.75} sx={sx}>
@@ -29,15 +30,18 @@ export const JobTags: React.FC<JobTagsProps> = ({ job, sx }) => {
           label={jobTypeLabels[job_type] ?? job_type}
           size="small"
           variant="outlined"
+          sx={{ fontWeight: 600, ...jobTypeChipSx[job_type] }}
         />
       )}
-      {experience_level && (
-        <Chip
-          label={experienceLevelLabels[experience_level] ?? experience_level}
-          size="small"
-          variant="outlined"
-        />
-      )}
+      {experience_level && experience_level.length > 0 &&
+        experience_level.map((lvl) => (
+          <Chip
+            key={lvl}
+            label={experienceLevelLabels[lvl] ?? lvl}
+            size="small"
+            variant="outlined"
+          />
+        ))}
       {is_remote && (
         <Chip label="Remote" size="small" color="primary" variant="outlined" />
       )}

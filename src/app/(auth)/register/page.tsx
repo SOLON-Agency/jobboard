@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SocialButtons } from "@/components/auth/SocialButtons";
 import { useAuth } from "@/hooks/useAuth";
+import appSettings from "@/config/app.settings.json";
 
 const schema = z
   .object({
@@ -36,7 +37,11 @@ export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const { signUp } = useAuth();
+  const { user, signUp } = useAuth();
+
+  useEffect(() => {
+    if (user) router.replace("/dashboard");
+  }, [user, router]);
 
   const {
     register,
@@ -89,15 +94,8 @@ export default function RegisterPage() {
           borderRadius: 3,
         }}
       >
-        <Typography variant="h3" sx={{ mb: 1, textAlign: "center" }}>
-          Creează-ți contul
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mb: 4, textAlign: "center" }}
-        >
-          Începe-ți călătoria în cariera juridică
+        <Typography variant="h3" sx={{ mb: 3, textAlign: "center" }}>
+          Creează cont {appSettings.name}
         </Typography>
 
         {error && (
@@ -106,7 +104,7 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <SocialButtons />
+        {/* <SocialButtons /> */}
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <TextField

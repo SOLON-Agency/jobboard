@@ -7,18 +7,23 @@ import {
   Button,
   Paper,
   Stack,
+  FormControl,
+  Select,
+  MenuItem,
+  type SelectChangeEvent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getUserCompanies } from "@/services/companies.service";
-import { createJob, updateJob, deleteJob } from "@/services/jobs.service";
+import { createJob, updateJob, deleteJob, archiveJob } from "@/services/jobs.service";
+import { createBenefit } from "@/services/benefits.service";
 import { slugify, parseSupabaseError } from "@/lib/utils";
 import { JobList } from "@/components/jobs/JobList";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditJob } from "@/components/dashboard/AddEditJob";
-import type { JobFormData, CompanyOption, JobWithCompany } from "@/components/dashboard/AddEditJob";
+import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/dashboard/AddEditJob";
 
 
 export default function JobsPage() {
@@ -28,6 +33,8 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<JobWithCompany[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<JobWithCompany | null>(null);
@@ -51,6 +58,7 @@ export default function JobsPage() {
       .from("job_listings")
       .select("*, companies(*)")
       .in("company_id", opts.map((c) => c.id))
+      .eq("is_archived", false)
       .order("created_at", { ascending: false });
 
     setJobs((data as JobWithCompany[]) ?? []);
@@ -68,11 +76,11 @@ export default function JobsPage() {
       description: "",
       location: "",
       job_type: "",
-      experience_level: "",
+      experience_level: [],
       salary_min: "",
       salary_max: "",
       is_remote: false,
-      application_method: "none",
+      application_method: "form",
       application_url: "",
       form_id: "",
     });
@@ -88,7 +96,7 @@ export default function JobsPage() {
       description: job.description ?? "",
       location: job.location ?? "",
       job_type: job.job_type ?? "",
-      experience_level: job.experience_level ?? "",
+      experience_level: job.experience_level ?? [],
       salary_min: job.salary_min?.toString() ?? "",
       salary_max: job.salary_max?.toString() ?? "",
       is_remote: job.is_remote,
@@ -109,7 +117,7 @@ export default function JobsPage() {
   };
 
   const onSubmit = useCallback(
-    async (data: JobFormData, status: "draft" | "published" = "draft") => {
+    async (data: JobFormData, status: "draft" | "published" = "draft", newBenefits?: BenefitDraft[]) => {
       setMessage(null);
       try {
         const appUrl = data.application_method === "url" ? (data.application_url || null) : null;
@@ -122,7 +130,7 @@ export default function JobsPage() {
             description: data.description,
             location: data.location || null,
             job_type: data.job_type || null,
-            experience_level: data.experience_level || null,
+            experience_level: data.experience_level.length > 0 ? data.experience_level : null,
             salary_min: data.salary_min ? Number(data.salary_min) : null,
             salary_max: data.salary_max ? Number(data.salary_max) : null,
             is_remote: data.is_remote,
@@ -131,14 +139,14 @@ export default function JobsPage() {
           });
           setMessage({ type: "success", text: "Anunț actualizat." });
         } else {
-          await createJob(supabase, {
+          const job = await createJob(supabase, {
             company_id: data.company_id,
             title: data.title,
             slug: `${slugify(data.title)}-${Date.now().toString(36)}`,
             description: data.description,
             location: data.location || null,
             job_type: data.job_type || null,
-            experience_level: data.experience_level || null,
+            experience_level: data.experience_level.length > 0 ? data.experience_level : null,
             salary_min: data.salary_min ? Number(data.salary_min) : null,
             salary_max: data.salary_max ? Number(data.salary_max) : null,
             is_remote: data.is_remote,
@@ -147,6 +155,11 @@ export default function JobsPage() {
             status,
             published_at: status === "published" ? new Date().toISOString() : null,
           });
+          if (newBenefits && newBenefits.length > 0) {
+            await Promise.all(
+              newBenefits.map((b) => createBenefit(supabase, { job_id: job.id, title: b.title, sort_order: b.sort_order }))
+            );
+          }
           setMessage({
             type: "success",
             text: status === "published" ? "Anunț publicat cu succes." : "Anunț salvat ca ciornă.",
@@ -194,17 +207,45 @@ export default function JobsPage() {
     await loadJobs();
   };
 
+  const handleArchive = async (job: JobWithCompany) => {
+    await archiveJob(supabase, job.id, true);
+    await loadJobs();
+  };
+
+  const filteredJobs =
+    selectedCompanyId === "all"
+      ? jobs
+      : jobs.filter((j) => j.company_id === selectedCompanyId);
+
   if (loading) return null;
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} sx={{ mb: 3 }}>
         <Typography variant="h3">Anunțuri de muncă</Typography>
-        {companies.length > 0 && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Anunț nou
-          </Button>
-        )}
+
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          {companies.length > 1 && (
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <Select
+                value={selectedCompanyId}
+                onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
+                displayEmpty
+              >
+                <MenuItem value="all">Toate companiile</MenuItem>
+                {companies.map((c) => (
+                  <MenuItem key={c.id} value={c.id}>{c.name.slice(0, 50)}...</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          {companies.length > 0 && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+              Anunț nou
+            </Button>
+          )}
+        </Stack>
       </Stack>
 
       {companies.length === 0 ? (
@@ -218,12 +259,16 @@ export default function JobsPage() {
             Creează companie
           </Button>
         </Paper>
-      ) : jobs.length === 0 ? (
+      ) : filteredJobs.length === 0 ? (
         <Paper sx={{ p: 4, border: "1px solid", borderColor: "divider", textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
-          <Typography variant="h5" sx={{ mb: 1 }}>Niciun anunț de muncă</Typography>
+          <Typography variant="h5" sx={{ mb: 1 }}>
+            {selectedCompanyId === "all" ? "Niciun anunț de muncă" : "Niciun anunț pentru această companie"}
+          </Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Creează primul tău anunț pentru a atrage candidații potriviți.
+            {selectedCompanyId === "all"
+              ? "Creează primul tău anunț pentru a atrage candidații potriviți."
+              : "Adaugă un anunț nou pentru compania selectată."}
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Creează anunț
@@ -231,10 +276,11 @@ export default function JobsPage() {
         </Paper>
       ) : (
         <JobList
-          jobs={jobs}
+          jobs={filteredJobs}
           onEdit={openEdit}
           onDuplicate={handleDuplicate}
           onStatusChange={handleStatusChange}
+          onArchive={handleArchive}
         />
       )}
 

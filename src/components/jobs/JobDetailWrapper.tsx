@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { toggleFavorite, getUserFavorites } from "@/services/jobs.service";
 import type { Tables } from "@/types/database";
+import type { BenefitItem } from "@/services/benefits.service";
 
 type JobWithCompany = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;
@@ -13,9 +14,10 @@ type JobWithCompany = Tables<"job_listings"> & {
 
 interface JobDetailWrapperProps {
   job: JobWithCompany;
+  benefits?: BenefitItem[];
 }
 
-export const JobDetailWrapper: React.FC<JobDetailWrapperProps> = ({ job }) => {
+export const JobDetailWrapper: React.FC<JobDetailWrapperProps> = ({ job, benefits = [] }) => {
   const { user } = useAuth();
   const supabase = useSupabase();
   const [isFavorite, setIsFavorite] = useState(false);
@@ -37,6 +39,7 @@ export const JobDetailWrapper: React.FC<JobDetailWrapperProps> = ({ job }) => {
   return (
     <JobDetail
       job={job}
+      benefits={benefits}
       isFavorite={isFavorite}
       onToggleFavorite={user ? handleToggleFavorite : undefined}
     />

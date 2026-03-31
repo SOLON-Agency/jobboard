@@ -19,7 +19,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getUserApplications } from "@/services/applications.service";
-import { formatDate } from "@/lib/utils";
+import { formatDate, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import type { Json } from "@/types/database";
 
@@ -137,24 +137,30 @@ export default function ApplicationsPage() {
 
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     {job ? (
-                      <Typography
-                        component={Link}
-                        href={`/jobs/${job.slug}`}
-                        variant="subtitle2"
-                        fontWeight={700}
-                        noWrap
-                        sx={{ textDecoration: "none", color: "text.primary", "&:hover": { color: "primary.main" } }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {job.title}
-                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography
+                          component={Link}
+                          href={`/jobs/${job.slug}`}
+                          variant="subtitle2"
+                          fontWeight={700}
+                          noWrap
+                          sx={{ textDecoration: "none", color: "text.primary", "&:hover": { color: "primary.main" } }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {job.title}
+                        </Typography>
+                        <Box>
+                          <Chip label={job.job_type} size="small" variant="outlined" />
+                        </Box>
+                      </Stack>
+
                     ) : (
                       <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
                         Loc de muncă șters
                       </Typography>
                     )}
                     <Typography variant="caption" color="text.secondary">
-                      {job?.companies?.name ?? "—"} • {formatDate(app.applied_at)}
+                      {job?.companies?.name ?? "—"} • {formatDate(app.applied_at)}{job?.location ? ` • ${job.location}` : ""} în {jobTypeLabels[job?.job_type ?? ""] ?? job?.job_type ?? "—"}
                     </Typography>
                   </Box>
 
@@ -196,19 +202,29 @@ export default function ApplicationsPage() {
                           gap: 1.5,
                         }}
                       >
-                        {entries.map(([label, value]) => (
-                          <Box key={label}>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                              {label}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{ wordBreak: "break-word", fontWeight: 500 }}
-                            >
-                              {value || "—"}
-                            </Typography>
-                          </Box>
-                        ))}
+                        {entries.map(([label, value]) => {
+                          const tags = value.includes("|||")
+                            ? value.split("|||").map((t) => t.trim()).filter(Boolean)
+                            : [];
+                          return (
+                            <Box key={label}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: tags.length > 0 ? 0.5 : 0 }}>
+                                {label}
+                              </Typography>
+                              {tags.length > 0 ? (
+                                <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                                  {tags.map((tag) => (
+                                    <Chip key={tag} label={tag} size="small" variant="outlined" />
+                                  ))}
+                                </Stack>
+                              ) : (
+                                <Typography variant="body2" sx={{ wordBreak: "break-word", fontWeight: 500 }}>
+                                  {value || "—"}
+                                </Typography>
+                              )}
+                            </Box>
+                          );
+                        })}
                       </Box>
                     </Box>
                   </Collapse>

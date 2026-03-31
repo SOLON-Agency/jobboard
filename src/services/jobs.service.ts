@@ -23,6 +23,7 @@ export const getPublishedJobs = async (
     .from("job_listings")
     .select("*, companies(*)", { count: "exact" })
     .eq("status", "published")
+    .eq("is_archived", false)
     .order(column, { ascending, nullsFirst: false })
     .range(from, to);
 
@@ -38,7 +39,7 @@ export const getPublishedJobs = async (
     query = query.eq("job_type", filters.type);
   }
   if (filters.experience) {
-    query = query.eq("experience_level", filters.experience);
+    query = query.overlaps("experience_level", [filters.experience]);
   }
   if (filters.salaryMin) {
     query = query.gte("salary_min", filters.salaryMin);
@@ -48,6 +49,9 @@ export const getPublishedJobs = async (
   }
   if (filters.remote) {
     query = query.eq("is_remote", true);
+  }
+  if (filters.minBenefits && filters.minBenefits > 0) {
+    query = query.gte("benefits_count", filters.minBenefits);
   }
 
   const { data, count, error } = await query;
@@ -156,6 +160,46 @@ export const deleteJob = async (
 ) => {
   const { error } = await supabase.from("job_listings").delete().eq("id", id);
   if (error) throw error;
+};
+
+export const archiveJob = async (
+  supabase: SupabaseClient<Database>,
+  id: string,
+  archived: boolean
+): Promise<void> => {
+  const { error } = await supabase
+    .from("job_listings")
+    .update({
+      is_archived: archived,
+      archived_at: archived ? new Date().toISOString() : null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+};
+
+export const getArchivedJobs = async (
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<(Tables<"job_listings"> & { companies: Tables<"companies"> | null })[]> => {
+  const { data: companyUsers } = await supabase
+    .from("company_users")
+    .select("company_id")
+    .eq("user_id", userId)
+    .not("accepted_at", "is", null);
+
+  if (!companyUsers?.length) return [];
+
+  const companyIds = companyUsers.map((cu) => cu.company_id);
+
+  const { data, error } = await supabase
+    .from("job_listings")
+    .select("*, companies(*)")
+    .in("company_id", companyIds)
+    .eq("is_archived", true)
+    .order("archived_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as (Tables<"job_listings"> & { companies: Tables<"companies"> | null })[];
 };
 
 export const getCompanyJobs = async (

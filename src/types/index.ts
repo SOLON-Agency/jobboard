@@ -14,6 +14,7 @@ export interface JobSearchFilters {
   salaryMin?: number;
   salaryMax?: number;
   remote?: boolean;
+  minBenefits?: number;
   sort?: JobSortOption;
 }
 

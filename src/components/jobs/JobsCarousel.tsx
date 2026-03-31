@@ -17,28 +17,21 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import type { Tables } from "@/types/database";
-import { formatSalary, jobTypeLabels } from "@/lib/utils";
+import { formatSalary, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 
 type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
 
-const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary" | "default"> = {
-  "full-time":  "success",
-  "part-time":  "warning",
-  contract:     "info",
-  internship:   "secondary",
-  freelance:    "default",
-};
-
 const VISIBLE = 3; // cards visible at once on desktop
 
 interface Props {
-  title: string;
+  title?: string;
+  subtitle?: string;
   description?: string;
   jobs: JobWithCompany[];
 }
 
-export const JobsCarousel: React.FC<Props> = ({ title, description, jobs }) => {
+export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jobs }) => {
   const [start, setStart] = useState(0);
 
   if (jobs.length === 0) return null;
@@ -51,9 +44,14 @@ export const JobsCarousel: React.FC<Props> = ({ title, description, jobs }) => {
     <Box sx={{ py: { xs: 3, md: 2 } }}>
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-        <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>
+        {title && <Typography variant="h2" fontWeight={700} sx={{ mb: 1 }}>
           {title}
-        </Typography>
+        </Typography>}
+        {subtitle && (
+          <Typography variant="h3" fontWeight={700} sx={{ mb: 1 }}>
+            {subtitle}
+          </Typography>
+        )}
         {description && (
           <Typography variant="body1" color="text.secondary">
             {description}
@@ -137,8 +135,8 @@ export const JobsCarousel: React.FC<Props> = ({ title, description, jobs }) => {
                 <Chip
                   label={jobTypeLabels[job.job_type] ?? job.job_type}
                   size="small"
-                  color={jobTypeColors[job.job_type] ?? "default"}
-                  sx={{ fontWeight: 600, fontSize: "0.68rem", height: 20, mb: 1 }}
+                  variant="outlined"
+                  sx={{ fontWeight: 600, fontSize: "0.68rem", height: 20, mb: 1, ...jobTypeChipSx[job.job_type] }}
                 />
               )}
               <Typography

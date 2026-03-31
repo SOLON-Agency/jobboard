@@ -25,6 +25,7 @@ import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import type { Tables } from "@/types/database";
+import type { BenefitItem } from "@/services/benefits.service";
 import {
   formatSalary,
   formatDate,
@@ -34,7 +35,9 @@ import {
 import { JobTags } from "@/components/jobs/JobTags";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 import appSettings from "@/config/app.settings.json";
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
 type JobWithCompany = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;
@@ -42,6 +45,7 @@ type JobWithCompany = Tables<"job_listings"> & {
 
 interface JobDetailProps {
   job: JobWithCompany;
+  benefits?: BenefitItem[];
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
 }
@@ -74,6 +78,7 @@ const MetaItem: React.FC<{ label: string; value: string }> = ({ label, value }) 
 
 export const JobDetail: React.FC<JobDetailProps> = ({
   job,
+  benefits = [],
   isFavorite = false,
   onToggleFavorite,
 }) => {
@@ -104,6 +109,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
   const applyButton = (
     <ApplyButton
       job={job}
+      company={job.companies ?? undefined}
       label="Aplică acum"
       size="large"
       fullWidth
@@ -115,7 +121,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: { xs: "1fr", lg: "1fr 300px" },
+        gridTemplateColumns: { xs: "1fr", md: "1fr 300px" },
         gap: { xs: 3, lg: 4 },
         alignItems: "start",
       }}
@@ -124,6 +130,14 @@ export const JobDetail: React.FC<JobDetailProps> = ({
       <Box>
         {/* Date + company byline */}
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+          {job.location && (
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                {job.location}
+              </Typography>
+            </Stack>
+          )}
           <CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
           <Typography variant="caption" color="text.secondary">
             {job.published_at ? formatDate(job.published_at) : "Ciornă"}
@@ -139,7 +153,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
           justifyContent="space-between"
           sx={{ mb: 3, gap: 2 }}
         >
-          <Typography variant="h2" sx={{ lineHeight: 1.2, flex: 1 }}>
+          <Typography variant="h1" sx={{ lineHeight: 1.2, flex: 1 }}>
             {job.title}
           </Typography>
 
@@ -161,34 +175,29 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               </Tooltip>
             )}
 
-            {/* Share — desktop: text button; mobile: icon only */}
+            {/* Share */}
+            <Button
+              variant="outlined"
+              size="medium"
+              startIcon={<ShareOutlinedIcon sx={{ fontSize: "16px !important" }} />}
+              onClick={handleShare}
+              sx={{ borderRadius: 5, fontWeight: 700, display: { xs: "none", md: "inline-flex" } }}
+            >
+              Trimite
+            </Button>
             <Tooltip title="Trimite">
               <Button
                 variant="outlined"
                 size="medium"
-                startIcon={<ShareOutlinedIcon />}
                 onClick={handleShare}
-                sx={{ borderRadius: 2, display: { xs: "none", sm: "inline-flex" } }}
-              >
-                Trimite
-              </Button>
-            </Tooltip>
-            <Tooltip title="Trimite">
-              <IconButton
-                size="small"
-                onClick={handleShare}
-                sx={{
-                  border: "1px solid",
-                  borderColor: "divider",
-                  display: { xs: "inline-flex", sm: "none" },
-                }}
+                sx={{ borderRadius: 5, minWidth: 0, px: 1.5, display: { xs: "inline-flex", md: "none" } }}
               >
                 <ShareOutlinedIcon fontSize="small" />
-              </IconButton>
+              </Button>
             </Tooltip>
 
             {/* Apply */}
-            <ApplyButton job={job} size="medium" sx={{ borderRadius: 2 }} />
+            <ApplyButton job={job} company={job.companies ?? undefined} size="medium" sx={{ borderRadius: 2 }} />
           </Stack>
         </Stack>
 
@@ -202,7 +211,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2 }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-                  <Box
+                  {/* <Box
                     sx={{
                       width: 28,
                       height: 28,
@@ -218,8 +227,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                     }}
                   >
                     {idx + 1}
-                  </Box>
-                  <Typography variant="h5" fontWeight={700}>
+                  </Box> */}
+                  <Typography variant="h3" fontWeight={700}>
                     {section.title}
                   </Typography>
                 </Stack>
@@ -280,20 +289,56 @@ export const JobDetail: React.FC<JobDetailProps> = ({
           )}
         </Stack>
 
+        {/* Benefits section */}
+        {benefits.length > 0 && (
+          <Paper
+            variant="outlined"
+            sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mt: 2 }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
+              <CardGiftcardOutlinedIcon sx={{ color: "success.main", fontSize: 22 }} />
+              <Typography variant="h3" fontWeight={700}>Beneficii {job.title}</Typography>
+              <Chip
+                label={benefits.length}
+                size="small"
+                color="success"
+                variant="outlined"
+                sx={{ height: 20, fontSize: "0.7rem", fontWeight: 700 }}
+              />
+            </Stack>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+              {benefits.map((benefit) => (
+                <Stack key={benefit.id} direction="row" spacing={1} alignItems="center">
+                  <CheckCircleOutlineIcon sx={{ fontSize: 16, color: "success.main", flexShrink: 0 }} />
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    title={benefit.title.length > 50 ? benefit.title : undefined}
+                    sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}
+                  >
+                    {benefit.title.length > 80
+                      ? `${benefit.title.slice(0, 80)}…`
+                      : benefit.title}
+                  </Typography>
+                </Stack>
+              ))}
+            </Box>
+          </Paper>
+        )}
+
         {/* Mobile Apply button */}
-        <Box sx={{ mt: 3, display: { xs: "block", lg: "none" } }}>
+        <Box sx={{ mt: 3, display: { xs: "block", md: "none" } }}>
           {applyButton}
         </Box>
       </Box>
 
       {/* ── RIGHT: sticky company sidebar ── */}
-      <Box sx={{ position: { lg: "sticky" }, top: { lg: 88 } }}>
+      <Box sx={{ position: { sm: "sticky" }, top: { sm: 88 } }}>
         <Paper
           variant="outlined"
           sx={{
             borderRadius: 3,
             overflow: "hidden",
-            bgcolor: "background.paper",
           }}
         >
           {/* Company hero */}
@@ -320,7 +365,17 @@ export const JobDetail: React.FC<JobDetailProps> = ({
             >
               <WorkOutlineIcon sx={{ fontSize: 30, color: "text.secondary" }} />
             </Avatar>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              component={job.companies?.slug ? Link : "span"}
+              href={job.companies?.slug ? `/companies/${job.companies.slug}` : undefined}
+              sx={{
+                textDecoration: "none",
+                color: "inherit",
+                "&:hover": { textDecoration: "underline" },
+              }}
+            >
               {job.companies?.name ?? "Companie"}
             </Typography>
             {job.companies?.description && (
@@ -329,6 +384,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 {job.companies.description.length > 80 ? "…" : ""}
               </Typography>
             )}
+
             {job.companies?.website && (
               <Button
                 variant="contained"
@@ -362,8 +418,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               <MetaItem
                 label="Experiență"
                 value={
-                  job.experience_level
-                    ? (experienceLevelLabels[job.experience_level] ?? job.experience_level)
+                  job.experience_level && job.experience_level.length > 0
+                    ? job.experience_level.map((lvl) => experienceLevelLabels[lvl] ?? lvl).join(", ")
                     : "—"
                 }
               />
@@ -389,7 +445,17 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               />
             </Box>
 
-            <JobTags job={job} sx={{ mb: 2.5 }} />
+            <JobTags job={job} sx={{ mb: benefits.length > 0 ? 1.5 : 2.5 }} />
+
+            {/* Benefits chip */}
+            {benefits.length > 0 && (
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2.5 }}>
+                <CardGiftcardOutlinedIcon sx={{ fontSize: 16, color: "success.main" }} />
+                <Typography variant="body2" fontWeight={600} color="success.main">
+                  {benefits.length} {benefits.length === 1 ? "beneficiu" : "beneficii"}
+                </Typography>
+              </Stack>
+            )}
 
             {/* Apply button */}
             {applyButton}

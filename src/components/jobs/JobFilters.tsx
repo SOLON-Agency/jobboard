@@ -39,7 +39,7 @@ const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary"
   freelance:    "default",
 };
 
-type SectionKey = "location" | "jobType" | "experience" | "salary" | "remote";
+type SectionKey = "location" | "jobType" | "experience" | "salary" | "remote" | "benefits";
 
 const SectionHeader: React.FC<{
   label: string;
@@ -100,6 +100,7 @@ export const JobFilters: React.FC = () => {
     experience: false,
     salary:     true,
     remote:     false,
+    benefits:   false,
   });
 
   const toggle = (key: SectionKey) =>
@@ -110,6 +111,10 @@ export const JobFilters: React.FC = () => {
     searchParams.get("salaryMax") ? Number(searchParams.get("salaryMax")) : appSettings.config.salaryMax ?? SALARY_MAX,
   ];
   const [salaryRange, setSalaryRange] = useState<[number, number]>(initialSalary);
+
+  const [minBenefits, setMinBenefits] = useState<number>(
+    searchParams.get("minBenefits") ? Number(searchParams.get("minBenefits")) : 0
+  );
 
   const updateParam = useCallback(
     (key: string, value: string | boolean | null) => {
@@ -127,10 +132,11 @@ export const JobFilters: React.FC = () => {
 
   const clearFilters = () => {
     setSalaryRange([0, SALARY_MAX]);
+    setMinBenefits(0);
     router.push(pathname);
   };
 
-  const activeFilterCount = ["q", "location", "type", "experience", "salaryMin", "salaryMax", "remote"].filter(
+  const activeFilterCount = ["q", "location", "type", "experience", "salaryMin", "salaryMax", "remote", "minBenefits"].filter(
     (k) => searchParams.has(k)
   ).length;
 
@@ -255,6 +261,43 @@ export const JobFilters: React.FC = () => {
                 />
               }
               label={<Typography variant="body2">Doar remote</Typography>}
+            />
+          </Box>
+        </Collapse>
+      </Box>
+
+      {/* Min benefits */}
+      <Box>
+        <SectionHeader
+          label="Număr minim de beneficii"
+          open={open.benefits}
+          onToggle={() => toggle("benefits")}
+        />
+        <Collapse in={open.benefits}>
+          <Box sx={{ pb: 2, px: 1 }}>
+            <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+              <Typography variant="caption" color="text.secondary">Minim</Typography>
+              <Typography variant="caption" fontWeight={700} color={minBenefits > 0 ? "primary.main" : "text.secondary"}>
+                {minBenefits === 0 ? "Orice" : `${minBenefits}+`}
+              </Typography>
+            </Stack>
+            <Slider
+              value={minBenefits}
+              min={0}
+              max={10}
+              step={1}
+              marks
+              onChange={(_, v) => setMinBenefits(v as number)}
+              onChangeCommitted={(_, v) => {
+                const val = v as number;
+                const params = new URLSearchParams(searchParams.toString());
+                if (val > 0) params.set("minBenefits", String(val));
+                else params.delete("minBenefits");
+                params.delete("page");
+                router.push(`${pathname}?${params.toString()}`);
+              }}
+              size="small"
+              color="success"
             />
           </Box>
         </Collapse>

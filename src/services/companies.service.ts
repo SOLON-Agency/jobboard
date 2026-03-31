@@ -27,14 +27,26 @@ export const getCompanyWithJobs = async (
 
   if (error) throw error;
 
-  const { data: jobs } = await supabase
-    .from("job_listings")
-    .select("*")
-    .eq("company_id", company.id)
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
+  const [publishedResult, totalResult] = await Promise.all([
+    supabase
+      .from("job_listings")
+      .select("*")
+      .eq("company_id", company.id)
+      .eq("status", "published")
+      .eq("is_archived", false)
+      .order("published_at", { ascending: false }),
+    supabase
+      .from("job_listings")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .eq("is_archived", false),
+  ]);
 
-  return { company, jobs: jobs ?? [] };
+  return {
+    company,
+    jobs: publishedResult.data ?? [],
+    totalJobCount: totalResult.count ?? 0,
+  };
 };
 
 export const getAllCompanySlugs = async (
@@ -86,13 +98,15 @@ export const updateCompany = async (
 
 export const getUserCompanies = async (
   supabase: SupabaseClient<Database>,
-  userId: string
+  userId: string,
+  onlyActive: boolean = true,
 ): Promise<(Tables<"company_users"> & { companies: Tables<"companies"> | null })[]> => {
   const { data, error } = await supabase
     .from("company_users")
     .select("*, companies(*)")
     .eq("user_id", userId)
-    .not("accepted_at", "is", null);
+    .not("accepted_at", "is", null)
+    .eq("companies.is_archived", onlyActive ? false : true);
 
   if (error) throw error;
   return data ?? [];
@@ -110,9 +124,32 @@ export const archiveCompany = async (
 ): Promise<void> => {
   const { error } = await supabase
     .from("companies")
-    .update({ is_archived: archived })
+    .update({
+      is_archived: archived,
+      archived_at: archived ? new Date().toISOString() : null,
+    })
     .eq("id", id);
   if (error) throw error;
+};
+
+export const getArchivedCompanies = async (
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<(Tables<"companies"> & { role: Database["public"]["Enums"]["company_role"] })[]> => {
+  const { data, error } = await supabase
+    .from("company_users")
+    .select("role, companies(*)")
+    .eq("user_id", userId)
+    .not("accepted_at", "is", null);
+
+  if (error) throw error;
+
+  return (data ?? []).flatMap((row) => {
+    if (!row.companies) return [];
+    const company = row.companies as Tables<"companies">;
+    if (!company.is_archived) return [];
+    return [{ ...company, role: row.role }];
+  });
 };
 
 export const getUserCompaniesWithJobCount = async (
@@ -153,6 +190,20 @@ export const getCompanyMembers = async (
 
   if (error) throw error;
   return data ?? [];
+};
+
+export const trackCompanyVisit = async (
+  supabase: SupabaseClient<Database>,
+  companyId: string
+): Promise<void> => {
+  await supabase.rpc("increment_company_visits", { p_company_id: companyId });
+};
+
+export const trackCompanyEngage = async (
+  supabase: SupabaseClient<Database>,
+  companyId: string
+): Promise<void> => {
+  await supabase.rpc("increment_company_engages", { p_company_id: companyId });
 };
 
 export const inviteMember = async (

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Box, Container, Typography, Stack, useTheme } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import appSettings from "@/config/app.settings.json";
 
 const footerLinks = [
   { label: "Locuri de muncă", href: "/jobs" },
@@ -52,7 +53,7 @@ export const Footer: React.FC = () => {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              LegalJobs
+              {appSettings.name}
             </Typography>
           </Box>
 

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import appSettings from "@/config/app.settings.json";
 
 const SOURCES = [
   {
@@ -45,7 +46,7 @@ function slugify(text: string): string {
 
 async function fetchPage(url: string): Promise<string> {
   const resp = await fetch(url, {
-    headers: { "User-Agent": "LegalJobs-Scraper/1.0" },
+    headers: { "User-Agent": `${appSettings.name}-Scraper/1.0` },
   });
   return resp.text();
 }

@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
@@ -44,6 +46,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      job_benefits: {
+        Row: {
+          created_at: string | null
+          id: string
+          job_id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          job_id: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_benefits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       applications: {
         Row: {
@@ -88,9 +122,11 @@ export type Database = {
       }
       companies: {
         Row: {
+          archived_at: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          engages: number
           founded_year: number | null
           id: string
           industry: string | null
@@ -101,12 +137,15 @@ export type Database = {
           size: string | null
           slug: string
           updated_at: string
+          visits: number
           website: string | null
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          engages?: number
           founded_year?: number | null
           id?: string
           industry?: string | null
@@ -117,12 +156,15 @@ export type Database = {
           size?: string | null
           slug: string
           updated_at?: string
+          visits?: number
           website?: string | null
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          engages?: number
           founded_year?: number | null
           id?: string
           industry?: string | null
@@ -133,6 +175,7 @@ export type Database = {
           size?: string | null
           slug?: string
           updated_at?: string
+          visits?: number
           website?: string | null
         }
         Relationships: []
@@ -384,26 +427,32 @@ export type Database = {
       }
       forms: {
         Row: {
+          archived_at: string | null
           company_id: string
           created_at: string
           description: string | null
           id: string
+          is_archived: boolean
           name: string
           status: string
         }
         Insert: {
+          archived_at?: string | null
           company_id: string
           created_at?: string
           description?: string | null
           id?: string
+          is_archived?: boolean
           name: string
           status?: string
         }
         Update: {
+          archived_at?: string | null
           company_id?: string
           created_at?: string
           description?: string | null
           id?: string
+          is_archived?: boolean
           name?: string
           status?: string
         }
@@ -421,12 +470,15 @@ export type Database = {
         Row: {
           application_form_id: string | null
           application_url: string | null
+          archived_at: string | null
+          benefits_count: number
           company_id: string
           created_at: string
           description: string | null
-          experience_level: string | null
+          experience_level: string[] | null
           expires_at: string | null
           id: string
+          is_archived: boolean
           is_external: boolean
           is_remote: boolean
           job_type: string | null
@@ -446,12 +498,15 @@ export type Database = {
         Insert: {
           application_form_id?: string | null
           application_url?: string | null
+          archived_at?: string | null
+          benefits_count?: number
           company_id: string
           created_at?: string
           description?: string | null
-          experience_level?: string | null
+          experience_level?: string[] | null
           expires_at?: string | null
           id?: string
+          is_archived?: boolean
           is_external?: boolean
           is_remote?: boolean
           job_type?: string | null
@@ -471,12 +526,15 @@ export type Database = {
         Update: {
           application_form_id?: string | null
           application_url?: string | null
+          archived_at?: string | null
+          benefits_count?: number
           company_id?: string
           created_at?: string
           description?: string | null
-          experience_level?: string | null
+          experience_level?: string[] | null
           expires_at?: string | null
           id?: string
+          is_archived?: boolean
           is_external?: boolean
           is_remote?: boolean
           job_type?: string | null
@@ -578,6 +636,136 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_experience: {
+        Row: {
+          company: string
+          created_at: string | null
+          description: string | null
+          end_year: number | null
+          id: string
+          is_current: boolean
+          sort_order: number
+          start_year: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string | null
+          description?: string | null
+          end_year?: number | null
+          id?: string
+          is_current?: boolean
+          sort_order?: number
+          start_year?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string | null
+          description?: string | null
+          end_year?: number | null
+          id?: string
+          is_current?: boolean
+          sort_order?: number
+          start_year?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_experience_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_skills: {
+        Row: {
+          id: string
+          skill_id: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          skill_id: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          skill_id?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_skills_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_education: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_year: number | null
+          id: string
+          institution: string
+          is_current: boolean
+          sort_order: number
+          start_year: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_year?: number | null
+          id?: string
+          institution: string
+          is_current?: boolean
+          sort_order?: number
+          start_year?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_year?: number | null
+          id?: string
+          institution?: string
+          is_current?: boolean
+          sort_order?: number
+          start_year?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_education_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -590,6 +778,7 @@ export type Database = {
           id: string
           is_public: boolean
           location: string | null
+          phone: string | null
           slug: string | null
           updated_at: string
         }
@@ -604,6 +793,7 @@ export type Database = {
           id: string
           is_public?: boolean
           location?: string | null
+          phone?: string | null
           slug?: string | null
           updated_at?: string
         }
@@ -618,8 +808,24 @@ export type Database = {
           id?: string
           is_public?: boolean
           location?: string | null
+          phone?: string | null
           slug?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          id: string
+          name: string
+        }
+        Insert: {
+          id?: string
+          name: string
+        }
+        Update: {
+          id?: string
+          name?: string
         }
         Relationships: []
       }
@@ -628,6 +834,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      company_has_no_owner: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: {
         Args: {
           p_company_id: string
@@ -731,3 +938,49 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      alert_frequency: ["daily", "weekly"],
+      application_status: ["pending", "reviewed", "shortlisted", "rejected"],
+      company_role: ["owner", "admin", "member"],
+      entity_type: ["user", "company"],
+      job_status: ["draft", "published", "archived"],
+    },
+  },
+} as const

@@ -1,84 +1,428 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Box, Container, Typography, Button, Stack } from "@mui/material";
+import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import { motion, type Variants } from "framer-motion";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import GavelIcon from "@mui/icons-material/Gavel";
+import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 
-const headingGradient = "linear-gradient(135deg, #03170C 0%, #3E5C76 55%, #748CAB 100%)";
-const glowGradient = "radial-gradient(circle, rgba(195,174,97,0.12) 0%, rgba(62,92,118,0.06) 50%, transparent 70%)";
+// ── Brand colors (from palette.ts) ───────────────────────────────────────────
+
+const BG = "#03170C";
+const WAVES = [
+  { offset: 0,              amplitude: 70, frequency: 0.003,  color: "rgba(195,174,97,0.9)",  opacity: 0.55 },
+  { offset: Math.PI / 2,   amplitude: 90, frequency: 0.0026, color: "rgba(62,92,118,0.85)",   opacity: 0.45 },
+  { offset: Math.PI,       amplitude: 60, frequency: 0.0034, color: "rgba(116,140,171,0.8)",  opacity: 0.40 },
+  { offset: Math.PI * 1.5, amplitude: 80, frequency: 0.0022, color: "rgba(15,64,36,0.9)",     opacity: 0.35 },
+  { offset: Math.PI * 2,   amplitude: 55, frequency: 0.004,  color: "rgba(240,235,216,0.5)",  opacity: 0.25 },
+];
+
+// ── Framer-motion variants ────────────────────────────────────────────────────
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.9, staggerChildren: 0.14 } },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: "easeOut" } },
+};
+
+const statsVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.96 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.65, ease: "easeOut", staggerChildren: 0.08 } },
+};
+
+// ── Stats data ────────────────────────────────────────────────────────────────
+
+const stats = [
+  { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Posturi publicate", value: "500+" },
+  { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme partenere", value: "80+" },
+  { icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: "rgba(240,235,216,0.8)" }} />, label: "Candidați activi", value: "1.200+" },
+];
+
+// ── Pills ─────────────────────────────────────────────────────────────────────
+
+const pills = ["Acces gratuit", "Firme de top", "Aplicare directă"] as const;
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export const HeroSection: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const targetRef = useRef({ x: 0, y: 0 });
 
+  // ── Canvas animation ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+    let time = 0;
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mouseInfluence = prefersReduced ? 10 : 60;
+    const influenceRadius = prefersReduced ? 160 : 300;
+    const smoothing = prefersReduced ? 0.04 : 0.1;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      const cx = { x: canvas.width / 2, y: canvas.height / 2 };
+      mouseRef.current = { ...cx };
+      targetRef.current = { ...cx };
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      targetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+
+    const onMouseLeave = () => {
+      targetRef.current = { x: canvas.width / 2, y: canvas.height / 2 };
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("mouseleave", onMouseLeave);
+
+    const drawWave = (wave: typeof WAVES[number]) => {
+      ctx.save();
+      ctx.beginPath();
+
+      for (let x = 0; x <= canvas.width; x += 4) {
+        const dx = x - mouseRef.current.x;
+        const dy = canvas.height / 2 - mouseRef.current.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const influence = Math.max(0, 1 - dist / influenceRadius);
+        const mouseEffect = influence * mouseInfluence * Math.sin(time * 0.001 + x * 0.01 + wave.offset);
+
+        const y =
+          canvas.height / 2 +
+          Math.sin(x * wave.frequency + time * 0.002 + wave.offset) * wave.amplitude +
+          Math.sin(x * wave.frequency * 0.4 + time * 0.003) * (wave.amplitude * 0.45) +
+          mouseEffect;
+
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = wave.color;
+      ctx.globalAlpha = wave.opacity;
+      ctx.shadowBlur = 40;
+      ctx.shadowColor = wave.color;
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const animate = () => {
+      time++;
+      mouseRef.current.x += (targetRef.current.x - mouseRef.current.x) * smoothing;
+      mouseRef.current.y += (targetRef.current.y - mouseRef.current.y) * smoothing;
+
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+
+      WAVES.forEach(drawWave);
+      animId = requestAnimationFrame(animate);
+    };
+
+    animId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+      canvas.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mouseleave", onMouseLeave);
+    };
+  }, []);
+
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <Box
+      component="section"
       sx={{
-        pt: { xs: 10, md: 16 },
-        pb: { xs: 8, md: 14 },
         position: "relative",
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
         overflow: "hidden",
+        bgcolor: BG,
       }}
     >
+      {/* Canvas background */}
       <Box
+        component="canvas"
+        ref={canvasRef}
+        aria-hidden="true"
         sx={{
           position: "absolute",
-          top: "20%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 600,
-          height: 600,
-          borderRadius: "50%",
-          background: glowGradient,
-          pointerEvents: "none",
+          inset: 0,
+          width: "100%",
+          height: "100%",
         }}
       />
 
-      <Container maxWidth="md" sx={{ position: "relative", textAlign: "center" }}>
-        <Typography
-          variant="h1"
-          sx={{
-            mb: 3,
-            fontSize: { xs: "2.25rem", md: "3.5rem" },
-            background: headingGradient,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          Platforma ta de carieră juridică
-        </Typography>
+      {/* Radial glow overlays */}
+      <Box sx={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <Box sx={{
+          position: "absolute", top: 0, left: "50%",
+          transform: "translateX(-50%)",
+          width: 600, height: 600,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(195,174,97,0.06) 0%, transparent 70%)",
+          filter: "blur(60px)",
+        }} />
+        <Box sx={{
+          position: "absolute", bottom: 0, right: 0,
+          width: 400, height: 400,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(62,92,118,0.08) 0%, transparent 70%)",
+          filter: "blur(80px)",
+        }} />
+      </Box>
 
-        <Typography
-          variant="h5"
-          color="text.secondary"
-          sx={{ mb: 5, fontWeight: 400, maxWidth: 600, mx: "auto" }}
-        >
-          Explorează sute de posturi juridice de la firme de top. Aplică direct,
-          setează alerte și preia controlul carierei tale.
-        </Typography>
+      {/* Content */}
+      <Container
+        maxWidth="lg"
+        sx={{ position: "relative", zIndex: 10, py: { xs: 12, md: 16 }, textAlign: "center" }}
+      >
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
 
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          justifyContent="center"
-        >
-          <Button
-            component={Link}
-            href="/jobs"
-            variant="contained"
-            size="large"
-            sx={{ px: 4, py: 1.5 }}
-          >
-            Explorează locuri de muncă
-          </Button>
-          <Button
-            component={Link}
-            href="/register"
-            variant="outlined"
-            size="large"
-            sx={{ px: 4, py: 1.5 }}
-          >
-            Creează cont
-          </Button>
-        </Stack>
+          {/* Badge */}
+          <motion.div variants={itemVariants}>
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 4,
+                px: 2.5,
+                py: 1,
+                borderRadius: 99,
+                border: "1px solid rgba(195,174,97,0.3)",
+                bgcolor: "rgba(195,174,97,0.08)",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              <AutoAwesomeIcon sx={{ fontSize: 15, color: "rgba(195,174,97,0.9)" }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "rgba(195,174,97,0.85)",
+                  fontWeight: 700,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  fontSize: "0.68rem",
+                }}
+              >
+                Platforma #1 pentru avocați
+              </Typography>
+            </Box>
+          </motion.div>
+
+          {/* Heading */}
+          <motion.div variants={itemVariants}>
+            <Typography
+              component="h1"
+              sx={{
+                fontSize: { xs: "2.4rem", sm: "3.2rem", md: "4.5rem", lg: "5rem" },
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.1,
+                color: "#F0EBD8",
+                mb: 3,
+              }}
+            >
+              Cariera ta juridică{" "}
+              <Box
+                component="span"
+                sx={{
+                  background: "linear-gradient(135deg, rgba(195,174,97,1) 0%, rgba(116,140,171,0.9) 60%, rgba(240,235,216,0.8) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                începe aici
+              </Box>
+            </Typography>
+          </motion.div>
+
+          {/* Subtitle */}
+          <motion.div variants={itemVariants}>
+            <Typography
+              sx={{
+                fontSize: { xs: "1.05rem", md: "1.35rem" },
+                color: "rgba(240,235,216,0.65)",
+                maxWidth: 640,
+                mx: "auto",
+                mb: 5,
+                lineHeight: 1.7,
+              }}
+            >
+              Explorează sute de posturi la firme de avocatură de top, aplică direct
+              și preia controlul carierei tale juridice — totul gratuit.
+            </Typography>
+          </motion.div>
+
+          {/* CTAs */}
+          <motion.div variants={itemVariants}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              justifyContent="center"
+              sx={{ mb: 5 }}
+            >
+              <Button
+                component={Link}
+                href="/jobs"
+                variant="contained"
+                size="large"
+                endIcon={<ArrowForwardIcon sx={{ transition: "transform 0.2s", ".MuiButton-root:hover &": { transform: "translateX(4px)" } }} />}
+                sx={{
+                  px: 4,
+                  py: 1.6,
+                  borderRadius: 99,
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
+                  letterSpacing: "0.04em",
+                  bgcolor: "rgba(195,174,97,0.9)",
+                  color: "#03170C",
+                  "&:hover": { bgcolor: "rgba(195,174,97,1)", transform: "translateY(-1px)", boxShadow: "0 8px 32px rgba(195,174,97,0.35)" },
+                  transition: "all 0.2s",
+                }}
+              >
+                Explorează posturi
+              </Button>
+              <Button
+                component={Link}
+                href="/register"
+                variant="outlined"
+                size="large"
+                sx={{
+                  px: 4,
+                  py: 1.6,
+                  borderRadius: 99,
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  borderColor: "rgba(240,235,216,0.25)",
+                  color: "rgba(240,235,216,0.8)",
+                  backdropFilter: "blur(8px)",
+                  bgcolor: "rgba(240,235,216,0.05)",
+                  "&:hover": {
+                    borderColor: "rgba(240,235,216,0.5)",
+                    bgcolor: "rgba(240,235,216,0.1)",
+                    transform: "translateY(-1px)",
+                  },
+                  transition: "all 0.2s",
+                }}
+              >
+                Creează cont gratuit
+              </Button>
+            </Stack>
+          </motion.div>
+
+          {/* Feature pills */}
+          <motion.div variants={itemVariants}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              justifyContent="center"
+              flexWrap="wrap"
+              sx={{ mb: 8, gap: 1.5 }}
+            >
+              {pills.map((pill) => (
+                <Box
+                  key={pill}
+                  sx={{
+                    px: 2.5,
+                    py: 0.75,
+                    borderRadius: 99,
+                    border: "1px solid rgba(240,235,216,0.15)",
+                    bgcolor: "rgba(240,235,216,0.05)",
+                    backdropFilter: "blur(6px)",
+                    color: "rgba(240,235,216,0.6)",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {pill}
+                </Box>
+              ))}
+            </Stack>
+          </motion.div>
+
+          {/* Stats bar */}
+          <motion.div variants={statsVariants}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+                gap: { xs: 2, sm: 0 },
+                borderRadius: 3,
+                border: "1px solid rgba(240,235,216,0.1)",
+                bgcolor: "rgba(240,235,216,0.04)",
+                backdropFilter: "blur(12px)",
+                overflow: "hidden",
+                maxWidth: 640,
+                mx: "auto",
+              }}
+            >
+              {stats.map((stat, i) => (
+                <motion.div key={stat.label} variants={itemVariants}>
+                  <Box
+                    sx={{
+                      px: 3,
+                      py: 3,
+                      textAlign: "center",
+                      borderRight: { sm: i < stats.length - 1 ? "1px solid rgba(240,235,216,0.08)" : "none" },
+                    }}
+                  >
+                    <Box sx={{ mb: 0.75, display: "flex", justifyContent: "center" }}>
+                      {stat.icon}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontSize: "1.85rem",
+                        fontWeight: 800,
+                        color: "#F0EBD8",
+                        lineHeight: 1,
+                        mb: 0.5,
+                      }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "0.68rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.22em",
+                        textTransform: "uppercase",
+                        color: "rgba(240,235,216,0.45)",
+                      }}
+                    >
+                      {stat.label}
+                    </Typography>
+                  </Box>
+                </motion.div>
+              ))}
+            </Box>
+          </motion.div>
+
+        </motion.div>
       </Container>
     </Box>
   );

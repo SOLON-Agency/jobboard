@@ -16,18 +16,11 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import type { Tables } from "@/types/database";
-import { formatSalary, timeAgo, jobTypeLabels } from "@/lib/utils";
+import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx, experienceLevelLabels } from "@/lib/utils";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 import appSettings from "@/config/app.settings.json";
-const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary" | "default"> = {
-  "full-time":  "success",
-  "part-time":  "warning",
-  contract:     "info",
-  internship:   "secondary",
-  freelance:    "default",
-};
-
 const statusColor: Record<string, "default" | "success" | "warning"> = {
   draft: "warning",
   published: "success",
@@ -98,8 +91,8 @@ export const JobRow: React.FC<JobRowProps> = ({
           <Chip
             label={jobTypeLabels[job.job_type] ?? job.job_type}
             size="small"
-            color={jobTypeColors[job.job_type] ?? "default"}
-            sx={{ fontWeight: 600, fontSize: "0.68rem", height: 20 }}
+            variant="outlined"
+            sx={{ fontWeight: 600, fontSize: "0.68rem", height: 20, ...jobTypeChipSx[job.job_type] }}
           />
         )}
         {job.is_remote && (
@@ -107,14 +100,22 @@ export const JobRow: React.FC<JobRowProps> = ({
         )}
 
       </Stack>
-      <Typography
-        variant="subtitle2"
-        fontWeight={700}
-        noWrap
-        sx={{ lineHeight: 1.3 }}
-      >
-        {job.title}
-      </Typography>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+        <Typography
+          variant="subtitle2"
+          fontWeight={700}
+          noWrap
+          sx={{ lineHeight: 1.3 }}
+        >
+          {job.title}
+        </Typography>
+        {job.experience_level && job.experience_level.length > 0 && (
+          job.experience_level.map((experience) => (
+            <Chip key={experience} label={experienceLevelLabels[experience] ?? experience} size="small" color="primary" variant="outlined" sx={{ height: 20, fontSize: "0.68rem" }} />
+          ))
+        )}
+      </Stack>
+      
       <Typography variant="caption" color="text.secondary" noWrap>
         {job.companies?.name}
       </Typography>
@@ -144,9 +145,29 @@ export const JobRow: React.FC<JobRowProps> = ({
         )}
       </Stack>
 
-      <Typography variant="caption" sx={{ color: "primary.main", fontWeight: 700, display: "block" }}>
-        {formatSalary(job.salary_min, job.salary_max)}
-      </Typography>
+      <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="flex-end" sx={{ mt: 0.25 }}>
+        <Typography variant="caption" sx={{ color: "primary.main", fontWeight: 700 }}>
+          {formatSalary(job.salary_min, job.salary_max)}
+        </Typography>
+        {job.benefits_count > 0 && (
+          <Chip
+            icon={<CardGiftcardOutlinedIcon sx={{ fontSize: "12px !important" }} />}
+            label={job.benefits_count}
+            size="small"
+            variant="outlined"
+            sx={{
+              height: 18,
+              fontSize: "0.65rem",
+              fontWeight: 700,
+              color: "success.main",
+              borderColor: "rgba(46,125,50,0.4)",
+              bgcolor: "rgba(46,125,50,0.06)",
+              "& .MuiChip-icon": { color: "success.main", ml: "4px" },
+              "& .MuiChip-label": { pr: "6px" },
+            }}
+          />
+        )}
+      </Stack>
     </Box>
 
     {/* Actions — custom slot or default apply/bookmark */}

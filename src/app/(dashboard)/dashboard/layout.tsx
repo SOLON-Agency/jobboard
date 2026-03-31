@@ -8,6 +8,7 @@ export default function DashboardLayout({
 }) {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* On desktop, 2-col grid; on mobile, stacked single col */}
       <Box
         sx={{
           display: "grid",

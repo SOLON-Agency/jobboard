@@ -6,15 +6,24 @@ import {
   Paper,
   Stack,
   Avatar,
+  Chip,
   Divider,
   Button,
+  Tooltip,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import DownloadIcon from "@mui/icons-material/Download";
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import { createClient } from "@/lib/supabase/server";
 import { experienceLevelLabels } from "@/lib/utils";
+import { getPublicEducationItems } from "@/services/education.service";
+import { getPublicExperienceItems } from "@/services/experience.service";
+import { getProfileSkills, type ProfileSkillWithName } from "@/services/skills.service";
+import { EducationTimeline } from "@/components/profile/EducationTimeline";
+import { ExperienceTimeline } from "@/components/profile/ExperienceTimeline";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -23,28 +32,17 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-interface MetaItemProps {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}
+// ── Two-line meta cell (mirrors company page MetaCell) ───────────────────────
 
-const MetaItem = ({ label, value, icon }: MetaItemProps) => (
+const MetaCell = ({ label, value }: { label: string; value: string }) => (
   <Box>
-    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 0.5 }}>
-      {icon && (
-        <Box sx={{ display: "flex", color: "text.disabled", "& svg": { fontSize: 13 } }}>
-          {icon}
-        </Box>
-      )}
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        sx={{ fontWeight: 600, letterSpacing: 0.4 }}
-      >
-        {label}
-      </Typography>
-    </Stack>
+    <Typography
+      variant="caption"
+      color="text.disabled"
+      sx={{ fontWeight: 600, letterSpacing: 0.4, display: "block", mb: 0.25 }}
+    >
+      {label}
+    </Typography>
     <Typography variant="body2" fontWeight={700} color="text.primary">
       {value}
     </Typography>
@@ -82,163 +80,283 @@ export default async function PublicProfilePage({ params }: Props) {
     notFound();
   }
 
+  const [education, experience, skills] = await Promise.all([
+    getPublicEducationItems(supabase, profile.id).catch(() => []),
+    getPublicExperienceItems(supabase, profile.id).catch(() => []),
+    getProfileSkills(supabase, profile.id).catch(() => [] as ProfileSkillWithName[]),
+  ]);
+
   const experienceLabel = profile.experience_level
-    ? (experienceLevelLabels[profile.experience_level as keyof typeof experienceLevelLabels] ?? profile.experience_level)
+    ? (experienceLevelLabels[
+        profile.experience_level as keyof typeof experienceLevelLabels
+      ] ?? profile.experience_level)
     : null;
 
-  const hasMeta = profile.location || experienceLabel || profile.headline;
+  const hasMetaGrid = !!(profile.location || experienceLabel);
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+
+      {/* ── Stats bar ─────────────────────────────────────────────────────── */}
+      <Stack
+        direction="row"
+        spacing={2}
+        alignItems="center"
+        divider={
+          <Box
+            component="span"
+            sx={{ width: "1px", height: 14, bgcolor: "divider", display: "inline-block" }}
+          />
+        }
+        sx={{ mb: 2 }}
+      >
+        {profile.location && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              {profile.location}
+            </Typography>
+          </Stack>
+        )}
+        {experienceLabel && (
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              {experienceLabel}
+            </Typography>
+          </Stack>
+        )}
+        {skills.length > 0 && (
+          <Typography variant="caption" color="success.main" fontWeight={600}>
+            {skills.length}{" "}
+            {skills.length === 1 ? "competență" : "competențe"}
+          </Typography>
+        )}
+      </Stack>
+
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", lg: "1fr 280px" },
-          gap: { xs: 4, lg: 5 },
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 300px" },
+          gap: { xs: 3, lg: 5 },
           alignItems: "start",
         }}
       >
-        {/* ── LEFT: main content ── */}
-        <Stack spacing={3}>
-          {/* Overview */}
-          {profile.bio && (
-            <Paper
-              variant="outlined"
-              sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}
-            >
-              <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
-                Prezentare generală
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ lineHeight: 1.85, whiteSpace: "pre-wrap" }}
-              >
-                {profile.bio}
-              </Typography>
-            </Paper>
-          )}
-
-          {/* Headline fallback when no bio */}
-          {!profile.bio && profile.headline && (
-            <Paper
-              variant="outlined"
-              sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}
-            >
-              <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
-                Prezentare generală
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {profile.headline}
-              </Typography>
-            </Paper>
-          )}
-
-          {/* Empty state */}
-          {!profile.bio && !profile.headline && (
-            <Paper
-              variant="outlined"
-              sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}
-            >
-              <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
-                Prezentare generală
-              </Typography>
-              <Typography variant="body1" color="text.disabled">
-                Acest utilizator nu a adăugat o descriere.
-              </Typography>
-            </Paper>
-          )}
-        </Stack>
-
-        {/* ── RIGHT: sticky sidebar ── */}
-        <Box sx={{ position: { lg: "sticky" }, top: 88 }}>
-          <Paper
-            variant="outlined"
-            sx={{
-              borderRadius: 3,
-              overflow: "hidden",
-              bgcolor: "rgba(62, 92, 118, 0.04)",
-              borderColor: "divider",
-            }}
+        {/* ── LEFT: title + content ─────────────────────────────────────────── */}
+        <Box>
+          {/* Title row */}
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            gap={2}
+            sx={{ mb: 3 }}
           >
-            {/* Avatar + name hero */}
-            <Box
-              sx={{
-                p: 3,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-              }}
-            >
-              <Avatar
-                src={profile.avatar_url ?? undefined}
-                sx={{
-                  width: 88,
-                  height: 88,
-                  bgcolor: "background.paper",
-                  border: "2px solid",
-                  borderColor: "divider",
-                  mb: 1.5,
-                }}
-              >
-                <PersonIcon sx={{ fontSize: 44 }} />
-              </Avatar>
-
-              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.3 }}>
+            <Box>
+              <Typography variant="h1" fontWeight={800} sx={{ lineHeight: 1.15 }}>
                 {profile.full_name ?? "Utilizator"}
               </Typography>
-
               {profile.headline && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mt: 0.5, px: 1 }}
-                >
+                <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ mt: 0.5 }}>
                   {profile.headline}
                 </Typography>
               )}
             </Box>
 
-            {hasMeta && (
-              <>
-                <Divider />
-                <Stack spacing={2.5} sx={{ p: 3 }}>
-                  {profile.location && (
-                    <MetaItem
-                      icon={<LocationOnOutlinedIcon />}
-                      label="Locație"
-                      value={profile.location}
-                    />
-                  )}
-                  {experienceLabel && (
-                    <MetaItem
-                      icon={<WorkOutlineIcon />}
-                      label="Experiență"
-                      value={experienceLabel}
-                    />
-                  )}
-                </Stack>
-              </>
-            )}
+            <Stack direction="row" spacing={1} sx={{ flexShrink: 0, pt: 1.5 }}>
+              {/* Share */}
+              <Button
+                variant="outlined"
+                size="medium"
+                startIcon={<ShareOutlinedIcon sx={{ fontSize: "16px !important" }} />}
+                sx={{
+                  borderRadius: 5,
+                  fontWeight: 700,
+                  display: { xs: "none", md: "inline-flex" },
+                }}
+              >
+                Trimite
+              </Button>
+              <Tooltip title="Trimite">
+                <Button
+                  variant="outlined"
+                  size="medium"
+                  sx={{
+                    borderRadius: 5,
+                    minWidth: 0,
+                    px: 1.5,
+                    display: { xs: "inline-flex", md: "none" },
+                  }}
+                >
+                  <ShareOutlinedIcon fontSize="small" />
+                </Button>
+              </Tooltip>
 
-            {profile.cv_url && (
-              <>
-                <Divider />
-                <Box sx={{ p: 3 }}>
+              {/* CV download */}
+              {profile.cv_url && (
+                <>
                   <Button
                     component="a"
                     href={profile.cv_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     variant="contained"
-                    fullWidth
-                    size="large"
-                    startIcon={<DownloadIcon />}
-                    sx={{ borderRadius: 2 }}
+                    size="medium"
+                    endIcon={<DownloadIcon sx={{ fontSize: "16px !important" }} />}
+                    sx={{
+                      borderRadius: 5,
+                      fontWeight: 700,
+                      bgcolor: "text.primary",
+                      color: "background.paper",
+                      "&:hover": { bgcolor: "text.secondary" },
+                      display: { xs: "none", sm: "inline-flex" },
+                    }}
                   >
-                    Descarcă CV
+                    <Typography sx={{ display: { sm: "none", md: "inline-flex" } }}>Descarcă CV</Typography>
+                    <Typography sx={{ display: { xs: "inline-flex", md: "none" } }}>CV</Typography>
                   </Button>
+                  <Tooltip title="Descarcă CV">
+                    <Button
+                      component="a"
+                      href={profile.cv_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="contained"
+                      size="medium"
+                      sx={{
+                        borderRadius: 5,
+                        minWidth: 0,
+                        px: 1.5,
+                        bgcolor: "text.primary",
+                        color: "background.paper",
+                        "&:hover": { bgcolor: "text.secondary" },
+                        display: { xs: "inline-flex", sm: "none" },
+                      }}
+                    >
+                      <DownloadIcon fontSize="small" />
+                    </Button>
+                  </Tooltip>
+                </>
+              )}
+            </Stack>
+          </Stack>
+
+          {/* Bio / overview card */}
+          <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mb: 3 }}>
+
+            {profile.bio ? (
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ lineHeight: 1.85, whiteSpace: "pre-wrap", pl: 5 }}
+              >
+                {profile.bio}
+              </Typography>
+            ) : profile.headline ? (
+              <Typography variant="body1" color="text.secondary" sx={{ pl: 5 }}>
+                {profile.headline}
+              </Typography>
+            ) : (
+              <Typography variant="body1" color="text.disabled" sx={{ pl: 5 }}>
+                Acest utilizator nu a adăugat o descriere.
+              </Typography>
+            )}
+          </Paper>
+
+          {/* Experience */}
+          {experience.length > 0 && <Box sx={{ mb: 3 }}><ExperienceTimeline items={experience} /></Box>}
+
+          {/* Education */}
+          {education.length > 0 && <EducationTimeline items={education} />}
+        </Box>
+
+        {/* ── RIGHT: sticky sidebar ─────────────────────────────────────────── */}
+        <Box sx={{ position: { sm: "sticky" }, top: { sm: 88 } }}>
+          <Paper variant="outlined" sx={{ borderRadius: 3, overflow: "hidden" }}>
+
+            {/* Avatar + name hero */}
+            <Box
+              sx={{
+                bgcolor: "action.hover",
+                py: 3,
+                px: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+                textAlign: "center",
+              }}
+            >
+              <Avatar
+                src={profile.avatar_url ?? undefined}
+                sx={{
+                  width: 80,
+                  height: 80,
+                  bgcolor: "background.paper",
+                  border: "2px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <PersonIcon sx={{ fontSize: 40 }} />
+              </Avatar>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
+                {profile.full_name ?? "Utilizator"}
+              </Typography>
+              {profile.headline && (
+                <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>
+                  {profile.headline}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Meta grid */}
+            {hasMetaGrid && (
+              <>
+                <Divider />
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 2,
+                    p: 2.5,
+                  }}
+                >
+                  {profile.location && (
+                    <MetaCell label="Locație" value={profile.location} />
+                  )}
+                  {experienceLabel && (
+                    <MetaCell label="Experiență" value={experienceLabel} />
+                  )}
+                </Box>
+              </>
+            )}
+
+            {/* Skills chips */}
+            {skills.length > 0 && (
+              <>
+                <Divider />
+                <Box sx={{ p: 2.5 }}>
+                  <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
+                    <LabelOutlinedIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ fontWeight: 600, letterSpacing: 0.4 }}
+                    >
+                      Competențe
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" flexWrap="wrap" gap={0.75}>
+                    {skills.map((s) => (
+                      <Chip
+                        key={s.id}
+                        label={s.skill.name}
+                        size="small"
+                        variant="outlined"
+                        sx={{ height: 22, fontSize: "0.7rem", fontWeight: 600 }}
+                      />
+                    ))}
+                  </Stack>
                 </Box>
               </>
             )}

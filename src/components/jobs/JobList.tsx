@@ -4,15 +4,22 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Box,
-  Typography,
-  Pagination,
-  Stack,
-  Select,
+  Button,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
   MenuItem,
   FormControl,
-  IconButton,
+  Pagination,
+  Select,
   Skeleton,
+  Stack,
   Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
@@ -21,6 +28,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import PublishIcon from "@mui/icons-material/Publish";
 import ArchiveIcon from "@mui/icons-material/Archive";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import appSettings from "@/config/app.settings.json";
 import { JobCard } from "./JobCard";
 import { JobRow } from "./JobRow";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -37,6 +46,156 @@ const SORT_OPTIONS: { value: JobSortOption; label: string }[] = [
   { value: "salary_high", label: "Salariu: Mare → Mic" },
   { value: "salary_low",  label: "Salariu: Mic → Mare" },
 ];
+
+// ─── Responsive action bar ────────────────────────────────────────────────────
+
+type ActionColor = "primary" | "secondary" | "success" | "warning";
+
+interface ActionDef {
+  key: string;
+  label: string;
+  icon: React.ReactElement;
+  color: ActionColor;
+  onClick: () => void;
+}
+
+interface JobActionsRowProps {
+  job: JobWithCompany;
+  onEdit?: (job: JobWithCompany) => void;
+  onDuplicate?: (job: JobWithCompany) => void;
+  onStatusChange?: (jobId: string, status: "published" | "archived" | "draft") => void;
+  onArchive?: (job: JobWithCompany) => void;
+}
+
+const ACTION_COLORS: Record<ActionColor, { bg: string; hover: string }> = {
+  primary:   { bg: "rgba(25,118,210,0.08)",  hover: "primary.main" },
+  secondary: { bg: "rgba(62,92,118,0.08)",   hover: "secondary.main" },
+  success:   { bg: "rgba(46,125,50,0.08)",   hover: "success.main" },
+  warning:   { bg: "rgba(237,108,2,0.08)",   hover: "warning.main" },
+};
+
+const JobActionsRow: React.FC<JobActionsRowProps> = ({
+  job, onEdit, onDuplicate, onStatusChange, onArchive,
+}) => {
+  const theme = useTheme();
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const actions: ActionDef[] = [
+    onStatusChange && job.status === "draft" ? {
+      key: "publish", label: "Publică", color: "success" as ActionColor,
+      icon: <PublishIcon fontSize="small" />,
+      onClick: () => { onStatusChange(job.id, "published"); },
+    } : null,
+    onEdit ? {
+      key: "edit", label: "Editează", color: "primary" as ActionColor,
+      icon: <EditIcon fontSize="small" />,
+      onClick: () => onEdit(job),
+    } : null,
+    onDuplicate ? {
+      key: "duplicate", label: "Duplică", color: "secondary" as ActionColor,
+      icon: <ContentCopyIcon fontSize="small" />,
+      onClick: () => onDuplicate(job),
+    } : null,
+    onArchive && appSettings.features.archiveJobs && job.status !== "archived" ? {
+      key: "archive", label: "Arhivează", color: "warning" as ActionColor,
+      icon: <ArchiveIcon fontSize="small" />,
+      onClick: () => onArchive(job),
+    } : null,
+  ].filter((a): a is ActionDef => a !== null);
+
+  // Desktop: 2 buttons + overflow menu; tablet: 1 button with text + menu; mobile: 1 icon-only + menu
+  // const visibleCount = isMd ? 2 : 1;
+  const visibleCount = 1;
+  const visible = actions.slice(0, visibleCount);
+  const overflow = actions.slice(visibleCount);
+
+  const [primary, ...rest] = visible;
+
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      {/* Primary button — always shown */}
+      {primary && (
+        <Tooltip title={!isSm ? primary.label : ""}>
+          <Button
+            size="small"
+            variant="contained"
+            color={primary.color}
+            onClick={primary.onClick}
+            startIcon={isSm ? primary.icon : undefined}
+            sx={{
+              minWidth: 0,
+              px: isSm ? 1.5 : 1,
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none" },
+              whiteSpace: "nowrap",
+            }}
+          >
+            {isSm ? primary.label : primary.icon}
+          </Button>
+        </Tooltip>
+      )}
+
+      {/* Secondary button — desktop only */}
+      {rest.map((action) => (
+        <Button
+          key={action.key}
+          size="small"
+          variant="outlined"
+          color={action.color}
+          onClick={action.onClick}
+          startIcon={action.icon}
+          sx={{ fontWeight: 500, whiteSpace: "nowrap", boxShadow: "none" }}
+        >
+          {action.label}
+        </Button>
+      ))}
+
+      {/* Overflow hamburger menu */}
+      {overflow.length > 0 && (
+        <>
+          <Tooltip title="Mai multe acțiuni">
+            <IconButton
+              size="small"
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
+              sx={{ color: "text.secondary" }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            slotProps={{ paper: { sx: { minWidth: 160, borderRadius: 2, mt: 0.5 } } }}
+          >
+            {overflow.map((action, i) => (
+              <React.Fragment key={action.key}>
+                {i > 0 && action.key === "archive" && <Divider />}
+                <MenuItem
+                  onClick={() => { action.onClick(); setMenuAnchor(null); }}
+                  sx={{ gap: 1.5, py: 1 }}
+                >
+                  <ListItemIcon sx={{ minWidth: 0, color: `${action.color}.main` }}>
+                    {action.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={action.label}
+                    primaryTypographyProps={{ variant: "body2", color: `${action.color}.main`, fontWeight: 500 }}
+                  />
+                </MenuItem>
+              </React.Fragment>
+            ))}
+          </Menu>
+        </>
+      )}
+    </Stack>
+  );
+};
 
 interface JobListProps {
   /** Controlled mode — pass jobs directly; skips internal fetching */
@@ -55,6 +214,7 @@ interface JobListProps {
   onEdit?: (job: JobWithCompany) => void;
   onDuplicate?: (job: JobWithCompany) => void;
   onStatusChange?: (jobId: string, status: "published" | "archived" | "draft") => void;
+  onArchive?: (job: JobWithCompany) => void;
 }
 
 export const JobList: React.FC<JobListProps> = ({
@@ -67,6 +227,7 @@ export const JobList: React.FC<JobListProps> = ({
   onEdit,
   onDuplicate,
   onStatusChange,
+  onArchive,
 }) => {
   const isControlled = controlledJobs !== undefined;
 
@@ -88,7 +249,7 @@ export const JobList: React.FC<JobListProps> = ({
   const shouldShowControls   = showControls   ?? !isControlled;
   const shouldShowPagination = showPagination ?? !isControlled;
   const shouldShowFavorites  = showFavorites  ?? !isControlled;
-  const hasActions = !!(onEdit || onDuplicate || onStatusChange);
+  const hasActions = !!(onEdit || onDuplicate || onStatusChange || onArchive);
 
   const page  = Number(searchParams.get("page") ?? "1");
   const sort  = (searchParams.get("sort") ?? "newest") as JobSortOption;
@@ -105,13 +266,14 @@ export const JobList: React.FC<JobListProps> = ({
     if (isControlled) return;
     setLoading(true);
     const filters: JobSearchFilters & { page: number } = {
-      q:          searchParams.get("q")          ?? undefined,
-      location:   searchParams.get("location")   ?? undefined,
-      type:       (searchParams.get("type")       as JobSearchFilters["type"])       ?? undefined,
-      experience: (searchParams.get("experience") as JobSearchFilters["experience"]) ?? undefined,
-      salaryMin:  searchParams.get("salaryMin")  ? Number(searchParams.get("salaryMin"))  : undefined,
-      salaryMax:  searchParams.get("salaryMax")  ? Number(searchParams.get("salaryMax"))  : undefined,
-      remote:     searchParams.get("remote") === "true" ? true : undefined,
+      q:           searchParams.get("q")          ?? undefined,
+      location:    searchParams.get("location")   ?? undefined,
+      type:        (searchParams.get("type")       as JobSearchFilters["type"])       ?? undefined,
+      experience:  (searchParams.get("experience") as JobSearchFilters["experience"]) ?? undefined,
+      salaryMin:   searchParams.get("salaryMin")  ? Number(searchParams.get("salaryMin"))  : undefined,
+      salaryMax:   searchParams.get("salaryMax")  ? Number(searchParams.get("salaryMax"))  : undefined,
+      remote:      searchParams.get("remote") === "true" ? true : undefined,
+      minBenefits: searchParams.get("minBenefits") ? Number(searchParams.get("minBenefits")) : undefined,
       sort,
       page,
     };
@@ -159,28 +321,13 @@ export const JobList: React.FC<JobListProps> = ({
   );
 
   const renderJobActions = (job: JobWithCompany) => (
-    <>
-      {onEdit && (
-        <IconButton size="small" onClick={() => onEdit(job)} title="Editează">
-          <EditIcon fontSize="small" />
-        </IconButton>
-      )}
-      {onDuplicate && (
-        <IconButton size="small" onClick={() => onDuplicate(job)} title="Duplică">
-          <ContentCopyIcon fontSize="small" />
-        </IconButton>
-      )}
-      {onStatusChange && job.status === "draft" && (
-        <IconButton size="small" color="success" onClick={() => onStatusChange(job.id, "published")} title="Publică">
-          <PublishIcon fontSize="small" />
-        </IconButton>
-      )}
-      {onStatusChange && job.status === "published" && (
-        <IconButton size="small" onClick={() => onStatusChange(job.id, "archived")} title="Arhivează">
-          <ArchiveIcon fontSize="small" />
-        </IconButton>
-      )}
-    </>
+    <JobActionsRow
+      job={job}
+      onEdit={onEdit}
+      onDuplicate={onDuplicate}
+      onStatusChange={onStatusChange}
+      onArchive={onArchive}
+    />
   );
 
   const activeView = isControlled ? "list" : view;

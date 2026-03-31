@@ -1,4 +1,5 @@
 {
+  "name": "LegalJobs",
   "config": {
     "currency": "RON",
     "locale": "ro",
@@ -11,7 +12,8 @@
     "messages": false,
     "notifications": false,
     "favouriteJobs": false,
-    "favouriteCompanies": true
+    "favouriteCompanies": false,
+    "archiveJobs": true
   },
   "brand": {
     "primary": "#03170C",

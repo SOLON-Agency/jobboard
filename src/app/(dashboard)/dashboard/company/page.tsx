@@ -5,6 +5,11 @@ import Link from "next/link";
 import {
   Typography,
   Button,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem as MuiMenuItem,
   Paper,
   Stack,
   Box,
@@ -24,6 +29,8 @@ import LanguageIcon from "@mui/icons-material/Language";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import appSettings from "@/config/app.settings.json";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
@@ -36,6 +43,98 @@ import { slugify, parseSupabaseError } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditCompany } from "@/components/dashboard/AddEditCompany";
 import type { CompanyFormData } from "@/components/dashboard/AddEditCompany";
+
+interface CompanyActionsProps {
+  company: CompanyWithJobCount;
+  onEdit: (c: CompanyWithJobCount) => void;
+  onArchive: (c: CompanyWithJobCount) => void;
+}
+
+const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onArchive }) => {
+  const theme = useTheme();
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const archiveAction = appSettings.features.archiveJobs ? {
+    label: company.is_archived ? "Dezarhivează" : "Arhivează",
+    icon: company.is_archived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />,
+    color: "warning" as const,
+    onClick: () => onArchive(company),
+  } : null;
+
+  // On desktop show 2 buttons (Edit + Preview); on tablet/mobile show 1 (Edit)
+  const visibleCount = isMd ? 2 : 1;
+
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      {/* Edit — primary, always first */}
+      <Tooltip title={!isSm ? "Editează" : ""}>
+        <Button
+          size="small"
+          variant="contained"
+          color="primary"
+          onClick={() => onEdit(company)}
+          startIcon={isSm ? <EditIcon fontSize="small" /> : undefined}
+          sx={{ minWidth: 0, px: isSm ? 1.5 : 1, fontWeight: 600, boxShadow: "none", "&:hover": { boxShadow: "none" }, whiteSpace: "nowrap" }}
+        >
+          {isSm ? "Editează" : <EditIcon fontSize="small" />}
+        </Button>
+      </Tooltip>
+
+      {/* Overflow menu — preview on tablet/mobile + archive */}
+      <>
+        <Tooltip title="Mai multe acțiuni">
+          <IconButton size="small" onClick={(e) => setMenuAnchor(e.currentTarget)} sx={{ color: "text.secondary" }}>
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Menu
+          anchorEl={menuAnchor}
+          open={Boolean(menuAnchor)}
+          onClose={() => setMenuAnchor(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          slotProps={{ paper: { sx: { minWidth: 180, borderRadius: 2, mt: 0.5 } } }}
+        >
+          <MuiMenuItem
+            component={Link}
+            href={`/companies/${company.slug}`}
+            target="_blank"
+            onClick={() => setMenuAnchor(null)}
+            sx={{ gap: 1.5, py: 1 }}
+          >
+            <ListItemIcon sx={{ minWidth: 0, color: "secondary.main" }}>
+              <OpenInNewIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Previzualizează"
+              primaryTypographyProps={{ variant: "body2", color: "secondary.main", fontWeight: 500 }}
+            />
+          </MuiMenuItem>
+          {/* Archive/Unarchive */}
+          {archiveAction && (
+            <>
+              {visibleCount < 2 && <Divider />}
+              <MuiMenuItem
+                onClick={() => { archiveAction.onClick(); setMenuAnchor(null); }}
+                sx={{ gap: 1.5, py: 1 }}
+              >
+                <ListItemIcon sx={{ minWidth: 0, color: "warning.main" }}>
+                  {archiveAction.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={archiveAction.label}
+                  primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }}
+                />
+              </MuiMenuItem>
+            </>
+          )}
+        </Menu>
+      </>
+    </Stack>
+  );
+};
 
 export default function CompanyPage() {
   const { user } = useAuth();
@@ -176,6 +275,12 @@ export default function CompanyPage() {
           }
 
           setMessage({ type: "success", text: "Companie creată." });
+          // Fire-and-forget: send company created confirmation email
+          supabase.functions
+            .invoke("notify-company-created", {
+              body: { company_id: newCompany.id, user_id: user.id },
+            })
+            .catch((e) => console.warn("notify-company-created failed:", e));
         }
         await load();
         setTimeout(closeDrawer, 900);
@@ -205,14 +310,6 @@ export default function CompanyPage() {
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Typography variant="h3">Companii</Typography>
         <Stack direction="row" spacing={1}>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={showArchived ? <UnarchiveIcon /> : <ArchiveIcon />}
-            onClick={() => setShowArchived((v) => !v)}
-          >
-            {showArchived ? "Ascunde arhivate" : "Afișează arhivate"}
-          </Button>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Companie nouă
           </Button>
@@ -339,35 +436,11 @@ export default function CompanyPage() {
                 </Typography>
               </Stack>
 
-              <IconButton
-                size="small"
-                component={Link}
-                href={`/companies/${company.slug}`}
-                target="_blank"
-                title="Previzualizează profilul public"
-                sx={{ flexShrink: 0 }}
-              >
-                <OpenInNewIcon fontSize="small" />
-              </IconButton>
-              <Tooltip title={company.is_archived ? "Dezarhivează" : "Arhivează"}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleArchive(company)}
-                  sx={{ flexShrink: 0, color: company.is_archived ? "primary.main" : "text.secondary" }}
-                >
-                  {company.is_archived
-                    ? <UnarchiveIcon fontSize="small" />
-                    : <ArchiveIcon fontSize="small" />}
-                </IconButton>
-              </Tooltip>
-              <IconButton
-                size="small"
-                onClick={() => openEdit(company)}
-                title="Editează compania"
-                sx={{ flexShrink: 0 }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
+              <CompanyActions
+                company={company}
+                onEdit={openEdit}
+                onArchive={handleArchive}
+              />
             </Paper>
           ))}
         </Stack>

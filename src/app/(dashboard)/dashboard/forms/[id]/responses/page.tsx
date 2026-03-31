@@ -354,16 +354,33 @@ export default function FormResponsesPage() {
                               gap: 1.5,
                             }}
                           >
-                            {form.form_fields.map((field) => (
-                              <Box key={field.id}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                                  {field.label}
-                                </Typography>
-                                <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
-                                  {getFieldValue(response, field.id)}
-                                </Typography>
-                              </Box>
-                            ))}
+                            {form.form_fields.map((field) => {
+                              const raw = getFieldValue(response, field.id);
+                              const isCheckbox = field.field_type === "checkbox";
+                              const tags = isCheckbox && raw !== "—"
+                                ? raw.split(",").map((t) => t.trim()).filter(Boolean)
+                                : [];
+                              return (
+                                <Box key={field.id}>
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: isCheckbox && tags.length > 0 ? 0.5 : 0 }}>
+                                    {field.label}
+                                  </Typography>
+                                  {isCheckbox && tags.length > 0 ? (
+                                    <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                                      {tags.map((tag) => (
+                                        tag.split("|||").map((t) => (
+                                          <Chip key={t} label={t} size="small" variant="outlined" />
+                                        ))
+                                      ))}
+                                    </Stack>
+                                  ) : (
+                                    <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+                                      {raw}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              );
+                            })}
                           </Box>
                         </Box>
                       </Collapse>

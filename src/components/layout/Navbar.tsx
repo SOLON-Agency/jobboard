@@ -113,7 +113,7 @@ export const Navbar: React.FC = () => {
                 textTransform: "uppercase",
               }}
             >
-              LegalJobs
+              {appSettings.name}
             </Typography>
           </Box>
 
