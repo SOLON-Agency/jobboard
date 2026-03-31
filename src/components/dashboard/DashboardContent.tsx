@@ -21,6 +21,8 @@ import BookmarkOutlinedIcon from "@mui/icons-material/BookmarkOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
 import {
   AreaChart,
   Area,
@@ -35,6 +37,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { motion } from "framer-motion";
 import appSettings from "@/config/app.settings.json";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -52,6 +55,8 @@ export interface DashboardStats {
   formResponsesTotal: number;
 
   hasCompanies: boolean;
+  companyVisits?: number;
+  companyEngages?: number;
 
   activityByMonth: { month: string; sent: number; received: number }[];
   jobsByStatus: { name: string; value: number }[];
@@ -180,6 +185,8 @@ export const DashboardContent: React.FC<DashboardStats> = ({
   formsTotal,
   formResponsesTotal,
   hasCompanies,
+  companyVisits,
+  companyEngages,
   activityByMonth,
   jobsByStatus,
   applicationsByStatus,
@@ -204,7 +211,7 @@ export const DashboardContent: React.FC<DashboardStats> = ({
           Bine ai revenit{profileName ? `, ${profileName}` : ""}!
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Iată un rezumat al activității tale.
+          Iată un rezumat al activității tale recente.
         </Typography>
       </Box>
 
@@ -306,6 +313,22 @@ export const DashboardContent: React.FC<DashboardStats> = ({
             icon={<InboxOutlinedIcon />}
             accentColor={CHART_COLORS.primary}
             href="/dashboard/forms"
+          />
+        )}
+        {hasCompanies && typeof companyVisits === "number" && (
+          <StatCard
+            label="Vizite companie"
+            value={companyVisits}
+            icon={<VisibilityOutlinedIcon />}
+            accentColor={CHART_COLORS.primary}
+          />
+        )}
+        {hasCompanies && typeof companyEngages === "number" && (
+          <StatCard
+            label="Interacțiuni companie"
+            value={companyEngages}
+            icon={<TouchAppOutlinedIcon />}
+            accentColor={CHART_COLORS.secondary}
           />
         )}
       </Box>

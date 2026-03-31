@@ -127,7 +127,7 @@ export const Navbar: React.FC = () => {
                   href={link.href}
                   disableRipple
                   sx={{
-                    color: CREAM_MUTED,
+                    color: "white",
                     fontWeight: 400,
                     fontSize: "0.875rem",
                     letterSpacing: "0.01em",
@@ -138,6 +138,7 @@ export const Navbar: React.FC = () => {
                     "&:hover": {
                       color: CREAM,
                       bgcolor: CREAM_HOVER,
+                      cursor: "pointer",
                     },
                   }}
                 >

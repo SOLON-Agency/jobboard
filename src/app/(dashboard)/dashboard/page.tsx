@@ -45,6 +45,7 @@ export default async function DashboardPage() {
     appsSentRes,
     savedCompaniesRes,
     formsRes,
+    companiesRes,
   ] = await Promise.all([
     companyIds.length > 0
       ? supabase.from("job_listings").select("id, status, created_at").in("company_id", companyIds)
@@ -57,6 +58,10 @@ export default async function DashboardPage() {
     companyIds.length > 0
       ? supabase.from("forms").select("id, status").in("company_id", companyIds)
       : Promise.resolve({ data: [] as { id: string; status: string }[] }),
+
+    companyIds.length > 0
+      ? supabase.from("companies").select("visits, engages").in("id", companyIds)
+      : Promise.resolve({ data: [] as { visits: number; engages: number }[] }),
   ]);
 
   const jobs = jobsRes.data ?? [];
@@ -119,6 +124,11 @@ export default async function DashboardPage() {
   // Profile completeness: name + headline + avatar
   const profileComplete = !!(profile?.full_name && profile?.headline && profile?.avatar_url);
 
+  // Sum visits and engages across all user companies
+  const companyRows = companiesRes.data ?? [];
+  const companyVisits = companyRows.reduce((sum, c) => sum + (c.visits ?? 0), 0);
+  const companyEngages = companyRows.reduce((sum, c) => sum + (c.engages ?? 0), 0);
+
   const stats: DashboardStats = {
     profileName: profile?.full_name ?? null,
     profileComplete,
@@ -130,6 +140,8 @@ export default async function DashboardPage() {
     formsTotal: forms.length,
     formResponsesTotal: formResponses.length,
     hasCompanies: companyIds.length > 0,
+    companyVisits: companyIds.length > 0 ? companyVisits : undefined,
+    companyEngages: companyIds.length > 0 ? companyEngages : undefined,
     activityByMonth,
     jobsByStatus,
     applicationsByStatus,

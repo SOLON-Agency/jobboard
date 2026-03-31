@@ -10,6 +10,7 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import appSettings from "@/config/app.settings.json";
 
 // ── Features data ─────────────────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ const features = [
     icon: <BusinessIcon sx={{ fontSize: 28 }} />,
     title: "Profiluri de companii",
     description:
-      "Explorează firmele de avocatură de top, descoperă cultura lor și răsfoiește toate posturile disponibile într-un singur loc.",
+      "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile într-un singur loc.",
     color: "#c3ae61",
     lightBg: "rgba(195,174,97,0.06)",
     border: "rgba(195,174,97,0.2)",
@@ -36,16 +37,16 @@ const features = [
     icon: <ArticleOutlinedIcon sx={{ fontSize: 28 }} />,
     title: "Aplicare directă",
     description:
-      "Trimite candidatura direct prin platformă cu formulare personalizate sau prin URL extern — fără e-mail-uri pierdute.",
+      "Trimite candidatura direct prin platformă cu formulare inteligente - daca ai profilul completat!",
     color: "#2d6a4f",
     lightBg: "rgba(45,106,79,0.06)",
     border: "rgba(45,106,79,0.15)",
   },
   {
     icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
-    title: "Creștere în carieră",
+    title: "Alerte inteligente",
     description:
-      "De la stagii și internship-uri la roluri senior, găsim oportunități potrivite pentru fiecare etapă a carierei tale juridice.",
+      "Salvează filtrele ca alerte și primești notificări când apar noi poziții care corespund criteriilor tale.",
     color: "#748CAB",
     lightBg: "rgba(116,140,171,0.06)",
     border: "rgba(116,140,171,0.15)",
@@ -84,7 +85,7 @@ export const FeaturesSection: React.FC = () => (
             variant="overline"
             sx={{ color: "primary.main", fontWeight: 700, letterSpacing: "0.2em", display: "block", mb: 1.5 }}
           >
-            De ce să alegi LegalJobs
+            De ce să alegi {appSettings.name}
           </Typography>
           <Typography variant="h2" sx={{ mb: 2 }}>
             Tot ce ai nevoie pentru a-ți{" "}
@@ -97,12 +98,11 @@ export const FeaturesSection: React.FC = () => (
                 backgroundClip: "text",
               }}
             >
-              lansa cariera
+              lansa cariera juridică
             </Box>
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: "auto" }}>
-            O platformă construită special pentru profesioniștii din domeniul juridic, cu instrumente
-            care fac diferența.
+            O platformă inteligentă construită special pentru profesioniștii din domeniul juridic pentru a face diferența in cariera juridică.
           </Typography>
         </Box>
 
@@ -283,7 +283,7 @@ export const FeaturesSection: React.FC = () => (
                 Gata să îți lansezi cariera?
               </Typography>
               <Typography sx={{ color: "rgba(240,235,216,0.5)" }}>
-                Alătură-te celor peste 1.200 de profesioniști juridici activi pe platformă.
+                Alătură-te celor peste 900 de profesioniști juridici activi pe platformă.
               </Typography>
             </Box>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ flexShrink: 0 }}>

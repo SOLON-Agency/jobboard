@@ -281,6 +281,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   const commonSx = { borderRadius: 5, fontWeight: 700, ...sx };
 
@@ -631,7 +632,22 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
           ) : (
             <Stack spacing={2.5}>
               {formSpec?.description && (
-                <Typography variant="body2" color="text.secondary">{formSpec.description}</Typography>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    {formSpec.description.length > 500 && !descriptionExpanded
+                      ? `${formSpec.description.slice(0, 500)}...`
+                      : formSpec.description}
+                  </Typography>
+                  {formSpec.description.length > 500 && (
+                    <Button
+                      size="small"
+                      onClick={() => setDescriptionExpanded((prev) => !prev)}
+                      sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: "none", fontWeight: 600 }}
+                    >
+                      {descriptionExpanded ? "Citește mai puțin" : "Citește mai mult"}
+                    </Button>
+                  )}
+                </Box>
               )}
               {formSpec?.form_fields.map((field) => (
                 <FormFieldInput

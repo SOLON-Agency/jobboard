@@ -41,14 +41,14 @@ const statsVariants: Variants = {
 // ── Stats data ────────────────────────────────────────────────────────────────
 
 const stats = [
-  { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Posturi publicate", value: "500+" },
-  { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme partenere", value: "80+" },
-  { icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: "rgba(240,235,216,0.8)" }} />, label: "Candidați activi", value: "1.200+" },
+  { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Anunțuri", value: "100+" },
+  { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme", value: "10+" },
+  { icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: "rgba(240,235,216,0.8)" }} />, label: "Candidați", value: "900+" },
 ];
 
 // ── Pills ─────────────────────────────────────────────────────────────────────
 
-const pills = ["Acces gratuit", "Firme de top", "Aplicare directă"] as const;
+const pills = ["Acces gratuit", "Aplicare directă", "Alerte inteligente"] as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -195,7 +195,7 @@ export const HeroSection: React.FC = () => {
       {/* Content */}
       <Container
         maxWidth="lg"
-        sx={{ position: "relative", zIndex: 10, py: { xs: 12, md: 16 }, textAlign: "center" }}
+        sx={{ position: "relative", zIndex: 10, pb: { xs: 4, md: 8 }, pt: { xs: 4, md: 0 }, textAlign: "center" }}
       >
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
 
@@ -226,7 +226,7 @@ export const HeroSection: React.FC = () => {
                   fontSize: "0.68rem",
                 }}
               >
-                Platforma #1 pentru avocați
+                Platforma #1 pentru recrutat avocați
               </Typography>
             </Box>
           </motion.div>
@@ -244,7 +244,7 @@ export const HeroSection: React.FC = () => {
                 mb: 3,
               }}
             >
-              Cariera ta juridică{" "}
+              Cariera ta{" "}
               <Box
                 component="span"
                 sx={{
@@ -254,13 +254,14 @@ export const HeroSection: React.FC = () => {
                   backgroundClip: "text",
                 }}
               >
-                începe aici
+                juridică
               </Box>
+              {" "}începe aici
             </Typography>
           </motion.div>
 
           {/* Subtitle */}
-          <motion.div variants={itemVariants}>
+          {/* <motion.div variants={itemVariants}>
             <Typography
               sx={{
                 fontSize: { xs: "1.05rem", md: "1.35rem" },
@@ -271,10 +272,10 @@ export const HeroSection: React.FC = () => {
                 lineHeight: 1.7,
               }}
             >
-              Explorează sute de posturi la firme de avocatură de top, aplică direct
-              și preia controlul carierei tale juridice — totul gratuit.
+              Explorează sute de posturi la firme de top de avocatură
+              și aplică direct pentru pozițiile care te interesează.
             </Typography>
-          </motion.div>
+          </motion.div> */}
 
           {/* CTAs */}
           <motion.div variants={itemVariants}>
