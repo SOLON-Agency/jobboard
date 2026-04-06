@@ -23,19 +23,14 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        position: "fixed",
+        position: "relative",
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: "appBar",
-        bgcolor: "background.paper",
-        borderTop: "1px solid",
-        borderColor: "divider",
-        pt: 1.5,
-        pb: 1.5,
+        backgroundColor: "background.paper",
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ paddingBottom: 2 }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
           justifyContent="space-between"

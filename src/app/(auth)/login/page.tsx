@@ -14,6 +14,10 @@ export default function LoginPage() {
       }
     >
       <LoginForm />
+      <br />
+      <br />
+      <br />
+      <br />
     </Suspense>
   );
 }

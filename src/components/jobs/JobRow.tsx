@@ -122,7 +122,7 @@ export const JobRow: React.FC<JobRowProps> = ({
     </Box>
 
     {/* Right side meta — location + salary + optional status */}
-    <Box sx={{ display: { xs: "none", md: "block" }, textAlign: "right", flexShrink: 0, minWidth: 140 }}>
+    <Box sx={{ display: { xs: "none", sm: "block" }, textAlign: "right", flexShrink: 0, minWidth: 140 }}>
       {showStatus && (
         <Chip
           label={job.status}
@@ -152,7 +152,7 @@ export const JobRow: React.FC<JobRowProps> = ({
         {job.benefits_count > 0 && (
           <Chip
             icon={<CardGiftcardOutlinedIcon sx={{ fontSize: "12px !important" }} />}
-            label={job.benefits_count}
+            label={job.benefits_count === 1 ? "1 beneficiu" : `${job.benefits_count} beneficii`}
             size="small"
             variant="outlined"
             sx={{
@@ -196,7 +196,7 @@ export const JobRow: React.FC<JobRowProps> = ({
         <ApplyButton
           job={job}
           size="small"
-          sx={{ px: 2.5, py: 0.75, fontSize: "0.75rem", whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
+          sx={{ px: 2.5, py: 0.75, fontSize: "0.75rem", whiteSpace: "nowrap", display: { xs: "inline-flex" } }}
         />
       </Stack>
     )}

@@ -38,6 +38,7 @@ import {
   type FormResponseWithValues,
 } from "@/services/forms.service";
 import { formatDate, parseSupabaseError } from "@/lib/utils";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import type { Tables } from "@/types/database";
 
 type FormWithFields = Tables<"forms"> & { form_fields: Tables<"form_fields">[] };
@@ -138,49 +139,53 @@ export default function FormResponsesPage() {
   return (
     <Stack spacing={3}>
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={2}>
-        <Stack spacing={0.5}>
-          <Button
-            component={Link}
-            href="/dashboard/forms"
-            startIcon={<ArrowBackIcon />}
-            size="small"
-            sx={{ alignSelf: "flex-start", mb: 0.5 }}
-          >
-            Înapoi la formulare
-          </Button>
-          {loading ? (
-            <Skeleton variant="text" width={260} height={32} />
-          ) : (
-            <Typography variant="h5" fontWeight={700}>
-              {form?.name ?? "Răspunsuri"}
-            </Typography>
-          )}
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography variant="body2" color="text.secondary">
-              {responses.length} {responses.length === 1 ? "răspuns" : "răspunsuri"}
-            </Typography>
-            {form && (
-              <Chip
-                label={form.status}
-                size="small"
-                color={form.status === "published" ? "success" : "warning"}
-                sx={{ height: 20, fontSize: "0.68rem" }}
-              />
+      <DashboardPageHeader
+        alignTop
+        title={
+          <Stack spacing={0.5}>
+            <Button
+              component={Link}
+              href="/dashboard/forms"
+              startIcon={<ArrowBackIcon />}
+              size="small"
+              sx={{ alignSelf: "flex-start", mb: 0.5 }}
+            >
+              Înapoi la formulare
+            </Button>
+            {loading ? (
+              <Skeleton variant="text" width={260} height={32} />
+            ) : (
+              <Typography variant="h5" fontWeight={700}>
+                {form?.name ?? "Răspunsuri"}
+              </Typography>
             )}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="body2" color="text.secondary">
+                {responses.length} {responses.length === 1 ? "răspuns" : "răspunsuri"}
+              </Typography>
+              {form && (
+                <Chip
+                  label={form.status}
+                  size="small"
+                  color={form.status === "published" ? "success" : "warning"}
+                  sx={{ height: 20, fontSize: "0.68rem" }}
+                />
+              )}
+            </Stack>
           </Stack>
-        </Stack>
-
-        <Button
-          variant="outlined"
-          startIcon={<DownloadIcon />}
-          onClick={exportCsv}
-          disabled={responses.length === 0 || loading}
-          size="small"
-        >
-          Export CSV
-        </Button>
-      </Stack>
+        }
+        actions={
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={exportCsv}
+            disabled={responses.length === 0 || loading}
+            size="small"
+          >
+            Export CSV
+          </Button>
+        }
+      />
 
       {/* ── Filters ───────────────────────────────────────────────────────── */}
       <Paper sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>

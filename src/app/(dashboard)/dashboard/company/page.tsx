@@ -42,6 +42,7 @@ import {
 import { slugify, parseSupabaseError } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditCompany } from "@/components/dashboard/AddEditCompany";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import type { CompanyFormData } from "@/components/dashboard/AddEditCompany";
 
 interface CompanyActionsProps {
@@ -294,10 +295,10 @@ export default function CompanyPage() {
   if (loading) {
     return (
       <>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-          <Skeleton variant="text" width={160} height={40} />
-          <Skeleton variant="rounded" width={140} height={36} />
-        </Stack>
+        <DashboardPageHeader
+          title={<Skeleton variant="text" width={160} height={40} />}
+          actions={<Skeleton variant="rounded" width={140} height={36} />}
+        />
         {[1, 2].map((i) => (
           <Skeleton key={i} variant="rounded" height={100} sx={{ mb: 2 }} />
         ))}
@@ -307,14 +308,14 @@ export default function CompanyPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3">Companii</Typography>
-        <Stack direction="row" spacing={1}>
+      <DashboardPageHeader
+        title={<Typography variant="h3">Companii</Typography>}
+        actions={
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Companie nouă
           </Button>
-        </Stack>
-      </Stack>
+        }
+      />
 
       {companies.length === 0 ? (
         <Paper sx={{ p: 5, textAlign: "center", border: "1px solid", borderColor: "divider" }}>

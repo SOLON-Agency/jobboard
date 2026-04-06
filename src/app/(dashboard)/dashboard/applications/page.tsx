@@ -22,6 +22,7 @@ import { getUserApplications } from "@/services/applications.service";
 import { formatDate, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import type { Json } from "@/types/database";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 type Application = Tables<"applications"> & {
   job_listings: (Tables<"job_listings"> & { companies: Tables<"companies"> | null }) | null;
@@ -74,14 +75,14 @@ export default function ApplicationsPage() {
 
   return (
     <>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Aplicațiile mele</Typography>
+      <DashboardPageHeader
+        title={<Typography variant="h5" fontWeight={700}>Aplicațiile mele</Typography>}
+        subtitle={
           <Typography variant="body2" color="text.secondary">
             Toate candidaturile trimise de tine.
           </Typography>
-        </Box>
-      </Stack>
+        }
+      />
 
       {/* Loading */}
       {loading && (

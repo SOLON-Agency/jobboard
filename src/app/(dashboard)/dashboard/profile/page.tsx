@@ -30,6 +30,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { experienceLevelLabels } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { EditEducation } from "@/components/profile/EditEducation";
 import { EditExperience } from "@/components/profile/EditExperience";
 import { EditSkills } from "@/components/profile/EditSkills";
@@ -191,17 +192,21 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3">Profil</Typography>
-        <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
-          {profile?.is_public && profile?.slug && <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={openViewProfile} disabled={loading}>
-            Vizualizează profilul
-          </Button>}
-          <Button variant="contained" startIcon={<EditIcon />} onClick={openEdit} disabled={loading}>
-            Editează profilul
-          </Button>
-        </Stack>
-      </Stack>
+      <DashboardPageHeader
+        title={<Typography variant="h3">Profil</Typography>}
+        actions={
+          <>
+            {profile?.is_public && profile?.slug && (
+              <Button variant="outlined" startIcon={<OpenInNewIcon />} onClick={openViewProfile} disabled={loading}>
+                Vizualizează profilul
+              </Button>
+            )}
+            <Button variant="contained" startIcon={<EditIcon />} onClick={openEdit} disabled={loading}>
+              Editează profilul
+            </Button>
+          </>
+        }
+      />
 
       {loading ? (
         <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>

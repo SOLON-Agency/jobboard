@@ -166,6 +166,7 @@ export default function RegisterPage() {
           </Typography>
         </Typography>
       </Paper>
+      <br />
     </Container>
   );
 }

@@ -21,6 +21,7 @@ import type { Tables } from "@/types/database";
 import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 interface JobCardProps {
   job: Tables<"job_listings"> & { companies: Tables<"companies"> | null };
   isFavorite?: boolean;
@@ -155,6 +156,24 @@ export const JobCard: React.FC<JobCardProps> = ({
               {formatSalary(job.salary_min, job.salary_max)}
             </Typography>
           </Stack>
+          {job.benefits_count > 0 && (
+          <Chip
+            icon={<CardGiftcardOutlinedIcon sx={{ fontSize: "12px !important" }} />}
+            label={job.benefits_count === 1 ? "1 beneficiu" : `${job.benefits_count} beneficii`}
+            size="small"
+            variant="outlined"
+            sx={{
+              height: 18,
+              fontSize: "0.65rem",
+              fontWeight: 700,
+              color: "success.main",
+              borderColor: "rgba(46,125,50,0.4)",
+              bgcolor: "rgba(46,125,50,0.06)",
+              "& .MuiChip-icon": { color: "success.main", ml: "4px" },
+              "& .MuiChip-label": { pr: "6px" },
+            }}
+          />
+        )}
         </Stack>
 
         <Button

@@ -51,6 +51,7 @@ import {
   type FormData as FormFormData,
   type FormField,
 } from "@/components/dashboard/AddEditForm";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import type { Tables } from "@/types/database";
 import type { FormWithFields } from "@/services/forms.service";
 
@@ -289,35 +290,36 @@ export default function FormsPage() {
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Formularele mele</Typography>
+      <DashboardPageHeader
+        title={<Typography variant="h5" fontWeight={700}>Formularele mele</Typography>}
+        subtitle={
           <Typography variant="body2" color="text.secondary">
             Creează formulare de aplicare și urmărește răspunsurile pentru anunțurile tale.
           </Typography>
-        </Box>
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          {companies.length > 1 && (
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Companie</InputLabel>
-              <Select
-                label="Companie"
-                value={selectedCompanyId}
-                onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
-              >
-                <MenuItem value="all">Toate companiile</MenuItem>
-                {companies.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={companies.length === 0}>
-            Formular nou
-          </Button>
-        </Stack>
-        
-      </Stack>
+        }
+        actions={
+          <>
+            {companies.length > 1 && (
+              <FormControl size="small" sx={{ minWidth: 180, maxWidth: "100%" }}>
+                <InputLabel>Companie</InputLabel>
+                <Select
+                  label="Companie"
+                  value={selectedCompanyId}
+                  onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
+                >
+                  <MenuItem value="all">Toate companiile</MenuItem>
+                  {companies.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} disabled={companies.length === 0}>
+              Formular nou
+            </Button>
+          </>
+        }
+      />
 
       {/* ── No companies warning ────────────────────────────────────────────── */}
       {!loading && companies.length === 0 && (

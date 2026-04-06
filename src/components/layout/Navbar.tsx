@@ -39,8 +39,8 @@ const CREAM_MUTED = "rgba(240, 235, 216, 0.65)";
 const CREAM_HOVER = "rgba(240, 235, 216, 0.12)";
 
 const navLinks = [
-  { label: "Locuri de muncă", href: "/jobs" },
-  { label: "Cum funcționează", href: "/how-it-works" },
+  { label: "Postează un anunț", href: "/anunt" },
+  // { label: "Cum funcționează", href: "/how-it-works" },
 ];
 
 export const Navbar: React.FC = () => {

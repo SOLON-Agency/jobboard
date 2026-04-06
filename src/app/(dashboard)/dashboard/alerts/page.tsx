@@ -33,6 +33,7 @@ import {
   deleteAlert,
 } from "@/services/alerts.service";
 import type { Tables } from "@/types/database";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 export default function AlertsPage() {
   const { user } = useAuth();
@@ -87,12 +88,14 @@ export default function AlertsPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h3">Job Alerts</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
-          New Alert
-        </Button>
-      </Stack>
+      <DashboardPageHeader
+        title={<Typography variant="h3">Job Alerts</Typography>}
+        actions={
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+            New Alert
+          </Button>
+        }
+      />
 
       {message && (
         <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMessage(null)}>

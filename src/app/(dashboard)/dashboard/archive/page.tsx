@@ -29,6 +29,7 @@ import { getArchivedForms, archiveForm } from "@/services/forms.service";
 import { formatDate } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import appSettings from "@/config/app.settings.json";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 type ArchivedJob = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
 type ArchivedForm = Tables<"forms">;
@@ -134,14 +135,14 @@ function ArchiveContent() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h3">Arhivă</Typography>
+      <DashboardPageHeader
+        title={<Typography variant="h3">Arhivă</Typography>}
+        subtitle={
           <Typography variant="body2" color="text.secondary">
             Elementele arhivate nu apar în paginile principale ale dashboard-ului.
           </Typography>
-        </Box>
-      </Stack>
+        }
+      />
 
       <Tabs
         value={tab}

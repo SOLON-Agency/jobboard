@@ -23,6 +23,7 @@ import { slugify, parseSupabaseError } from "@/lib/utils";
 import { JobList } from "@/components/jobs/JobList";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditJob } from "@/components/dashboard/AddEditJob";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/dashboard/AddEditJob";
 
 
@@ -221,32 +222,33 @@ export default function JobsPage() {
 
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} sx={{ mb: 3 }}>
-        <Typography variant="h3">Anunțuri de muncă</Typography>
+      <DashboardPageHeader
+        title={<Typography variant="h3">Anunțuri de muncă</Typography>}
+        actions={
+          <>
+            {companies.length > 1 && (
+              <FormControl size="small" sx={{ minWidth: 180, maxWidth: "100%" }}>
+                <Select
+                  value={selectedCompanyId}
+                  onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
+                  displayEmpty
+                >
+                  <MenuItem value="all">Toate companiile</MenuItem>
+                  {companies.map((c) => (
+                    <MenuItem key={c.id} value={c.id}>{c.name.slice(0, 50)}...</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          {companies.length > 1 && (
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <Select
-                value={selectedCompanyId}
-                onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
-                displayEmpty
-              >
-                <MenuItem value="all">Toate companiile</MenuItem>
-                {companies.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>{c.name.slice(0, 50)}...</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-
-          {companies.length > 0 && (
-            <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-              Anunț nou
-            </Button>
-          )}
-        </Stack>
-      </Stack>
+            {companies.length > 0 && (
+              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+                Anunț nou
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {companies.length === 0 ? (
         <Paper sx={{ p: 4, border: "1px solid", borderColor: "divider", textAlign: "center" }}>
