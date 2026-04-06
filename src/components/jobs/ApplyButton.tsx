@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -35,6 +35,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -251,6 +252,16 @@ const notifyApplication = (
     .catch((err: unknown) => console.warn("notify-application:", err));
 };
 
+/** Unique violation on `applications` (e.g. job_id + user_id), not other tables in the apply flow. */
+const isApplicationsDuplicateError = (err: unknown): boolean => {
+  if (!err || typeof err !== "object") return false;
+  const { code, message = "" } = err as { code?: string; message?: string };
+  if (code !== "23505") return false;
+  const m = message.toLowerCase();
+  if (m.includes("form_response")) return false;
+  return m.includes("application") || /job_id|user_id/.test(m);
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export const ApplyButton: React.FC<ApplyButtonProps> = ({
@@ -282,8 +293,30 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   const commonSx = { borderRadius: 5, fontWeight: 700, ...sx };
+
+  // ── Existing application for this job (prefetch) ────────────────────────────
+  useEffect(() => {
+    if (!user?.id) {
+      setAlreadyApplied(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("job_id", job.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled && data) setAlreadyApplied(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, job.id, supabase]);
 
   // ── No application method → link to job page ──────────────────────────────
   if (!job.application_url && !job.application_form_id) {
@@ -329,9 +362,16 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
 
       notifyApplication(supabase, job.id, user.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
+      setAlreadyApplied(true);
       setConfirmed(true);
       window.open(job.application_url!, "_blank", "noopener,noreferrer");
     } catch (err) {
+      // Only `applications` is inserted here — any unique violation means already applied.
+      if (isApplicationsDuplicateError(err) || (err as { code?: string }).code === "23505") {
+        setAlreadyApplied(true);
+        setConfirmOpen(false);
+        return;
+      }
       setConfirmError(parseSupabaseError(err));
     } finally {
       setConfirming(false);
@@ -392,6 +432,12 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const handleSubmit = useCallback(async () => {
     if (!validate()) return;
     if (!user) { setSubmitError("Trebuie să fii autentificat pentru a aplica."); return; }
+    if (!user.email?.trim()) {
+      setSubmitError(
+        "Contul tău nu are adresă de email verificată. Adaugă un email în setările contului pentru a aplica.",
+      );
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -412,7 +458,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
         .insert({
           form_id: job.application_form_id!,
           job_listing_id: job.id,
-          respondent_email: user.email ?? null,
+          respondent_email: user.email,
           respondent_name: user.user_metadata?.full_name ?? user.email ?? null,
         })
         .select("id")
@@ -447,14 +493,37 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       notifyApplication(supabase, job.id, user.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
 
+      setAlreadyApplied(true);
       setSubmitted(true);
     } catch (err) {
+      if (isApplicationsDuplicateError(err)) {
+        setAlreadyApplied(true);
+        setDrawerOpen(false);
+        setSubmitError(null);
+        return;
+      }
       setSubmitError(parseSupabaseError(err));
     } finally {
       setSubmitting(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, supabase, job, formSpec, fieldValues, fileValues]);
+
+  if (alreadyApplied) {
+    return (
+      <Button
+        disabled
+        variant="outlined"
+        color="success"
+        size={size}
+        fullWidth={fullWidth}
+        endIcon={<TaskAltIcon />}
+        sx={commonSx}
+      >
+        Aplicat
+      </Button>
+    );
+  }
 
   return (
     <>
