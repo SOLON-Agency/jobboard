@@ -12,6 +12,7 @@ export interface DashboardPageHeaderProps {
    */
   alignTop?: boolean;
   sx?: SxProps<Theme>;
+  responsive?: boolean;
 }
 
 export const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
@@ -20,9 +21,10 @@ export const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
   actions,
   alignTop = false,
   sx,
+  responsive = true,
 }) => (
   <Stack
-    direction={{ xs: "column", md: "row" }}
+    direction={responsive ? { xs: "column", md: "row" } : "row"}
     justifyContent="space-between"
     alignItems={{
       xs: "flex-start",
