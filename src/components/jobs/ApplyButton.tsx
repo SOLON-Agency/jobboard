@@ -241,15 +241,14 @@ const FormFieldInput: React.FC<FieldProps> = ({ field, value, fileValue, error, 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const notifyApplication = (
-  supabase: ReturnType<typeof useSupabase>,
-  job_id: string,
-  applicant_user_id: string
-) => {
-  // Fire-and-forget: notification failure must not block the application flow.
-  supabase.functions
-    .invoke("notify-application", { body: { job_id, applicant_user_id } })
-    .catch((err: unknown) => console.warn("notify-application:", err));
+const notifyApplication = (jobId: string) => {
+  // Same-origin API → Edge Function (service role); avoids CORS OPTIONS to *.supabase.co.
+  void fetch("/api/jobs/notify-application", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ job_id: jobId }),
+  }).catch((err: unknown) => console.warn("notify-application:", err));
 };
 
 /** Unique violation on `applications` (e.g. job_id + user_id), not other tables in the apply flow. */
@@ -360,7 +359,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       });
       if (appErr) throw appErr;
 
-      notifyApplication(supabase, job.id, user.id);
+      notifyApplication(job.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
       setAlreadyApplied(true);
       setConfirmed(true);
@@ -452,45 +451,34 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
         finalValues[fieldId] = data.publicUrl;
       }
 
-      // 1. form_responses row
-      const { data: responseRow, error: respErr } = await supabase
-        .from("form_responses")
-        .insert({
-          form_id: job.application_form_id!,
-          job_listing_id: job.id,
-          respondent_email: user.email,
-          respondent_name: user.user_metadata?.full_name ?? user.email ?? null,
-        })
-        .select("id")
-        .single();
-      if (respErr) throw respErr;
+      // Persist application via API (service role) — avoids RLS blocks on form_responses / applications.
+      const response = await fetch("/api/jobs/apply-internal-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ job_id: job.id, field_values: finalValues }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        code?: string;
+      };
 
-      // 2. form_response_values rows
-      if (formSpec!.form_fields.length > 0) {
-        const { error: valErr } = await supabase.from("form_response_values").insert(
-          formSpec!.form_fields.map((f) => ({
-            response_id: responseRow.id,
-            field_id: f.id,
-            value: finalValues[f.id] ?? null,
-          }))
+      if (!response.ok) {
+        if (response.status === 409 || payload.code === "23505") {
+          setAlreadyApplied(true);
+          setDrawerOpen(false);
+          setSubmitError(null);
+          return;
+        }
+        setSubmitError(
+          payload.error ?? "A apărut o eroare la trimiterea candidaturii. Te rugăm să încerci din nou.",
         );
-        if (valErr) throw valErr;
+        return;
       }
 
-      // 3. applications row — human-readable form_data for dashboard display
-      const formDataJson = Object.fromEntries(
-        formSpec!.form_fields.map((f) => [f.label, finalValues[f.id] ?? ""])
-      );
-      const { error: appErr } = await supabase.from("applications").insert({
-        job_id: job.id,
-        user_id: user.id,
-        form_data: formDataJson,
-        status: "pending",
-      });
-      if (appErr) throw appErr;
-
-      // 4. Fire-and-forget email notifications + engagement tracking
-      notifyApplication(supabase, job.id, user.id);
+      // Fire-and-forget email notifications + engagement tracking
+      notifyApplication(job.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
 
       setAlreadyApplied(true);
@@ -525,6 +513,9 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
     );
   }
 
+  const internalFormBusy = !isExternalUrl && (loadingForm || submitting);
+  const applySpinnerSize = size === "small" ? 14 : size === "large" ? 22 : 18;
+
   return (
     <>
       <Button
@@ -532,10 +523,18 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
         variant={variant}
         size={size}
         fullWidth={fullWidth}
-        endIcon={<AutoAwesomeIcon />}
+        disabled={internalFormBusy}
+        endIcon={
+          internalFormBusy ? (
+            <CircularProgress size={applySpinnerSize} color="inherit" aria-hidden />
+          ) : (
+            <AutoAwesomeIcon />
+          )
+        }
+        aria-busy={internalFormBusy}
         sx={commonSx}
       >
-        {label}
+        {internalFormBusy ? (submitting ? "Se trimite..." : "Se încarcă...") : label}
       </Button>
 
       {/* ── External URL confirmation dialog ──────────────────────────────── */}

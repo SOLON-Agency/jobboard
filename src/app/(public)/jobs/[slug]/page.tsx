@@ -71,7 +71,7 @@ export default async function JobPage({ params }: Props) {
       />
       <Container maxWidth="lg" sx={{ py: 4, mb: 2 }}>
         <JobDetailWrapper job={job} benefits={benefits} />
-        <JobsCarousel subtitle="Posturi similare" jobs={relatedJobs} />
+        <JobsCarousel subtitle="Posturi similare" jobs={relatedJobs} autoScroll={false} />
       </Container>
       <JobCtaBanner />
     </>

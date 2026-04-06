@@ -8,6 +8,7 @@ export const JobCtaBanner: React.FC = () => (
   <Box
     sx={{
       borderTop: "1px solid",
+      borderBottom: "1px solid",
       borderColor: "divider",
       bgcolor: "background.paper",
       py: { xs: 5, md: 7 },

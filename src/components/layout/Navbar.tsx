@@ -45,7 +45,7 @@ const navLinks = [
 
 export const Navbar: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { user, loading: authLoading, signOut } = useAuth();
@@ -68,6 +68,9 @@ export const Navbar: React.FC = () => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+  const redirectToDashboard = () => {
+    window.location.href = "/dashboard";
   };
 
   const handleSignOut = async () => {
@@ -287,12 +290,31 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile hamburger */}
           {isMobile && (
+            <>
             <IconButton
               onClick={() => setDrawerOpen(true)}
               sx={{ color: CREAM, ml: 0.5 }}
             >
               <MenuIcon />
             </IconButton>
+            {user && ( <IconButton onClick={redirectToDashboard}>
+              <Avatar
+                src={avatarUrl ?? undefined}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: "rgba(62,92,118,0.6)",
+                  color: CREAM,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  border: "1.5px solid rgba(240,235,216,0.3)",
+                }}
+              >
+                {user?.email?.[0]?.toUpperCase() ?? "U"}
+              </Avatar>
+            </IconButton>
+            )}
+            </>
           )}
         </Toolbar>
       </AppBar>

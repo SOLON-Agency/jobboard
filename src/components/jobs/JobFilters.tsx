@@ -92,6 +92,7 @@ export const JobFilters: React.FC = () => {
   const searchParams = useSearchParams();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const isTablet = useMediaQuery(theme.breakpoints.up("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const [open, setOpen] = useState<Record<SectionKey, boolean>>({
@@ -150,6 +151,9 @@ export const JobFilters: React.FC = () => {
     <Stack divider={<Divider />}>
       {/* Location */}
       <Box>
+        <Typography variant="h5" fontWeight={700} mb={-1}>
+          Filtrează după
+        </Typography>
         <SectionHeader label="Locație" open={open.location} onToggle={() => toggle("location")} />
         <Collapse in={open.location}>
           <Box sx={{ pb: 2 }}>
@@ -343,9 +347,6 @@ export const JobFilters: React.FC = () => {
         }}
       >
         <Box sx={{ px: 2.5, pt: 2.5, pb: 0 }}>
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
-            Filtrează după
-          </Typography>
           {searchBar}
         </Box>
         <Box sx={{ px: 2.5 }}>{filtersBody}</Box>
@@ -376,8 +377,6 @@ export const JobFilters: React.FC = () => {
       }}
     >
       <Box
-        component="button"
-        onClick={() => setMobileOpen((p) => !p)}
         sx={{
           width: "100%",
           display: "flex",
@@ -388,21 +387,33 @@ export const JobFilters: React.FC = () => {
           border: "none",
           bgcolor: "transparent",
           cursor: "pointer",
-          color: "text.primary",
+          color: "text.primary"
         }}
       >
-        <Stack direction="row" spacing={1} alignItems="center">
-          <FilterListIcon fontSize="small" sx={{ color: "text.secondary" }} />
-          <Typography variant="body2" fontWeight={600}>Filtrează după</Typography>
-          {activeFilterCount > 0 && (
-            <Chip label={activeFilterCount} size="small" color="primary" sx={{ height: 20, fontSize: 11 }} />
-          )}
-        </Stack>
+        <Box
+          sx={{
+            width: { xs: "100%", md: "66.666%" },
+            minWidth: 0,
+            flexShrink: 1,
+            alignSelf: "center",
+            "& > .MuiBox-root": { mb: 0 },
+          }}
+        >
+          {searchBar}
+        </Box>
+        <Box component="button" sx={{minWidth: isTablet ? 130 : 20, textAlign: "right", ml: 2}} onClick={() => setMobileOpen((p) => !p)}        >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0, ml: { xs: 0, md: 2 } }}>
+            <FilterListIcon fontSize="small" sx={{ color: "text.secondary" }} />
+            {isTablet && <Typography variant="body2" fontWeight={600}>Filtrează după</Typography>}
+            {activeFilterCount > 0 && (
+              <Chip label={activeFilterCount} size="small" color="primary" sx={{ height: 20, fontSize: 11 }} />
+            )}
+          </Stack>
+        </Box>
         {mobileOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
       </Box>
       <Collapse in={mobileOpen}>
         <Box sx={{ px: 2, pb: 2 }}>
-          {searchBar}
           {filtersBody}
           <Button
             variant="contained"
