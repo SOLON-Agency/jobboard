@@ -2,12 +2,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildEmail,
   corsHeaders,
-  createTransport,
   detailRow,
   errResponse,
-  getSmtpConfig,
+  getResendConfig,
   infoTable,
   okResponse,
+  sendHtmlEmail,
 } from "../_shared/email.ts";
 
 interface NotifyPayload {
@@ -102,13 +102,12 @@ Deno.serve(async (req) => {
         ? `${siteUrl}/users/${applicantProfile.slug}`
         : null;
 
-    // ── SMTP ─────────────────────────────────────────────────────────────────
-    const smtp = getSmtpConfig();
-    if (!smtp) {
-      console.warn("SMTP env vars not configured — skipping emails.");
+    // ── Resend ───────────────────────────────────────────────────────────────
+    const mail = getResendConfig();
+    if (!mail) {
+      console.warn("Resend not configured (RESEND_API_KEY + RESEND_FROM) — skipping emails.");
       return okResponse({ emailsSent: false });
     }
-    const transporter = createTransport(smtp);
 
     // ── Email 1: job poster ──────────────────────────────────────────────────
     if (posterEmail) {
@@ -139,8 +138,7 @@ Deno.serve(async (req) => {
         }
       `;
 
-      await transporter.sendMail({
-        from: smtp.from,
+      await sendHtmlEmail(mail, {
         to: posterEmail,
         subject: `Candidatură nouă pentru „${job.title}"`,
         html: buildEmail({
@@ -199,8 +197,7 @@ Deno.serve(async (req) => {
         </p>
       `;
 
-      await transporter.sendMail({
-        from: smtp.from,
+      await sendHtmlEmail(mail, {
         to: applicantEmail,
         subject: `Candidatura ta pentru „${job.title}" a fost trimisă!`,
         html: buildEmail({

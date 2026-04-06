@@ -2,12 +2,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildEmail,
   corsHeaders,
-  createTransport,
   detailRow,
   errResponse,
-  getSmtpConfig,
+  getResendConfig,
   infoTable,
   okResponse,
+  sendHtmlEmail,
 } from "../_shared/email.ts";
 
 interface NotifyPayload {
@@ -60,13 +60,12 @@ Deno.serve(async (req) => {
       minute: "2-digit",
     });
 
-    // ── SMTP ─────────────────────────────────────────────────────────────────
-    const smtp = getSmtpConfig();
-    if (!smtp) {
-      console.warn("SMTP not configured — skipping profile update email.");
+    // ── Resend ───────────────────────────────────────────────────────────────
+    const mail = getResendConfig();
+    if (!mail) {
+      console.warn("Resend not configured (RESEND_API_KEY + RESEND_FROM) — skipping profile update email.");
       return okResponse({ emailsSent: false });
     }
-    const transporter = createTransport(smtp);
 
     // ── Build detail rows ────────────────────────────────────────────────────
     const expLabel = Array.isArray(profile?.experience_level)
@@ -107,8 +106,7 @@ Deno.serve(async (req) => {
       </p>
     `;
 
-    await transporter.sendMail({
-      from: smtp.from,
+    await sendHtmlEmail(mail, {
       to: userEmail,
       subject: "Profilul tău a fost actualizat",
       html: buildEmail({

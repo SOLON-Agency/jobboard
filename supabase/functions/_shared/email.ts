@@ -1,9 +1,12 @@
 /**
  * Shared email utilities for Supabase Edge Functions.
- * Provides a consistent branded HTML email shell and an SMTP transport factory.
+ * Branded HTML shell + transactional sends via the Resend API.
+ *
+ * Secrets (Supabase Dashboard → Edge Functions → Secrets):
+ *   RESEND_API_KEY — required
+ *   RESEND_FROM    — verified sender, e.g. "LegalJobs <noreply@yourdomain.com>"
+ *   (optional) SMTP_FROM — legacy fallback if RESEND_FROM is unset
  */
-
-import nodemailer from "npm:nodemailer@6";
 
 // ─── Brand tokens ─────────────────────────────────────────────────────────────
 
@@ -45,7 +48,7 @@ export function detailRow(label: string, value: string): string {
   `;
 }
 
-// ─── Info table wrapper ────────────────────────────────────────────────────────
+// ─── Info table wrapper ───────────────────────────────────────────────────────
 
 export function infoTable(rows: string): string {
   return `
@@ -160,34 +163,60 @@ export function buildEmail({
 </html>`;
 }
 
-// ─── SMTP transport factory ────────────────────────────────────────────────────
+// ─── Resend transport ─────────────────────────────────────────────────────────
 
-export interface SmtpConfig {
-  host: string;
-  port: number;
-  user: string;
-  pass: string;
+export interface ResendConfig {
+  apiKey: string;
   from: string;
 }
 
-export function getSmtpConfig(): SmtpConfig | null {
-  const host = Deno.env.get("SMTP_HOST");
-  const port = parseInt(Deno.env.get("SMTP_PORT") ?? "587");
-  const user = Deno.env.get("SMTP_USER");
-  const pass = Deno.env.get("SMTP_PASS");
-  const from = Deno.env.get("SMTP_FROM") ?? user ?? "noreply@jobboard.ro";
+/** Returns null if RESEND_API_KEY or a usable From address is missing. */
+export function getResendConfig(): ResendConfig | null {
+  const apiKey = Deno.env.get("RESEND_API_KEY")?.trim();
+  const from =
+    Deno.env.get("RESEND_FROM")?.trim() ??
+    Deno.env.get("SMTP_FROM")?.trim() ??
+    "";
 
-  if (!host || !user || !pass) return null;
-  return { host, port, user, pass, from };
+  if (!apiKey || !from) return null;
+  return { apiKey, from };
 }
 
-export function createTransport(cfg: SmtpConfig) {
-  return nodemailer.createTransport({
-    host: cfg.host,
-    port: cfg.port,
-    secure: cfg.port === 465,
-    auth: { user: cfg.user, pass: cfg.pass },
+export interface SendHtmlEmailOptions {
+  to: string | string[];
+  subject: string;
+  html: string;
+}
+
+/** POSTs to Resend; throws on HTTP error or API error body. */
+export async function sendHtmlEmail(
+  cfg: ResendConfig,
+  { to, subject, html }: SendHtmlEmailOptions,
+): Promise<{ id?: string }> {
+  const toList = Array.isArray(to) ? to : [to];
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cfg.apiKey}`,
+    },
+    body: JSON.stringify({
+      from: cfg.from,
+      to: toList,
+      subject,
+      html,
+    }),
   });
+
+  const data = (await res.json()) as { id?: string; message?: string; name?: string };
+
+  if (!res.ok) {
+    const msg = data.message ?? `${res.status} ${res.statusText}`;
+    throw new Error(`Resend: ${msg}`);
+  }
+
+  return data;
 }
 
 // ─── CORS headers ─────────────────────────────────────────────────────────────

@@ -2,12 +2,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildEmail,
   corsHeaders,
-  createTransport,
   detailRow,
   errResponse,
-  getSmtpConfig,
+  getResendConfig,
   infoTable,
   okResponse,
+  sendHtmlEmail,
 } from "../_shared/email.ts";
 
 interface NotifyPayload {
@@ -58,13 +58,12 @@ Deno.serve(async (req) => {
       year: "numeric",
     });
 
-    // ── SMTP ─────────────────────────────────────────────────────────────────
-    const smtp = getSmtpConfig();
-    if (!smtp) {
-      console.warn("SMTP not configured — skipping company created email.");
+    // ── Resend ───────────────────────────────────────────────────────────────
+    const mail = getResendConfig();
+    if (!mail) {
+      console.warn("Resend not configured (RESEND_API_KEY + RESEND_FROM) — skipping company created email.");
       return okResponse({ emailsSent: false });
     }
-    const transporter = createTransport(smtp);
 
     // ── Build detail rows ────────────────────────────────────────────────────
     const rows = [
@@ -102,8 +101,7 @@ Deno.serve(async (req) => {
       </p>
     `;
 
-    await transporter.sendMail({
-      from: smtp.from,
+    await sendHtmlEmail(mail, {
       to: userEmail,
       subject: `Compania „${company.name}" a fost creată cu succes!`,
       html: buildEmail({
