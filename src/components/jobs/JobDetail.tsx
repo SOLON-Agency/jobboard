@@ -57,7 +57,7 @@ function parseSections(html: string): Array<{ title: string; html: string }> {
     m[1].replace(/<[^>]*>/g, "").trim()
   );
 
-  if (headings.length === 0) return [{ title: "Overview", html }];
+  if (headings.length === 0) return [{ title: "Descriere", html }];
 
   const parts = html.split(/<h2[^>]*>[\s\S]*?<\/h2>/gi);
   return headings
@@ -296,8 +296,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
             sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mt: 2 }}
           >
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
-              <CardGiftcardOutlinedIcon sx={{ color: "success.main", fontSize: 22 }} />
-              <Typography variant="h3" fontWeight={700}>Beneficii {job.title}</Typography>
+              {/* <CardGiftcardOutlinedIcon sx={{ color: "success.main", fontSize: 22 }} /> */}
+              <Typography variant="h3" fontWeight={700}>Beneficii </Typography>
               <Chip
                 label={benefits.length}
                 size="small"

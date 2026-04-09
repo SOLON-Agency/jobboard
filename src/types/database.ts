@@ -834,6 +834,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      application_notification_recipient: {
+        Args: { p_job_id: string }
+        Returns: { poster_email: string | null; poster_name: string | null }[]
+      },
       company_has_no_owner: { Args: { p_company_id: string }; Returns: boolean }
       is_company_member: {
         Args: {

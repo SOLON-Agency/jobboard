@@ -320,7 +320,7 @@ export const FeaturesSection: React.FC = () => (
                   "&:hover": { borderColor: "rgba(240,235,216,0.4)", bgcolor: "rgba(240,235,216,0.05)" },
                 }}
               >
-                Explorează posturi
+                Explorează anunțuri
               </Button>
             </Stack>
           </Box>

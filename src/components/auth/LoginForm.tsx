@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
+  CircularProgress,
   Container,
   Typography,
   TextField,
@@ -51,6 +52,11 @@ export const LoginForm: React.FC = () => {
     setError(null);
     const { error: authError } = await signIn(data.email, data.password);
     if (authError) {
+      const code = (authError as { code?: string }).code;
+      if (code === "email_not_confirmed" || authError.message === "Email not confirmed") {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
+      }
       setError(authError.message);
     } else {
       router.push(redirect);
@@ -112,6 +118,9 @@ export const LoginForm: React.FC = () => {
             fullWidth
             size="large"
             disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? <CircularProgress size={18} color="inherit" /> : null
+            }
             sx={{ py: 1.5 }}
           >
             {isSubmitting ? "Se conectează..." : "Conectare"}

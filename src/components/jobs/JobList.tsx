@@ -27,6 +27,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import PublishIcon from "@mui/icons-material/Publish";
+import UnpublishedIcon from "@mui/icons-material/Unpublished";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import appSettings from "@/config/app.settings.json";
@@ -74,128 +75,7 @@ const ACTION_COLORS: Record<ActionColor, { bg: string; hover: string }> = {
   warning:   { bg: "rgba(237,108,2,0.08)",   hover: "warning.main" },
 };
 
-const JobActionsRow: React.FC<JobActionsRowProps> = ({
-  job, onEdit, onDuplicate, onStatusChange, onArchive,
-}) => {
-  const theme = useTheme();
-  const isMd = useMediaQuery(theme.breakpoints.up("md"));
-  const isSm = useMediaQuery(theme.breakpoints.up("sm"));
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
-  const actions: ActionDef[] = [
-    onStatusChange && job.status === "draft" ? {
-      key: "publish", label: "Publică", color: "success" as ActionColor,
-      icon: <PublishIcon fontSize="small" />,
-      onClick: () => { onStatusChange(job.id, "published"); },
-    } : null,
-    onEdit ? {
-      key: "edit", label: "Editează", color: "primary" as ActionColor,
-      icon: <EditIcon fontSize="small" />,
-      onClick: () => onEdit(job),
-    } : null,
-    onDuplicate ? {
-      key: "duplicate", label: "Duplică", color: "secondary" as ActionColor,
-      icon: <ContentCopyIcon fontSize="small" />,
-      onClick: () => onDuplicate(job),
-    } : null,
-    onArchive && appSettings.features.archiveJobs && job.status !== "archived" ? {
-      key: "archive", label: "Arhivează", color: "warning" as ActionColor,
-      icon: <ArchiveIcon fontSize="small" />,
-      onClick: () => onArchive(job),
-    } : null,
-  ].filter((a): a is ActionDef => a !== null);
-
-  // Desktop: 2 buttons + overflow menu; tablet: 1 button with text + menu; mobile: 1 icon-only + menu
-  // const visibleCount = isMd ? 2 : 1;
-  const visibleCount = 1;
-  const visible = actions.slice(0, visibleCount);
-  const overflow = actions.slice(visibleCount);
-
-  const [primary, ...rest] = visible;
-
-  return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
-      {/* Primary button — always shown */}
-      {primary && (
-        <Tooltip title={!isSm ? primary.label : ""}>
-          <Button
-            size="small"
-            variant="contained"
-            color={primary.color}
-            onClick={primary.onClick}
-            startIcon={isSm ? primary.icon : undefined}
-            sx={{
-              minWidth: 0,
-              px: isSm ? 1.5 : 1,
-              fontWeight: 600,
-              boxShadow: "none",
-              "&:hover": { boxShadow: "none" },
-              whiteSpace: "nowrap",
-            }}
-          >
-            {isSm ? primary.label : primary.icon}
-          </Button>
-        </Tooltip>
-      )}
-
-      {/* Secondary button — desktop only */}
-      {rest.map((action) => (
-        <Button
-          key={action.key}
-          size="small"
-          variant="outlined"
-          color={action.color}
-          onClick={action.onClick}
-          startIcon={action.icon}
-          sx={{ fontWeight: 500, whiteSpace: "nowrap", boxShadow: "none" }}
-        >
-          {action.label}
-        </Button>
-      ))}
-
-      {/* Overflow hamburger menu */}
-      {overflow.length > 0 && (
-        <>
-          <Tooltip title="Mai multe acțiuni">
-            <IconButton
-              size="small"
-              onClick={(e) => setMenuAnchor(e.currentTarget)}
-              sx={{ color: "text.secondary" }}
-            >
-              <MoreVertIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Menu
-            anchorEl={menuAnchor}
-            open={Boolean(menuAnchor)}
-            onClose={() => setMenuAnchor(null)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-            transformOrigin={{ vertical: "top", horizontal: "right" }}
-            slotProps={{ paper: { sx: { minWidth: 160, borderRadius: 2, mt: 0.5 } } }}
-          >
-            {overflow.map((action, i) => (
-              <React.Fragment key={action.key}>
-                {i > 0 && action.key === "archive" && <Divider />}
-                <MenuItem
-                  onClick={() => { action.onClick(); setMenuAnchor(null); }}
-                  sx={{ gap: 1.5, py: 1 }}
-                >
-                  <ListItemIcon sx={{ minWidth: 0, color: `${action.color}.main` }}>
-                    {action.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={action.label}
-                    primaryTypographyProps={{ variant: "body2", color: `${action.color}.main`, fontWeight: 500 }}
-                  />
-                </MenuItem>
-              </React.Fragment>
-            ))}
-          </Menu>
-        </>
-      )}
-    </Stack>
-  );
-};
 
 interface JobListProps {
   /** Controlled mode — pass jobs directly; skips internal fetching */
@@ -454,6 +334,134 @@ export const JobList: React.FC<JobListProps> = ({
             color="primary"
           />
         </Box>
+      )}
+    </Stack>
+  );
+};
+const JobActionsRow: React.FC<JobActionsRowProps> = ({
+  job, onEdit, onDuplicate, onStatusChange, onArchive,
+}) => {
+  const theme = useTheme();
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const actions: ActionDef[] = [
+    onStatusChange && job.status === "draft" ? {
+      key: "publish", label: "Publică", color: "success" as ActionColor,
+      icon: <PublishIcon fontSize="small" />,
+      onClick: () => { onStatusChange(job.id, "published"); },
+    } : null,
+    onEdit ? {
+      key: "edit", label: "Editează", color: "primary" as ActionColor,
+      icon: <EditIcon fontSize="small" />,
+      onClick: () => onEdit(job),
+    } : null,
+    onDuplicate ? {
+      key: "duplicate", label: "Duplică", color: "secondary" as ActionColor,
+      icon: <ContentCopyIcon fontSize="small" />,
+      onClick: () => onDuplicate(job),
+    } : null,
+    onStatusChange && job.status === "published" ? {
+      key: "unpublish", label: "Dezactivează", color: "warning" as ActionColor,
+      icon: <UnpublishedIcon fontSize="small" />,
+      onClick: () => { onStatusChange(job.id, "draft"); },
+    } : null,
+    onArchive && appSettings.features.archiveJobs && job.status !== "archived" ? {
+      key: "archive", label: "Arhivează", color: "error" as ActionColor,
+      icon: <ArchiveIcon fontSize="small" />,
+      onClick: () => onArchive(job),
+    } : null,
+  ].filter((a): a is ActionDef => a !== null);
+
+  // Desktop: 2 buttons + overflow menu; tablet: 1 button with text + menu; mobile: 1 icon-only + menu
+  // const visibleCount = isMd ? 2 : 1;
+  const visibleCount = 1;
+  const visible = actions.slice(0, visibleCount);
+  const overflow = actions.slice(visibleCount);
+
+  const [primary, ...rest] = visible;
+
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      {/* Primary button — always shown */}
+      {primary && (
+        <Tooltip title={!isSm ? primary.label : ""}>
+          <Button
+            size="small"
+            variant="contained"
+            color={primary.color}
+            onClick={primary.onClick}
+            startIcon={isSm ? primary.icon : undefined}
+            sx={{
+              minWidth: 0,
+              px: isSm ? 1.5 : 1,
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none" },
+              whiteSpace: "nowrap",
+            }}
+          >
+            {isSm ? primary.label : primary.icon}
+          </Button>
+        </Tooltip>
+      )}
+
+      {/* Secondary button — desktop only */}
+      {rest.map((action) => (
+        <Button
+          key={action.key}
+          size="small"
+          variant="outlined"
+          color={action.color}
+          onClick={action.onClick}
+          startIcon={action.icon}
+          sx={{ fontWeight: 500, whiteSpace: "nowrap", boxShadow: "none" }}
+        >
+          {action.label}
+        </Button>
+      ))}
+
+      {/* Overflow hamburger menu */}
+      {overflow.length > 0 && (
+        <>
+          <Tooltip title="Mai multe acțiuni">
+            <IconButton
+              size="small"
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
+              sx={{ color: "text.secondary" }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            slotProps={{ paper: { sx: { minWidth: 160, borderRadius: 2, mt: 0.5 } } }}
+          >
+            {overflow.flatMap((action, i) => [
+              i > 0 && action.key === "archive" ? (
+                <Divider key={`divider-${action.key}`} />
+              ) : null,
+              <MenuItem
+                key={action.key}
+                onClick={() => { action.onClick(); setMenuAnchor(null); }}
+                sx={{ gap: 1.5, py: 1 }}
+              >
+                <ListItemIcon sx={{ minWidth: 0, color: `${action.color}.main` }}>
+                  {action.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={action.label}
+                  primaryTypographyProps={{ variant: "body2", color: `${action.color}.main`, fontWeight: 500 }}
+                />
+              </MenuItem>,
+            ].filter((x): x is React.ReactElement => x !== null))}
+          </Menu>
+        </>
       )}
     </Stack>
   );

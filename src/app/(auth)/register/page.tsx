@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Box,
+  CircularProgress,
   Container,
   Typography,
   TextField,
@@ -15,7 +16,6 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { SocialButtons } from "@/components/auth/SocialButtons";
 import { useAuth } from "@/hooks/useAuth";
 import appSettings from "@/config/app.settings.json";
 
@@ -36,7 +36,6 @@ type FormData = z.infer<typeof schema>;
 export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const { user, signUp } = useAuth();
 
   useEffect(() => {
@@ -57,32 +56,9 @@ export default function RegisterPage() {
     if (authError) {
       setError(authError.message);
     } else {
-      setSuccess(true);
+      router.push("/dashboard");
     }
   };
-
-  if (success) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Paper sx={{ p: 4, borderRadius: 3, textAlign: "center" }}>
-          <Typography variant="h3" sx={{ mb: 2 }}>
-            Verifică-ți e-mailul
-          </Typography>
-          <Typography color="text.secondary">
-            Am trimis un link de confirmare la adresa ta de e-mail. Apasă pe link pentru a-ți activa contul.
-          </Typography>
-          <Button
-            component={Link}
-            href="/login"
-            variant="outlined"
-            sx={{ mt: 3 }}
-          >
-            Înapoi la conectare
-          </Button>
-        </Paper>
-      </Container>
-    );
-  }
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
@@ -148,6 +124,9 @@ export default function RegisterPage() {
             fullWidth
             size="large"
             disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? <CircularProgress size={18} color="inherit" /> : null
+            }
             sx={{ py: 1.5 }}
           >
             {isSubmitting ? "Se creează contul..." : "Creează cont"}

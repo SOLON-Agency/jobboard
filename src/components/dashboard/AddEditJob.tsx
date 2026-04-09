@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react";
 import {
   Typography,
   TextField,
@@ -79,6 +79,10 @@ export type JobWithCompany = Tables<"job_listings"> & {
 
 export type BenefitDraft = { title: string; sort_order: number };
 
+export interface AddEditJobHandle {
+  submit: () => Promise<void>;
+}
+
 interface AddEditJobProps {
   companies: CompanyOption[];
   editingJob: JobWithCompany | null;
@@ -86,16 +90,22 @@ interface AddEditJobProps {
   onSubmit: (data: JobFormData, status: "draft" | "published", newBenefits?: BenefitDraft[]) => Promise<void>;
   onDelete?: () => void;
   onCancel: () => void;
+  /** Hides the built-in action buttons — caller controls submission via ref.submit() */
+  hideActions?: boolean;
+  /** Disables internal form creation; hides "Formular intern" radio option */
+  wizardMode?: boolean;
 }
 
-export const AddEditJob: React.FC<AddEditJobProps> = ({
+export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(function AddEditJob({
   companies,
   editingJob,
   defaultValues,
   onSubmit,
   onDelete,
   onCancel,
-}) => {
+  hideActions,
+  wizardMode,
+}, ref) {
   const supabase = useSupabase();
   const [formsList, setFormsList] = useState<{ id: string; name: string }[]>([]);
   const [pendingStatus, setPendingStatus] = useState<"draft" | "published" | null>(null);
@@ -178,6 +188,13 @@ export const AddEditJob: React.FC<AddEditJobProps> = ({
     resolver: zodResolver(schema),
     defaultValues,
   });
+
+  useImperativeHandle(ref, () => ({
+    submit: () => {
+      const localBenefits = benefits.map((b) => ({ title: b.title, sort_order: b.sort_order }));
+      return handleSubmit((data) => onSubmit(data, "published", localBenefits))();
+    },
+  }));
 
   const loadForms = useCallback(
     async (companyId: string) => {
@@ -536,7 +553,7 @@ export const AddEditJob: React.FC<AddEditJobProps> = ({
                   control={<Radio size="small" />}
                   label="URL extern"
                 />
-                {appSettings.features.forms && (
+                {appSettings.features.forms && !wizardMode && (
                   <FormControlLabel
                     value="form"
                     control={<Radio size="small" />}
@@ -633,55 +650,54 @@ export const AddEditJob: React.FC<AddEditJobProps> = ({
           />
         </EditSideDrawer>
 
-        <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center" justifyContent="flex-end">
-          <Button
-            variant="outlined"
-            color="secondary"
-            disabled={isSubmitting || pendingStatus !== null}
-            sx={{ px: 4 }}
-            onClick={() => {
-              setPendingStatus("draft");
-              const localBenefits = editingJob ? undefined : benefits.map((b) => ({ title: b.title, sort_order: b.sort_order }));
-              handleSubmit((data) => onSubmit(data, "draft", localBenefits))().finally(() =>
-                setPendingStatus(null)
-              );
-            }}
-          >
-            {pendingStatus === "draft"
-              ? "Se salvează..."
-              : editingJob
-              ? "Actualizează anunțul"
-              : "Salvează ciornă"}
-          </Button>
-
-          {!editingJob && (
+        {!hideActions && (
+          <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center" justifyContent="flex-end">
             <Button
-              variant="contained"
-              color="primary"
+              variant="outlined"
+              color="secondary"
               disabled={isSubmitting || pendingStatus !== null}
               sx={{ px: 4 }}
               onClick={() => {
-                setPendingStatus("published");
+                setPendingStatus("draft");
                 const localBenefits = editingJob ? undefined : benefits.map((b) => ({ title: b.title, sort_order: b.sort_order }));
-                handleSubmit((data) => onSubmit(data, "published", localBenefits))().finally(() =>
+                handleSubmit((data) => onSubmit(data, "draft", localBenefits))().finally(() =>
                   setPendingStatus(null)
                 );
               }}
             >
-              {pendingStatus === "published" ? "Se publică..." : "Publică anunț"}
+              {pendingStatus === "draft"
+                ? "Se salvează..."
+                : editingJob
+                ? "Actualizează anunțul"
+                : "Salvează ciornă"}
             </Button>
-          )}
 
-          {onDelete && (
-            <Button variant="outlined" color="error" onClick={onDelete}>
-              Șterge
-            </Button>
-          )}
-          {/* <Button variant="outlined" onClick={onCancel}>
-            Anulează
-          </Button> */}
-        </Stack>
+            {!editingJob && (
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={isSubmitting || pendingStatus !== null}
+                sx={{ px: 4 }}
+                onClick={() => {
+                  setPendingStatus("published");
+                  const localBenefits = editingJob ? undefined : benefits.map((b) => ({ title: b.title, sort_order: b.sort_order }));
+                  handleSubmit((data) => onSubmit(data, "published", localBenefits))().finally(() =>
+                    setPendingStatus(null)
+                  );
+                }}
+              >
+                {pendingStatus === "published" ? "Se publică..." : "Publică anunț"}
+              </Button>
+            )}
+
+            {onDelete && (
+              <Button variant="outlined" color="error" onClick={onDelete}>
+                Șterge
+              </Button>
+            )}
+          </Stack>
+        )}
       </Stack>
     </Box>
   );
-};
+});

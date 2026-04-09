@@ -116,11 +116,30 @@ async function parseWolfTheiss(): Promise<ScrapedJob[]> {
   }
 }
 
-Deno.serve(async () => {
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+Deno.serve(async (req) => {
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  if (!cronSecret) {
+    console.error("scrape-jobs: set CRON_SECRET in Edge Function secrets");
+    return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  const auth = req.headers.get("Authorization");
+  if (auth !== `Bearer ${cronSecret}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  if (!serviceKey || !supabaseUrl) {
+    return new Response(JSON.stringify({ error: "Missing Supabase env" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey);
 
   let totalInserted = 0;
 

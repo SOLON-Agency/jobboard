@@ -134,10 +134,10 @@ export default function ProfilePage() {
     } else {
       await loadProfile();
       setMessage({ type: "success", text: "Profil actualizat cu succes." });
-      // Fire-and-forget: send profile update confirmation email
-      supabase.functions
-        .invoke("notify-profile-update", { body: { user_id: user.id } })
-        .catch((e) => console.warn("notify-profile-update failed:", e));
+      void fetch("/api/profile/notify-updated", {
+        method: "POST",
+        credentials: "same-origin",
+      }).catch((e) => console.warn("notify-updated failed:", e));
       setTimeout(closeDrawer, 900);
     }
   };

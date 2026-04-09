@@ -72,11 +72,26 @@ export const useAuth = () => {
     return { error };
   }, [supabase.auth]);
 
+  const resendVerification = useCallback(
+    async (email: string) => {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      return { error };
+    },
+    [supabase.auth]
+  );
+
   return {
     ...state,
     signUp,
     signIn,
     signInWithProvider,
     signOut,
+    resendVerification,
   };
 };

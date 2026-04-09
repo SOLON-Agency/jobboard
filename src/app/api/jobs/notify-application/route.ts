@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { sendApplicationNotificationEmails } from "@/lib/email/send-application-notification";
+
+const siteUrl = () =>
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
 
 /**
- * Proxies to Supabase Edge Function `notify-application` from the server.
- * Avoids browser → supabase.co CORS preflight (OPTIONS) which often 404s when
- * the function is missing or the gateway rejects preflight; same-origin fetch from the app has no CORS.
+ * Sends application notification emails from the Next.js server using the user’s
+ * Supabase session (RLS + SECURITY DEFINER RPC). Resend keys live only here — no
+ * service-role key in the app.
  */
 export async function POST(request: Request) {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!serviceKey || !url) {
-    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,24 +32,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "job_id required" }, { status: 400 });
   }
 
-  const edgeUrl = `${url.replace(/\/$/, "")}/functions/v1/notify-application`;
-
-  const edgeRes = await fetch(edgeUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${serviceKey}`,
-      apikey: serviceKey,
-    },
-    body: JSON.stringify({
-      job_id: body.job_id,
-      applicant_user_id: user.id,
-    }),
-  });
-
-  if (!edgeRes.ok) {
-    const text = await edgeRes.text();
-    console.warn("notify-application edge:", edgeRes.status, text);
+  try {
+    await sendApplicationNotificationEmails(
+      supabase,
+      user,
+      body.job_id,
+      siteUrl()
+    );
+  } catch (err) {
+    console.warn("notify-application:", err);
   }
 
   return NextResponse.json({ ok: true as const });

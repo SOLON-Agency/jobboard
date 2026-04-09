@@ -40,7 +40,7 @@ const CREAM_HOVER = "rgba(240, 235, 216, 0.12)";
 
 const navLinks = [
   { label: "Postează un anunț", href: "/anunt" },
-  // { label: "Cum funcționează", href: "/how-it-works" },
+  { label: "Cum funcționează", href: "/how-it-works" },
 ];
 
 export const Navbar: React.FC = () => {

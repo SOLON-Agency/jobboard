@@ -8,7 +8,7 @@ import appSettings from "@/config/app.settings.json";
 
 const footerLinks = [
   { label: "Locuri de muncă", href: "/jobs" },
-  { label: "Cum funcționează", href: "/how-it-works" },
+  // { label: "Cum funcționează", href: "/how-it-works" },
   { label: "Politică de confidențialitate", href: "/policy" },
 ];
 

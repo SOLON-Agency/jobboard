@@ -162,7 +162,7 @@ const FormActionsRow: React.FC<FormActionsRowProps> = ({ form, onEdit, onArchive
           <>
             {!showEditAsButton && <Divider />}
             <MuiMenuItem onClick={() => { onArchive(form); setMenuAnchor(null); }} sx={{ gap: 1.5, py: 1 }}>
-              <ListItemIcon sx={{ minWidth: 0, color: "warning.main" }}>
+              <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
                 <ArchiveIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="Arhivează" primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }} />

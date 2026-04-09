@@ -60,7 +60,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onArch
   const archiveAction = appSettings.features.archiveJobs ? {
     label: company.is_archived ? "Dezarhivează" : "Arhivează",
     icon: company.is_archived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />,
-    color: "warning" as const,
+    color: "error" as const,
     onClick: () => onArchive(company),
   } : null;
 
@@ -121,12 +121,12 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onArch
                 onClick={() => { archiveAction.onClick(); setMenuAnchor(null); }}
                 sx={{ gap: 1.5, py: 1 }}
               >
-                <ListItemIcon sx={{ minWidth: 0, color: "warning.main" }}>
+                <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
                   {archiveAction.icon}
                 </ListItemIcon>
                 <ListItemText
                   primary={archiveAction.label}
-                  primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }}
+                  primaryTypographyProps={{ variant: "body2", color: "error.main", fontWeight: 500 }}
                 />
               </MuiMenuItem>
             </>
@@ -276,12 +276,12 @@ export default function CompanyPage() {
           }
 
           setMessage({ type: "success", text: "Companie creată." });
-          // Fire-and-forget: send company created confirmation email
-          supabase.functions
-            .invoke("notify-company-created", {
-              body: { company_id: newCompany.id, user_id: user.id },
-            })
-            .catch((e) => console.warn("notify-company-created failed:", e));
+          void fetch("/api/companies/notify-created", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ company_id: newCompany.id }),
+          }).catch((e) => console.warn("notify-created failed:", e));
         }
         await load();
         setTimeout(closeDrawer, 900);

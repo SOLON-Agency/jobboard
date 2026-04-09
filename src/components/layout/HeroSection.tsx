@@ -38,13 +38,23 @@ const statsVariants: Variants = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.65, ease: "easeOut", staggerChildren: 0.08 } },
 };
 
-// ── Stats data ────────────────────────────────────────────────────────────────
+// ── Stats helpers ─────────────────────────────────────────────────────────────
 
-const stats = [
-  { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Anunțuri", value: "100+" },
-  { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme", value: "10+" },
-  { icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: "rgba(240,235,216,0.8)" }} />, label: "Candidați", value: "900+" },
-];
+function formatCount(n: number): string {
+  if (n >= 1000) return `${(Math.floor(n / 100) / 10).toLocaleString("ro")}K+`;
+  if (n >= 100)  return `${Math.floor(n / 100) * 100}+`;
+  if (n >= 50)   return `${Math.floor(n / 50) * 50}+`;
+  if (n >= 30)   return `${Math.floor(n / 30) * 30}+`;
+  if (n >= 20)   return `${Math.floor(n / 20) * 20}+`;
+  if (n >= 10)   return `${Math.floor(n / 10) * 10}+`;
+  return `${n}`;
+}
+
+export interface HeroCounts {
+  jobs: number;
+  companies: number;
+  users: number;
+}
 
 // ── Pills ─────────────────────────────────────────────────────────────────────
 
@@ -52,7 +62,13 @@ const pills = ["Acces gratuit", "Aplicare directă", "Alerte inteligente"] as co
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export const HeroSection: React.FC = () => {
+export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
+  const stats = [
+    { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Anunțuri", value: counts ? formatCount(counts.jobs) : "100+" },
+    { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme", value: counts ? formatCount(counts.companies) : "10+" },
+    { icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: "rgba(240,235,216,0.8)" }} />, label: "Candidați", value: counts ? formatCount(counts.users) : "900+" },
+  ];
+  console.log(counts);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const targetRef = useRef({ x: 0, y: 0 });
@@ -304,7 +320,7 @@ export const HeroSection: React.FC = () => {
                   transition: "all 0.2s",
                 }}
               >
-                Explorează posturi
+                Explorează anunțuri
               </Button>
               <Button
                 component={Link}

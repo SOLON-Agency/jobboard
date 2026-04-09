@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useImperativeHandle, forwardRef } from "react";
 import {
   Typography,
   TextField,
@@ -29,21 +29,28 @@ export const schema = z.object({
 
 export type CompanyFormData = z.infer<typeof schema>;
 
+export interface AddEditCompanyHandle {
+  submit: () => Promise<void>;
+}
+
 interface AddEditCompanyProps {
   editing: CompanyWithJobCount | null;
   defaultValues: CompanyFormData;
   initialLogoUrl?: string | null;
   onSubmit: (data: CompanyFormData, logoFile: File | null) => Promise<void>;
   onCancel: () => void;
+  /** Hides built-in action buttons — caller controls submission via ref.submit() */
+  hideActions?: boolean;
 }
 
-export const AddEditCompany: React.FC<AddEditCompanyProps> = ({
+export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyProps>(function AddEditCompany({
   editing,
   defaultValues,
   initialLogoUrl,
   onSubmit,
   onCancel,
-}) => {
+  hideActions,
+}, ref) {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(
     initialLogoUrl ?? null
@@ -57,6 +64,10 @@ export const AddEditCompany: React.FC<AddEditCompanyProps> = ({
     resolver: zodResolver(schema),
     defaultValues,
   });
+
+  useImperativeHandle(ref, () => ({
+    submit: () => handleSubmit((data) => onSubmit(data, logoFile))(),
+  }));
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -195,24 +206,23 @@ export const AddEditCompany: React.FC<AddEditCompanyProps> = ({
           />
         </Stack>
 
-        <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={isSubmitting}
-            sx={{ px: 4 }}
-          >
-            {isSubmitting
-              ? "Se salvează..."
-              : editing
-              ? "Actualizează compania"
-              : "Creează companie"}
-          </Button>
-          {/* <Button variant="outlined" onClick={onCancel}>
-            Anulează
-          </Button> */}
-        </Stack>
+        {!hideActions && (
+          <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting}
+              sx={{ px: 4 }}
+            >
+              {isSubmitting
+                ? "Se salvează..."
+                : editing
+                ? "Actualizează compania"
+                : "Creează companie"}
+            </Button>
+          </Stack>
+        )}
       </Stack>
     </Box>
   );
-};
+});

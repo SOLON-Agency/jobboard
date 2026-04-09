@@ -242,7 +242,6 @@ const FormFieldInput: React.FC<FieldProps> = ({ field, value, fileValue, error, 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const notifyApplication = (jobId: string) => {
-  // Same-origin API → Edge Function (service role); avoids CORS OPTIONS to *.supabase.co.
   void fetch("/api/jobs/notify-application", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -451,7 +450,6 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
         finalValues[fieldId] = data.publicUrl;
       }
 
-      // Persist application via API (service role) — avoids RLS blocks on form_responses / applications.
       const response = await fetch("/api/jobs/apply-internal-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 interface ApplyBody {
   job_id?: string;
@@ -8,16 +7,6 @@ interface ApplyBody {
 }
 
 export async function POST(request: Request) {
-  let admin: ReturnType<typeof createAdminClient>;
-  try {
-    admin = createAdminClient();
-  } catch {
-    return NextResponse.json(
-      { error: "Configurare server incompletă (lipsește cheia de serviciu)." },
-      { status: 500 },
-    );
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,7 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Date lipsă sau invalide." }, { status: 400 });
   }
 
-  const { data: job, error: jobErr } = await admin
+  const { data: job, error: jobErr } = await supabase
     .from("job_listings")
     .select("id, company_id, application_form_id, status, is_archived")
     .eq("id", jobId)
@@ -67,7 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Nu poți aplica la acest anunț." }, { status: 403 });
   }
 
-  const { data: formRow, error: formErr } = await admin
+  const { data: formRow, error: formErr } = await supabase
     .from("forms")
     .select("id, status, is_archived")
     .eq("id", job.application_form_id)
@@ -77,7 +66,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Formularul de aplicare nu este disponibil." }, { status: 403 });
   }
 
-  const { data: fields, error: fieldsErr } = await admin
+  const { data: fields, error: fieldsErr } = await supabase
     .from("form_fields")
     .select("id, label, is_required")
     .eq("form_id", job.application_form_id)
@@ -85,7 +74,10 @@ export async function POST(request: Request) {
 
   if (fieldsErr) {
     console.error("apply-internal-form form_fields:", fieldsErr);
-    return NextResponse.json({ error: "Nu s-au putut încărca câmpurile formularului." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Nu s-au putut încărca câmpurile formularului." },
+      { status: 500 },
+    );
   }
 
   const fieldList = fields ?? [];
@@ -94,15 +86,12 @@ export async function POST(request: Request) {
     if (f.is_required) {
       const v = fieldValues[f.id]?.trim();
       if (!v) {
-        return NextResponse.json(
-          { error: `Câmp obligatoriu: ${f.label}` },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: `Câmp obligatoriu: ${f.label}` }, { status: 400 });
       }
     }
   }
 
-  const { data: existingApp } = await admin
+  const { data: existingApp } = await supabase
     .from("applications")
     .select("id")
     .eq("job_id", job.id)
@@ -118,7 +107,7 @@ export async function POST(request: Request) {
       ? user.user_metadata.full_name
       : user.email;
 
-  const { data: responseRow, error: respErr } = await admin
+  const { data: responseRow, error: respErr } = await supabase
     .from("form_responses")
     .insert({
       form_id: job.application_form_id,
@@ -147,7 +136,7 @@ export async function POST(request: Request) {
       value: fieldValues[f.id] ?? null,
     }));
 
-    const { error: valErr } = await admin.from("form_response_values").insert(valueRows);
+    const { error: valErr } = await supabase.from("form_response_values").insert(valueRows);
     if (valErr) {
       console.error("apply-internal-form form_response_values:", valErr);
       return NextResponse.json(
@@ -157,11 +146,9 @@ export async function POST(request: Request) {
     }
   }
 
-  const formDataJson = Object.fromEntries(
-    fieldList.map((f) => [f.label, fieldValues[f.id] ?? ""]),
-  );
+  const formDataJson = Object.fromEntries(fieldList.map((f) => [f.label, fieldValues[f.id] ?? ""]));
 
-  const { error: appErr } = await admin.from("applications").insert({
+  const { error: appErr } = await supabase.from("applications").insert({
     job_id: job.id,
     user_id: user.id,
     form_data: formDataJson,

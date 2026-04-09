@@ -223,7 +223,7 @@ export default function JobsPage() {
   return (
     <>
       <DashboardPageHeader
-        responsive={false}
+        responsive={true}
         title={<Typography variant="h3">Anunțuri de muncă</Typography>}
         actions={
           <>
