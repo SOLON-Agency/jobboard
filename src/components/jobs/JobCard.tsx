@@ -22,6 +22,7 @@ import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx } from "@/lib/utils
 import appSettings from "@/config/app.settings.json";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
+
 interface JobCardProps {
   job: Tables<"job_listings"> & { companies: Tables<"companies"> | null };
   isFavorite?: boolean;
@@ -45,9 +46,6 @@ export const JobCard: React.FC<JobCardProps> = ({
         transform: "translateY(-2px)",
         transition: "all 0.2s ease",
       },
-    }}
-    onClick={() => {
-      router.push(`/jobs/${job.slug}`);
     }}
   >
     {/* Full-card overlay link — the only <a> that wraps the card area */}

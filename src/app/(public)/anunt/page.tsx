@@ -1,4 +1,4 @@
-import { Container, Typography } from "@mui/material";
+import { Container } from "@mui/material";
 import type { Metadata } from "next";
 import appSettings from "@/config/app.settings.json";
 import { AnuntWizard } from "./AnuntWizard";
@@ -23,22 +23,7 @@ export const metadata: Metadata = {
 
 export default function AnuntPage() {
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, md: 8 } }}>
-      <Typography
-        variant="h2"
-        fontWeight={900}
-        sx={{ mb: 1, letterSpacing: "-0.5px" }}
-      >
-        Publică un anunț
-      </Typography>
-      <Typography
-        variant="body1"
-        color="text.secondary"
-        sx={{ mb: 5 }}
-      >
-        Completează pașii de mai jos pentru a publica anunțul tău de angajare pe {appSettings.name}.
-      </Typography>
-
+    <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 } }}>
       <AnuntWizard />
     </Container>
   );

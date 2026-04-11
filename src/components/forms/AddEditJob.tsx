@@ -27,6 +27,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import CheckIcon from "@mui/icons-material/Check";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import { useForm, Controller } from "react-hook-form";
@@ -352,7 +353,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
               name="job_type"
               control={control}
               render={({ field }) => (
-                <FormControl sx={{ flex: 1 }}>
+                <FormControl sx={{ flex: 1, maxWidth: 150 }}>
                   <InputLabel>Tip de contract</InputLabel>
                   <Select {...field} label="Tip de contract" value={field.value ?? ""}>
                     <MenuItem value="">Nespecificat</MenuItem>
@@ -441,7 +442,6 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
 
           {/* ── Benefits ─────────────────────────────────────────────────── */}
           <Box>
-            <Divider sx={{ mb: 2 }} />
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
               <CardGiftcardOutlinedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
               <Typography variant="subtitle2" fontWeight={700}>
@@ -555,7 +555,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                                 setEditingBenefitTitle(benefit.title);
                               }}
                             >
-                              <CheckIcon sx={{ fontSize: 14, transform: "scaleX(-1)" }} />
+                              <EditOutlinedIcon sx={{ fontSize: 14 }} />
                             </IconButton>
                           </Tooltip>
                         </>
@@ -613,7 +613,6 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                 },
               }}
             />
-            <Divider sx={{ mt: 2 }} />
           </Box>
 
           <Controller
@@ -621,7 +620,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             control={control}
             render={({ field }) => (
               <FormControl component="fieldset">
-                <FormLabel component="h3" sx={{ mb: 1, fontSize: "0.875rem", fontWeight: 600 }}>
+                <FormLabel component="h3" sx={{ mb: 0, fontSize: "0.875rem", fontWeight: 600 }}>
                   Unde vor aplica candidații?
                 </FormLabel>
                 <RadioGroup row {...field}>
@@ -634,6 +633,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                     <FormControlLabel
                       value="form"
                       control={<Radio size="small" />}
+                      sx={{ marginBottom: 0 }}
                       label={
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                           <span>Formular intern personalizat</span>

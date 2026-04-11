@@ -125,9 +125,17 @@ export default function JobsPage() {
         const appFormId = data.application_method === "form" ? (data.form_id || null) : null;
 
         if (editingJob) {
+          const companyName =
+            editingJob.companies?.name ??
+            companies.find((c) => c.id === editingJob.company_id)?.name ??
+            "";
+          const slug = companyName
+            ? `${slugify(data.title)}-${slugify(companyName)}-${editingJob.id.slice(0, 8)}`
+            : `${slugify(data.title)}-${editingJob.id.slice(0, 8)}`;
+
           await updateJob(supabase, editingJob.id, {
             title: data.title,
-            slug: `${slugify(data.title)}-${editingJob.id.slice(0, 8)}`,
+            slug,
             description: data.description,
             location: data.location || null,
             job_type: data.job_type || null,
@@ -140,10 +148,15 @@ export default function JobsPage() {
           });
           setMessage({ type: "success", text: "Anunț actualizat." });
         } else {
+          const companyName = companies.find((c) => c.id === data.company_id)?.name ?? "";
+          const slug = companyName
+            ? `${slugify(data.title)}-${slugify(companyName)}-${Date.now().toString(36)}`
+            : `${slugify(data.title)}-${Date.now().toString(36)}`;
+
           const job = await createJob(supabase, {
             company_id: data.company_id,
             title: data.title,
-            slug: `${slugify(data.title)}-${Date.now().toString(36)}`,
+            slug,
             description: data.description,
             location: data.location || null,
             job_type: data.job_type || null,
@@ -172,7 +185,7 @@ export default function JobsPage() {
         setMessage({ type: "error", text: parseSupabaseError(err) });
       }
     },
-    [supabase, editingJob, loadJobs]
+    [supabase, editingJob, companies, loadJobs]
   );
 
   const handleStatusChange = async (jobId: string, status: "published" | "archived" | "draft") => {

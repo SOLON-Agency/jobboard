@@ -18,12 +18,10 @@ import {
   Divider,
   Paper,
   Stack,
-  Step,
-  StepLabel,
-  Stepper,
   TextField,
   Typography,
 } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -59,6 +57,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STEP_LABELS = ["Anunț", "Companie", "Confirmare"];
+const STEP_DESCRIPTIONS = [
+  "Titlu, descriere, salariu și aplicare",
+  "Informații despre compania angajatoare",
+  "Revizuiește și publică anunțul",
+];
 const PLACEHOLDER_COMPANY_ID = "wizard-pending";
 const DRAFT_STORAGE_KEY = "anunt-wizard-draft";
 
@@ -670,7 +673,7 @@ export const AnuntWizard: React.FC = () => {
         }
       }
 
-      const jobSlug = `${slugify(jobData.title)}-${Date.now().toString(36)}`;
+      const jobSlug = `${slugify(jobData.title)}-${slugify(companyData.name)}-${Date.now().toString(36)}`;
       const job = await createJob(supabase, {
         company_id: company.id,
         title: jobData.title,
@@ -737,216 +740,370 @@ export const AnuntWizard: React.FC = () => {
     <>
       {publishing && <PublishingOverlay message={LOADING_MESSAGES[loadingMsgIdx]} />}
 
-      {/* Stepper */}
-      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 4, borderRadius: 3 }}>
-        <Stepper activeStep={step} alternativeLabel>
-          {STEP_LABELS.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-      </Paper>
+      <Box
+        sx={{
+          display: { xs: "block", md: "grid" },
+          gridTemplateColumns: { md: "240px 1fr" },
+          gap: { md: 5 },
+          alignItems: "flex-start",
+        }}
+      >
+        {/* ── Sticky sidebar ────────────────────────────────────────────── */}
+        <Box
+          sx={{
+            position: { md: "sticky" },
+            top: { md: "calc(64px + 24px)" },
+          }}
+        >
+          {/* Page title — desktop only */}
+          <Box sx={{ display: { xs: "none", md: "block" }, mb: 5 }}>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ mb: 0.75, letterSpacing: "-0.3px" }}
+            >
+              Publică un anunț
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Completează pașii de mai jos pentru a publica anunțul tău de angajare.
+            </Typography>
+          </Box>
 
-      {/* Step content */}
-      <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, minHeight: 400 }}>
+          {/* Mobile: compact step badge */}
+          <Box
+            sx={{
+              display: { xs: "flex", md: "none" },
+              alignItems: "center",
+              gap: 1.5,
+              mb: 2.5,
+            }}
+          >
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                bgcolor: "primary.main",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Typography variant="caption" fontWeight={700} color="white">
+                {step + 1}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.2 }}>
+                Pasul {step + 1} din {STEP_LABELS.length}
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {STEP_LABELS[step]}
+              </Typography>
+            </Box>
+          </Box>
 
-        {/* ── Step 0: Job details ── */}
-        {step === 0 && (
-          <>
-            <Typography variant="h4" fontWeight={800} sx={{ mb: 1 }}>
-              Detalii anunț
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Descrie postul pe care îl oferi. Cu cât ești mai specific, cu atât atragi candidații mai potriviți.
-            </Typography>
-            <AddEditJob
-              ref={jobFormRef}
-              key="wizard-job"
-              companies={[{ id: PLACEHOLDER_COMPANY_ID, name: "Compania ta" }]}
-              editingJob={null}
-              defaultValues={
-                jobData ?? {
-                  company_id: PLACEHOLDER_COMPANY_ID,
-                  title: "",
-                  description: "",
-                  location: "",
-                  job_type: "",
-                  experience_level: [],
-                  salary_min: "",
-                  salary_max: "",
-                  is_remote: false,
-                  application_method: "url",
-                  application_url: "",
-                  form_id: "",
-                }
-              }
-              onSubmit={handleJobSubmit}
-              onCancel={() => {}}
-              hideActions
-              wizardMode
-            />
-          </>
-        )}
+          {/* Desktop: vertical step navigation */}
+          <Box sx={{ display: { xs: "none", md: "block" } }}>
+            {STEP_LABELS.map((label, i) => {
+              const isCompleted = i < step;
+              const isActive = i === step;
+              const isLast = i === STEP_LABELS.length - 1;
+              return (
+                <Box key={label}>
+                  <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                    {/* Step circle */}
+                    <Box
+                      sx={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        bgcolor: isCompleted
+                          ? "success.main"
+                          : isActive
+                            ? "primary.main"
+                            : "transparent",
+                        border: "2px solid",
+                        borderColor: isCompleted
+                          ? "success.main"
+                          : isActive
+                            ? "primary.main"
+                            : "divider",
+                        color:
+                          isCompleted || isActive ? "white" : "text.disabled",
+                      }}
+                    >
+                      {isCompleted ? (
+                        <CheckIcon sx={{ fontSize: 16 }} />
+                      ) : (
+                        <Typography
+                          variant="caption"
+                          fontWeight={700}
+                          lineHeight={1}
+                        >
+                          {i + 1}
+                        </Typography>
+                      )}
+                    </Box>
 
-        {/* ── Step 1: Company details ── */}
-        {step === 1 && (
-          <>
-            <Typography variant="h4" fontWeight={800} sx={{ mb: 1 }}>
-              Compania ta
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Candidații vor vedea aceste informații alături de anunțul tău.
-            </Typography>
-            <AddEditCompany
-              ref={companyFormRef}
-              key="wizard-company"
-              editing={null}
-              defaultValues={
-                companyData ?? {
-                  name: "",
-                  description: "",
-                  website: "",
-                  industry: "",
-                  size: "",
-                  location: "",
-                  founded_year: "",
-                }
-              }
-              initialLogoUrl={companyLogoUrl}
-              onSubmit={handleCompanySubmit}
-              onCancel={() => {}}
-              hideActions
-            />
-          </>
-        )}
+                    {/* Step label */}
+                    <Box sx={{ pt: 0.25 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={isActive ? 700 : 500}
+                        color={
+                          isActive
+                            ? "text.primary"
+                            : isCompleted
+                              ? "text.secondary"
+                              : "text.disabled"
+                        }
+                      >
+                        {label}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {STEP_DESCRIPTIONS[i]}
+                      </Typography>
+                    </Box>
+                  </Box>
 
-        {/* ── Step 2: Confirmation + publish gate ── */}
-        {step === 2 && jobData && companyData && (
-          <>
-            <Typography variant="h4" fontWeight={800} sx={{ mb: 1 }}>
-              Verifică și publică
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Acesta este cum va arăta anunțul tău. Poți edita orice detaliu înainte de publicare.
-            </Typography>
+                  {/* Vertical connector */}
+                  {!isLast && (
+                    <Box
+                      sx={{
+                        ml: "15px",
+                        width: 2,
+                        height: 28,
+                        bgcolor: isCompleted ? "success.main" : "divider",
+                        my: 0.5,
+                      }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
 
-            {/* Draft restored after email confirmation */}
-            {draftRestored && (
-              <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
-                <AlertTitle fontWeight={700}>Ciornă restaurată</AlertTitle>
-                Anunțul tău a fost salvat. Acum că ți-ai confirmat adresa de e-mail, poți publica.
-              </Alert>
+        {/* ── Main content ──────────────────────────────────────────────── */}
+        <Box>
+          <Paper
+            variant="outlined"
+            sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, minHeight: 400 }}
+          >
+            {/* ── Step 0: Job details ── */}
+            {step === 0 && (
+              <>
+                <Typography variant="h5" fontWeight={800} sx={{ mb: 0.5 }}>
+                  Detalii anunț
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Descrie postul pe care îl oferi. Cu cât ești mai specific, cu atât atragi candidații mai potriviți.
+                </Typography>
+                <AddEditJob
+                  ref={jobFormRef}
+                  key="wizard-job"
+                  companies={[{ id: PLACEHOLDER_COMPANY_ID, name: "Compania ta" }]}
+                  editingJob={null}
+                  defaultValues={
+                    jobData ?? {
+                      company_id: PLACEHOLDER_COMPANY_ID,
+                      title: "",
+                      description: "",
+                      location: "",
+                      job_type: "",
+                      experience_level: [],
+                      salary_min: "",
+                      salary_max: "",
+                      is_remote: false,
+                      application_method: "url",
+                      application_url: "",
+                      form_id: "",
+                    }
+                  }
+                  onSubmit={handleJobSubmit}
+                  onCancel={() => {}}
+                  hideActions
+                  wizardMode
+                />
+              </>
             )}
 
-            {/* Preview (pure display, no publish button) */}
-            <ConfirmationStep
-              jobData={jobData}
-              jobBenefits={jobBenefits}
-              companyData={companyData}
-              companyLogoUrl={companyLogoUrl}
-              onEditJob={() => setStep(0)}
-              onEditCompany={() => setStep(1)}
-            />
-
-            {/* ── Publish area ── */}
-            <Box sx={{ mt: 3 }}>
-              {/* Case 1: anonymous/unauthenticated — needs to create / log in to a real account */}
-              {isAnonymous && !isPendingConfirmation && (
-                <UpgradeAuthGate
-                  emailRedirectTo={emailRedirectTo}
-                  onRegistered={handleRegistered}
+            {/* ── Step 1: Company details ── */}
+            {step === 1 && (
+              <>
+                <Typography variant="h5" fontWeight={800} sx={{ mb: 0.5 }}>
+                  Compania ta
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Candidații vor vedea aceste informații alături de anunțul tău.
+                </Typography>
+                <AddEditCompany
+                  ref={companyFormRef}
+                  key="wizard-company"
+                  editing={null}
+                  defaultValues={
+                    companyData ?? {
+                      name: "",
+                      description: "",
+                      website: "",
+                      industry: "",
+                      size: "",
+                      location: "",
+                      founded_year: "",
+                    }
+                  }
+                  initialLogoUrl={companyLogoUrl}
+                  onSubmit={handleCompanySubmit}
+                  onCancel={() => {}}
+                  hideActions
                 />
-              )}
+              </>
+            )}
 
-              {/* Case 2: just registered — waiting for email confirmation */}
-              {isPendingConfirmation && (
-                <Alert
-                  severity="info"
-                  icon={<MarkEmailReadIcon fontSize="inherit" />}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <AlertTitle fontWeight={700}>Confirmă adresa de e-mail</AlertTitle>
-                  Am trimis un link de confirmare la{" "}
-                  <strong>{registeredEmail}</strong>. După ce apeși pe link, vei fi
-                  redirecționat înapoi aici și anunțul tău va fi publicat automat.
-                  <br />
-                  <Typography variant="caption" color="text.secondary">
-                    Verifică și dosarul Spam dacă nu primești e-mailul.
-                  </Typography>
-                </Alert>
-              )}
+            {/* ── Step 2: Confirmation + publish gate ── */}
+            {step === 2 && jobData && companyData && (
+              <>
+                <Typography variant="h5" fontWeight={800} sx={{ mb: 0.5 }}>
+                  Verifică și publică
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Acesta este cum va arăta anunțul tău. Poți edita orice detaliu înainte de publicare.
+                </Typography>
 
-              {/* Case 3: confirmed account — ready to publish */}
-              {canPublish && (
-                <Stack spacing={2}>
-                  {publishError && (
-                    <Alert severity="error" sx={{ borderRadius: 2 }}>
-                      {publishError}
+                {draftRestored && (
+                  <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+                    <AlertTitle fontWeight={700}>Ciornă restaurată</AlertTitle>
+                    Anunțul tău a fost salvat. Acum că ți-ai confirmat adresa de e-mail, poți publica.
+                  </Alert>
+                )}
+
+                <ConfirmationStep
+                  jobData={jobData}
+                  jobBenefits={jobBenefits}
+                  companyData={companyData}
+                  companyLogoUrl={companyLogoUrl}
+                  onEditJob={() => setStep(0)}
+                  onEditCompany={() => setStep(1)}
+                />
+
+                <Box sx={{ mt: 3 }}>
+                  {isAnonymous && !isPendingConfirmation && (
+                    <UpgradeAuthGate
+                      emailRedirectTo={emailRedirectTo}
+                      onRegistered={handleRegistered}
+                    />
+                  )}
+
+                  {isPendingConfirmation && (
+                    <Alert
+                      severity="info"
+                      icon={<MarkEmailReadIcon fontSize="inherit" />}
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <AlertTitle fontWeight={700}>Confirmă adresa de e-mail</AlertTitle>
+                      Am trimis un link de confirmare la{" "}
+                      <strong>{registeredEmail}</strong>. După ce apeși pe link, vei fi
+                      redirecționat înapoi aici și anunțul tău va fi publicat automat.
+                      <br />
+                      <Typography variant="caption" color="text.secondary">
+                        Verifică și dosarul Spam dacă nu primești e-mailul.
+                      </Typography>
                     </Alert>
                   )}
-                  <Button
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    disabled={publishing}
-                    startIcon={
-                      publishing
-                        ? <CircularProgress size={20} color="inherit" />
-                        : <RocketLaunchIcon />
-                    }
-                    onClick={handlePublish}
-                    sx={{ py: 1.75, fontSize: "1rem", fontWeight: 700 }}
-                  >
-                    {publishing ? "Se publică..." : "Publică anunțul"}
-                  </Button>
-                </Stack>
-              )}
-            </Box>
-          </>
-        )}
-      </Paper>
 
-      {/* Navigation footer (steps 0 and 1 only) */}
-      {step < 2 && (
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mt: 3 }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBack}
-            disabled={step === 0}
-            sx={{ visibility: step === 0 ? "hidden" : "visible" }}
-          >
-            Înapoi
-          </Button>
-          <Button
-            variant="contained"
-            endIcon={<ArrowForwardIcon />}
-            onClick={handleNext}
-            sx={{ px: 4 }}
-          >
-            Continuă
-          </Button>
-        </Stack>
-      )}
+                  {canPublish && (
+                    <Stack spacing={2}>
+                      {publishError && (
+                        <Alert severity="error" sx={{ borderRadius: 2 }}>
+                          {publishError}
+                        </Alert>
+                      )}
+                      <Button
+                        variant="contained"
+                        size="large"
+                        fullWidth
+                        disabled={publishing}
+                        startIcon={
+                          publishing
+                            ? <CircularProgress size={20} color="inherit" />
+                            : <RocketLaunchIcon />
+                        }
+                        onClick={handlePublish}
+                        sx={{ py: 1.75, fontSize: "1rem", fontWeight: 700 }}
+                      >
+                        {publishing ? "Se publică..." : "Publică anunțul"}
+                      </Button>
+                    </Stack>
+                  )}
+                </Box>
+              </>
+            )}
+          </Paper>
 
-      {/* Back button on step 2 */}
-      {step === 2 && (
-        <Box sx={{ mt: 3 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBack}
+          {/* Navigation buttons
+              — fixed to the bottom of the viewport on mobile,
+                normal flow on desktop (md+)                           */}
+          <Box
+            sx={{
+              // Mobile: fixed bar
+              position: { xs: "fixed", md: "static" },
+              bottom: { xs: 0, md: "auto" },
+              left: { xs: 0, md: "auto" },
+              right: { xs: 0, md: "auto" },
+              zIndex: { xs: "appBar", md: "auto" },
+              bgcolor: { xs: "background.paper", md: "transparent" },
+              borderTop: { xs: "1px solid", md: "none" },
+              borderColor: { xs: "divider", md: "transparent" },
+              px: { xs: 2, md: 0 },
+              py: { xs: 1.5, md: 0 },
+              mt: { xs: 0, md: 3 },
+            }}
           >
-            Înapoi
-          </Button>
+            {step < 2 ? (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Button
+                  variant="outlined"
+                  startIcon={<ArrowBackIcon />}
+                  onClick={handleBack}
+                  disabled={step === 0}
+                  sx={{ visibility: step === 0 ? "hidden" : "visible" }}
+                >
+                  Înapoi
+                </Button>
+                <Button
+                  variant="contained"
+                  endIcon={<ArrowForwardIcon />}
+                  onClick={handleNext}
+                  sx={{ px: 4 }}
+                >
+                  Continuă
+                </Button>
+              </Stack>
+            ) : (
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={handleBack}
+              >
+                Înapoi
+              </Button>
+            )}
+          </Box>
+
+          {/* Spacer so the fixed nav bar never overlaps the last form field on mobile */}
+          <Box sx={{ display: { xs: "block", md: "none" }, height: 72 }} />
         </Box>
-      )}
+      </Box>
     </>
   );
 };

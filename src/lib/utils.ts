@@ -33,6 +33,14 @@ export const slugify = (text: string): string =>
   text
     .toLowerCase()
     .trim()
+    // Romanian diacritics — both comma-below (ș ț) and cedilla (ş ţ) forms
+    .replace(/[ăâ]/g, "a")
+    .replace(/î/g, "i")
+    .replace(/[șş]/g, "s")
+    .replace(/[țţ]/g, "t")
+    // Generic accent removal (é → e, ö → o, etc.)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^\w\s-]/g, "")
     .replace(/[\s_]+/g, "-")
     .replace(/^-+|-+$/g, "");

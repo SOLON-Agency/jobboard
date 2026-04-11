@@ -27,7 +27,6 @@ import {
 } from "@/lib/utils";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 import appSettings from "@/config/app.settings.json";
-import router from "next/router";
 
 const statusColor: Record<string, "default" | "success" | "warning"> = {
   draft: "warning",
@@ -67,9 +66,6 @@ export const JobRow: React.FC<JobRowProps> = ({
           transform: "translateY(-2px)",
           transition: "all 0.2s ease",
         },
-      }}
-      onClick={() => {
-        router.push(`/jobs/${job.slug}`);
       }}
     >
       {/* Company logo */}

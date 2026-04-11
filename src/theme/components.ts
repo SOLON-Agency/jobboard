@@ -15,6 +15,23 @@ export const components: Components<Theme> = {
         textTransform: "none",
         fontWeight: 600,
         letterSpacing: "0.02em",
+        "&.Mui-disabled": {
+          color: "#ffffff",
+          // Re-enable pointer events so the cursor style is visible.
+          // The underlying <button disabled> attribute still blocks clicks.
+          pointerEvents: "auto",
+          cursor: "not-allowed",
+          background: "rgba(0, 0, 0, 0.12)",
+        },
+        ".Mui-disabled&:hover": {
+          background: "rgba(0, 0, 0, 0.12)",
+          boxShadow: "none",
+        },
+      },
+      contained: {
+        "&:hover:not(.Mui-disabled)": {
+          backgroundColor: "linear-gradient(135deg, #0f4024 0%, #4d6e8a 100%)",
+        },
       },
       containedPrimary: {
         background: "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)",
