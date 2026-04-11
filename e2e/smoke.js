@@ -46,14 +46,15 @@ async function main() {
       fn: async () => {
         const page = await newPage(browser);
         try {
-          await goto(page, path);
+          // Allow extra time for cold Vercel boots on the first request
+          await goto(page, path, { timeout: 45000 });
 
           // Every page must have a non-empty <title>
           const title = await page.title();
           if (!title?.trim()) throw new Error('Page rendered without a <title>');
 
-          // The global <nav> (Navbar) must be present
-          await expectSelector(page, 'nav', 5000);
+          // MUI AppBar renders as <header> — present on every page with a Navbar
+          await expectSelector(page, 'header', 8000);
 
           // No uncaught JS errors in the first render
           const errors = page._consoleErrors.filter(

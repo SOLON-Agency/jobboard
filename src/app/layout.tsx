@@ -60,7 +60,6 @@ export default function RootLayout({
           <Navbar />
           <main style={{ flex: 1 }} className="main-content">{children}</main>
           <Footer />
-          <br /> <br />
         </ThemeRegistry>
       </body>
     </html>

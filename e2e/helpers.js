@@ -10,7 +10,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = (process.env.E2E_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL).replace(/\/$/, '');
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL).replace(/\/$/, '');
 
 // ── Browser ───────────────────────────────────────────────────────────────────
 
@@ -47,9 +47,9 @@ async function newPage(browser) {
  * Navigate to a path relative to BASE_URL and return the response.
  * Throws if status >= 400.
  */
-async function goto(page, urlPath, { waitUntil = 'domcontentloaded' } = {}) {
+async function goto(page, urlPath, { waitUntil = 'domcontentloaded', timeout = 30000 } = {}) {
   const url = `${BASE_URL}${urlPath}`;
-  const response = await page.goto(url, { waitUntil, timeout: 20000 });
+  const response = await page.goto(url, { waitUntil, timeout });
   if (!response) throw new Error(`No response from ${url}`);
   const status = response.status();
   if (status >= 400) throw new Error(`HTTP ${status} on ${url}`);

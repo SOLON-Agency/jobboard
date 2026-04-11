@@ -174,6 +174,7 @@ export async function sendHtmlEmail(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${cfg.apiKey}`,
+      "User-Agent": "legaljobs/1.0",
     },
     body: JSON.stringify({
       from: cfg.from,

@@ -30,7 +30,7 @@ export const Footer: React.FC = () => {
         backgroundColor: "background.paper",
       }}
     >
-      <Container maxWidth="lg" sx={{ paddingBottom: 2 }}>
+      <Container maxWidth="lg" sx={{ paddingBottom: 2, paddingTop: 2 }}>
         <Stack
           direction={{ xs: "column", md: "row" }}
           justifyContent="space-between"
