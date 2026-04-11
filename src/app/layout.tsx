@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
+import { Saira } from "next/font/google";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 import appSettings from "@/config/app.settings.json";
+
+const saira = Saira({
+  subsets: ["latin", "latin-ext"],
+  axes: ["wdth"],
+  weight: "variable",
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-saira",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={saira.variable}>
       {/* <style dangerouslySetInnerHTML={{ __html: `
         .main-content {
           padding-bottom: 100px;
@@ -45,7 +55,7 @@ export default function RootLayout({
           }
         }
       `}} /> */}
-      <body>
+      <body style={{ fontFamily: "var(--font-saira), sans-serif" }}>
         <ThemeRegistry>
           <Navbar />
           <main style={{ flex: 1 }} className="main-content">{children}</main>

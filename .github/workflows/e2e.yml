@@ -1,0 +1,116 @@
+name: E2E Tests
+
+# ── Triggers ──────────────────────────────────────────────────────────────────
+# Runs only on pushes to main so production is always tested after every deploy.
+on:
+  push:
+    branches: ['main']
+
+# ── Permissions ───────────────────────────────────────────────────────────────
+# `checks: write`        → dorny/test-reporter can create check runs
+# `pull-requests: write` → dorny/test-reporter can annotate PRs
+# `contents: read`       → checkout
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  e2e:
+    name: E2E Tests (production)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Puppeteer browser
+        run: npx puppeteer browsers install chrome
+
+      # ── Wait for deployment ────────────────────────────────────────────────
+      # Give Vercel (or whichever host) time to finish deploying the new build
+      # before hitting the production URL with tests.
+      - name: Wait 120 s for deployment to propagate
+        run: sleep 120
+
+      # ── Smoke Tests ────────────────────────────────────────────────────────
+      - name: Run smoke tests
+        id: smoke
+        run: node e2e/smoke.js
+        continue-on-error: true
+        env:
+          E2E_BASE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+
+      - name: Upload smoke screenshots (on failure)
+        if: steps.smoke.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screenshots
+          path: e2e/screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload smoke XML results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: e2e/results/smoke.xml
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ── Full E2E Tests ─────────────────────────────────────────────────────
+      - name: Run full E2E suite
+        id: full
+        run: node e2e/full.js
+        continue-on-error: true
+        env:
+          E2E_BASE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+      - name: Upload failure screenshots
+        if: steps.full.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-screenshots
+          path: e2e/screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload full XML results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-results
+          path: e2e/results/
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ── Publish reports ────────────────────────────────────────────────────
+      - name: Publish smoke test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: 🔥 Smoke Tests
+          path: e2e/results/smoke.xml
+          reporter: java-junit
+          fail-on-error: 'true'
+
+      - name: Publish full E2E test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: 🧪 Full E2E Tests
+          path: 'e2e/results/*.xml'
+          reporter: java-junit
+          fail-on-error: 'true'

@@ -9,8 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "supabase:deploy:hello-world": "supabase functions deploy hello-world --project-ref uccivcdtfpevtykirkuw",
-    "supabase:deploy:all": "supabase functions deploy --project-ref uccivcdtfpevtykirkuw"
+    "supabase:deploy": "node scripts/deploy-edge-functions.js",
+    "supabase:deploy:all": "node scripts/deploy-edge-functions.js",
+    "e2e:smoke": "node e2e/smoke.js",
+    "e2e:full": "node e2e/full.js",
+    "e2e": "node e2e/smoke.js && node e2e/full.js"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -30,6 +33,7 @@
     "@tiptap/starter-kit": "^3.21.0",
     "framer-motion": "^12.38.0",
     "next": "16.2.1",
+    "puppeteer": "^24.40.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.72.0",
@@ -45,9 +49,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.1",
+    "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "jsdom": "^29.0.1",
+    "supabase": "^2.89.1",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",

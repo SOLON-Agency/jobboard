@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# E2E test artefacts — generated at runtime, never committed
+e2e/results/
+e2e/screenshots/

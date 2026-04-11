@@ -35,12 +35,12 @@ export const useAuth = () => {
 
   const signUp = useCallback(
     async (email: string, password: string) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
-      return { error };
+      return { data, error };
     },
     [supabase.auth]
   );
@@ -72,6 +72,11 @@ export const useAuth = () => {
     return { error };
   }, [supabase.auth]);
 
+  const signInAnonymously = useCallback(async () => {
+    const { data, error } = await supabase.auth.signInAnonymously();
+    return { data, error };
+  }, [supabase.auth]);
+
   const resendVerification = useCallback(
     async (email: string) => {
       const { error } = await supabase.auth.resend({
@@ -90,6 +95,7 @@ export const useAuth = () => {
     ...state,
     signUp,
     signIn,
+    signInAnonymously,
     signInWithProvider,
     signOut,
     resendVerification,

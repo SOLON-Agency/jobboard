@@ -9,6 +9,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import {
   Alert,
+  AlertTitle,
   Avatar,
   Box,
   Button,
@@ -23,14 +24,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -55,7 +56,11 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-// ─── Loading messages ─────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const STEP_LABELS = ["Anunț", "Companie", "Confirmare"];
+const PLACEHOLDER_COMPANY_ID = "wizard-pending";
+const DRAFT_STORAGE_KEY = "anunt-wizard-draft";
 
 const LOADING_MESSAGES = [
   "Consultăm codul muncii...",
@@ -72,7 +77,36 @@ const LOADING_MESSAGES = [
   "Verificăm clauza de neconcurență...",
 ];
 
-// ─── Auth step schemas ────────────────────────────────────────────────────────
+// ─── Draft persistence helpers ────────────────────────────────────────────────
+
+interface WizardDraft {
+  jobData: JobFormData;
+  jobBenefits: BenefitDraft[];
+  companyData: CompanyFormData;
+  companyLogoUrl: string | null;
+}
+
+function saveDraft(draft: WizardDraft) {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch { /* storage unavailable */ }
+}
+
+function loadDraft(): WizardDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as WizardDraft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch { /* ignore */ }
+}
+
+// ─── Auth schemas ─────────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
   email: z.string().email("Email invalid"),
@@ -92,11 +126,7 @@ const registerSchema = z
   });
 type RegisterData = z.infer<typeof registerSchema>;
 
-// ─── Wizard step config ───────────────────────────────────────────────────────
-
-const STEP_LABELS = ["Anunț", "Companie", "Cont", "Confirmare"];
-
-// ─── Inline auth forms ────────────────────────────────────────────────────────
+// ─── LoginInline ──────────────────────────────────────────────────────────────
 
 const LoginInline: React.FC<{ onError: (msg: string | null) => void }> = ({ onError }) => {
   const supabase = createClient();
@@ -116,7 +146,7 @@ const LoginInline: React.FC<{ onError: (msg: string | null) => void }> = ({ onEr
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack spacing={2}>
         <TextField
           {...register("email")}
@@ -148,10 +178,13 @@ const LoginInline: React.FC<{ onError: (msg: string | null) => void }> = ({ onEr
   );
 };
 
+// ─── RegisterInline ───────────────────────────────────────────────────────────
+
 const RegisterInline: React.FC<{
+  emailRedirectTo: string;
   onError: (msg: string | null) => void;
   onSuccess: (email: string) => void;
-}> = ({ onError, onSuccess }) => {
+}> = ({ emailRedirectTo, onError, onSuccess }) => {
   const supabase = createClient();
   const {
     register,
@@ -164,7 +197,7 @@ const RegisterInline: React.FC<{
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo },
     });
     if (error) {
       onError(error.message);
@@ -174,7 +207,7 @@ const RegisterInline: React.FC<{
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Stack spacing={2}>
         <TextField
           {...register("email")}
@@ -207,14 +240,75 @@ const RegisterInline: React.FC<{
           disabled={isSubmitting}
           startIcon={isSubmitting ? <CircularProgress size={18} color="inherit" /> : null}
         >
-          {isSubmitting ? "Se creează contul..." : "Creează cont"}
+          {isSubmitting ? "Se creează contul..." : "Creează cont gratuit"}
         </Button>
       </Stack>
     </Box>
   );
 };
 
-// ─── Confirmation preview ────────────────────────────────────────────────────
+// ─── UpgradeAuthGate ──────────────────────────────────────────────────────────
+// Shown in the confirmation step when the user is anonymous or unauthenticated.
+
+const UpgradeAuthGate: React.FC<{
+  emailRedirectTo: string;
+  onRegistered: (email: string) => void;
+}> = ({ emailRedirectTo, onRegistered }) => {
+  const [mode, setMode] = useState<"register" | "login">("register");
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <Paper
+      variant="outlined"
+      sx={{ p: { xs: 2.5, sm: 3 }, borderRadius: 2, mt: 3, borderColor: "primary.main" }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+        <LockOpenIcon color="primary" />
+        <Typography variant="h5" fontWeight={700}>
+          Publică anunțul
+        </Typography>
+      </Stack>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+        Creează un cont gratuit sau conectează-te pentru a publica anunțul. Anunțul tău este salvat și te așteptăm.
+      </Typography>
+
+      <Stack direction="row" spacing={1} sx={{ mb: 2.5 }}>
+        <Button
+          variant={mode === "register" ? "contained" : "outlined"}
+          onClick={() => { setMode("register"); setError(null); }}
+          sx={{ flex: 1 }}
+        >
+          Cont nou
+        </Button>
+        <Button
+          variant={mode === "login" ? "contained" : "outlined"}
+          onClick={() => { setMode("login"); setError(null); }}
+          sx={{ flex: 1 }}
+        >
+          Am deja cont
+        </Button>
+      </Stack>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {mode === "login" ? (
+        <LoginInline onError={setError} />
+      ) : (
+        <RegisterInline
+          emailRedirectTo={emailRedirectTo}
+          onError={setError}
+          onSuccess={onRegistered}
+        />
+      )}
+    </Paper>
+  );
+};
+
+// ─── ConfirmationStep (pure preview) ─────────────────────────────────────────
 
 interface ConfirmationProps {
   jobData: JobFormData;
@@ -223,9 +317,6 @@ interface ConfirmationProps {
   companyLogoUrl: string | null;
   onEditJob: () => void;
   onEditCompany: () => void;
-  onPublish: () => void;
-  publishing: boolean;
-  error: string | null;
 }
 
 const ConfirmationStep: React.FC<ConfirmationProps> = ({
@@ -235,9 +326,6 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
   companyLogoUrl,
   onEditJob,
   onEditCompany,
-  onPublish,
-  publishing,
-  error,
 }) => {
   const descriptionText = jobData.description.replace(/<[^>]*>/g, "").trim();
   const salaryText = formatSalary(
@@ -248,10 +336,7 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
   return (
     <Stack spacing={3}>
       {/* Company card */}
-      <Paper
-        variant="outlined"
-        sx={{ p: 3, borderRadius: 2 }}
-      >
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
           <Stack direction="row" spacing={2} alignItems="center">
             <Avatar
@@ -285,6 +370,7 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
             startIcon={<EditIcon />}
             onClick={onEditCompany}
             sx={{ color: "text.secondary" }}
+            aria-label="Editează compania"
           >
             Editează
           </Button>
@@ -302,6 +388,7 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
             startIcon={<EditIcon />}
             onClick={onEditJob}
             sx={{ color: "text.secondary", flexShrink: 0 }}
+            aria-label="Editează anunțul"
           >
             Editează
           </Button>
@@ -324,9 +411,7 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
           )}
           {jobData.experience_level.length > 0 && (
             <Chip
-              label={jobData.experience_level
-                .map((l) => experienceLevelLabels[l] ?? l)
-                .join(" – ")}
+              label={jobData.experience_level.map((l) => experienceLevelLabels[l] ?? l).join(" – ")}
               size="small"
               variant="outlined"
             />
@@ -337,27 +422,24 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
         </Stack>
 
         {descriptionText && (
-          <>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                display: "-webkit-box",
-                WebkitLineClamp: 4,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                mb: 2,
-              }}
-            >
-              {descriptionText}
-            </Typography>
-          </>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              display: "-webkit-box",
+              WebkitLineClamp: 4,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              mb: 2,
+            }}
+          >
+            {descriptionText}
+          </Typography>
         )}
 
         {jobBenefits.length > 0 && (
           <>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-              {/* <CardGiftcardIcon sx={{ fontSize: 22, color: "#2d6a4f" }} /> */}
               <Typography variant="h3" fontWeight={700}>Beneficii</Typography>
               <Chip
                 label={jobBenefits.length}
@@ -371,9 +453,7 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
               {jobBenefits.map((b, i) => (
                 <Stack key={i} direction="row" alignItems="center" spacing={1.5}>
                   <CheckCircleOutlineIcon sx={{ fontSize: 16, color: "success.main", flexShrink: 0 }} />
-                  <Typography variant="body1" fontWeight={500}>
-                    {b.title}
-                  </Typography>
+                  <Typography variant="body1" fontWeight={500}>{b.title}</Typography>
                 </Stack>
               ))}
             </Stack>
@@ -399,24 +479,6 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
           </>
         )}
       </Paper>
-
-      {error && (
-        <Alert severity="error" sx={{ borderRadius: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Button
-        variant="contained"
-        size="large"
-        fullWidth
-        disabled={publishing}
-        startIcon={publishing ? <CircularProgress size={20} color="inherit" /> : <RocketLaunchIcon />}
-        onClick={onPublish}
-        sx={{ py: 1.75, fontSize: "1rem", fontWeight: 700 }}
-      >
-        {publishing ? "Se publică..." : "Publică anunțul"}
-      </Button>
     </Stack>
   );
 };
@@ -438,11 +500,7 @@ const PublishingOverlay: React.FC<{ message: string }> = ({ message }) => (
     }}
   >
     <Box sx={{ position: "relative", display: "inline-flex" }}>
-      <CircularProgress
-        size={80}
-        thickness={2.5}
-        sx={{ color: "primary.main" }}
-      />
+      <CircularProgress size={80} thickness={2.5} sx={{ color: "primary.main" }} />
       <Box
         sx={{
           position: "absolute",
@@ -471,39 +529,56 @@ const PublishingOverlay: React.FC<{ message: string }> = ({ message }) => (
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
-const PLACEHOLDER_COMPANY_ID = "wizard-pending";
-
 export const AnuntWizard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const supabase = useSupabase();
   const router = useRouter();
 
-  // ── Wizard step (0=job, 1=company, 2=auth, 3=confirm) ──────────────────
+  // step: 0=job, 1=company, 2=confirm+publish
   const [step, setStep] = useState(0);
 
-  // ── Step data ──────────────────────────────────────────────────────────
   const [jobData, setJobData] = useState<JobFormData | null>(null);
   const [jobBenefits, setJobBenefits] = useState<BenefitDraft[]>([]);
   const [companyData, setCompanyData] = useState<CompanyFormData | null>(null);
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
 
-  // ── Auth step state ───────────────────────────────────────────────────
-  const [authMode, setAuthMode] = useState<"login" | "register">("register");
-  const [authError, setAuthError] = useState<string | null>(null);
-  // email captured at registration time — used to show the confirmation banner
+  // email captured when the user registers from the auth gate
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  // true when the draft was restored from localStorage after email confirmation
+  const [draftRestored, setDraftRestored] = useState(false);
 
-  // ── Publish state ─────────────────────────────────────────────────────
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
-  // ── Step refs for imperative form triggers ────────────────────────────
   const jobFormRef = useRef<AddEditJobHandle>(null);
   const companyFormRef = useRef<AddEditCompanyHandle>(null);
 
-  // ── Rotate loading messages ───────────────────────────────────────────
+  // ── Auto sign-in anonymously so we always have a session ─────────────────
+  // This lets us track the user through the wizard without requiring account
+  // creation, and allows future draft-saving to the DB under a consistent ID.
+  useEffect(() => {
+    if (!authLoading && !user) {
+      void supabase.auth.signInAnonymously();
+    }
+  }, [authLoading, user, supabase.auth]);
+
+  // ── Restore a saved draft when the user returns after confirming email ────
+  useEffect(() => {
+    if (!user || user.is_anonymous || !user.email_confirmed_at) return;
+    const draft = loadDraft();
+    if (!draft) return;
+    setJobData(draft.jobData);
+    setJobBenefits(draft.jobBenefits ?? []);
+    setCompanyData(draft.companyData);
+    setCompanyLogoUrl(draft.companyLogoUrl ?? null);
+    setDraftRestored(true);
+    setStep(2);
+    clearDraft();
+  }, [user]);
+
+  // ── Rotate loading messages during publish ────────────────────────────────
   useEffect(() => {
     if (!publishing) return;
     const id = setInterval(
@@ -513,21 +588,7 @@ export const AnuntWizard: React.FC = () => {
     return () => clearInterval(id);
   }, [publishing]);
 
-  // ── Auto-advance from auth step once user authenticates ───────────────
-  useEffect(() => {
-    if (user && step === 2) setStep(3);
-  }, [user, step]);
-
-  // ── Advance helpers ───────────────────────────────────────────────────
-  const advanceFromCompany = useCallback(() => {
-    if (user) {
-      setStep(3); // skip auth
-    } else {
-      setStep(2);
-    }
-  }, [user]);
-
-  // ── Step 0 submit: store job data → step 1 ────────────────────────────
+  // ── Step 0: store job data → step 1 ──────────────────────────────────────
   const handleJobSubmit = useCallback(
     async (data: JobFormData, _status: "draft" | "published", benefits?: BenefitDraft[]) => {
       setJobData(data);
@@ -537,37 +598,43 @@ export const AnuntWizard: React.FC = () => {
     []
   );
 
-  // ── Step 1 submit: store company data → step 2/3 ──────────────────────
+  // ── Step 1: store company data → step 2 (always) ─────────────────────────
   const handleCompanySubmit = useCallback(
     async (data: CompanyFormData, logoFile: File | null) => {
       setCompanyData(data);
       setCompanyLogoFile(logoFile);
       setCompanyLogoUrl(logoFile ? URL.createObjectURL(logoFile) : null);
-      advanceFromCompany();
+      setStep(2);
     },
-    [advanceFromCompany]
+    []
   );
 
-  // ── Back navigation ───────────────────────────────────────────────────
+  // ── Back navigation ───────────────────────────────────────────────────────
   const handleBack = () => {
-    if (step === 3 && !user) setStep(2);
-    else if (step === 3 && user) setStep(1);
-    else if (step === 2) setStep(1);
-    else if (step > 0) setStep((s) => s - 1);
+    if (step === 2) setStep(1);
+    else if (step === 1) setStep(0);
   };
 
-  // ── Trigger next from external "Continuă" button ──────────────────────
+  // ── "Continuă" button for steps 0 and 1 ──────────────────────────────────
   const handleNext = async () => {
-    if (step === 0) {
-      await jobFormRef.current?.submit();
-    } else if (step === 1) {
-      await companyFormRef.current?.submit();
-    }
+    if (step === 0) await jobFormRef.current?.submit();
+    else if (step === 1) await companyFormRef.current?.submit();
   };
 
-  // ── Final publish ─────────────────────────────────────────────────────
+  // ── Save draft to localStorage when the user registers from the auth gate ─
+  const handleRegistered = useCallback(
+    (email: string) => {
+      setRegisteredEmail(email);
+      if (jobData && companyData) {
+        saveDraft({ jobData, jobBenefits, companyData, companyLogoUrl });
+      }
+    },
+    [jobData, jobBenefits, companyData, companyLogoUrl]
+  );
+
+  // ── Final publish ─────────────────────────────────────────────────────────
   const handlePublish = async () => {
-    if (!user || !jobData || !companyData) return;
+    if (!user || user.is_anonymous || !jobData || !companyData) return;
     setPublishing(true);
     setPublishError(null);
 
@@ -642,11 +709,21 @@ export const AnuntWizard: React.FC = () => {
     }
   };
 
-  // ── Effective display step index (auth step shown as step 2 only when not authed) ──
-  const displayStep = user && step >= 2 ? step - 1 : step;
-  const displayLabels = user
-    ? STEP_LABELS.filter((_, i) => i !== 2)
-    : STEP_LABELS;
+  // ── Auth-gate conditions ──────────────────────────────────────────────────
+  // After the user registers from the gate, `user` stays anonymous until they
+  // click the confirmation link and return (triggering the draft restore above).
+  const isAnonymous = !user || user.is_anonymous === true;
+  const isPendingConfirmation =
+    registeredEmail !== null && (!user || user.is_anonymous === true);
+  const canPublish =
+    !!user && user.is_anonymous !== true && !!user.email_confirmed_at;
+
+  // Build the emailRedirectTo so the confirmation link returns to this wizard
+  // page, which will then auto-restore the saved draft.
+  const emailRedirectTo =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(window.location.pathname)}`
+      : "/auth/callback";
 
   if (authLoading) {
     return (
@@ -660,13 +737,10 @@ export const AnuntWizard: React.FC = () => {
     <>
       {publishing && <PublishingOverlay message={LOADING_MESSAGES[loadingMsgIdx]} />}
 
-      {/* Stepper header */}
-      <Paper
-        variant="outlined"
-        sx={{ p: { xs: 2, md: 3 }, mb: 4, borderRadius: 3 }}
-      >
-        <Stepper activeStep={displayStep} alternativeLabel>
-          {displayLabels.map((label) => (
+      {/* Stepper */}
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 }, mb: 4, borderRadius: 3 }}>
+        <Stepper activeStep={step} alternativeLabel>
+          {STEP_LABELS.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
             </Step>
@@ -675,10 +749,8 @@ export const AnuntWizard: React.FC = () => {
       </Paper>
 
       {/* Step content */}
-      <Paper
-        variant="outlined"
-        sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, minHeight: 400 }}
-      >
+      <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 4 }, borderRadius: 3, minHeight: 400 }}>
+
         {/* ── Step 0: Job details ── */}
         {step === 0 && (
           <>
@@ -749,55 +821,8 @@ export const AnuntWizard: React.FC = () => {
           </>
         )}
 
-        {/* ── Step 2: Auth (only when not authenticated) ── */}
-        {step === 2 && !user && (
-          <>
-            <Typography variant="h4" fontWeight={800} sx={{ mb: 1 }}>
-              Contul tău
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Autentifică-te sau creează un cont gratuit pentru a publica anunțul.
-            </Typography>
-
-            <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
-              <Button
-                variant={authMode === "register" ? "contained" : "outlined"}
-                onClick={() => { setAuthMode("register"); setAuthError(null); }}
-                sx={{ flex: 1 }}
-              >
-                Cont nou
-              </Button>
-              <Button
-                variant={authMode === "login" ? "contained" : "outlined"}
-                onClick={() => { setAuthMode("login"); setAuthError(null); }}
-                sx={{ flex: 1 }}
-              >
-                Am deja cont
-              </Button>
-            </Stack>
-
-            {authError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {authError}
-              </Alert>
-            )}
-
-            {authMode === "login" ? (
-              <LoginInline onError={setAuthError} />
-            ) : (
-              <RegisterInline
-                onError={setAuthError}
-                onSuccess={(email) => {
-                  setRegisteredEmail(email);
-                  setStep(3);
-                }}
-              />
-            )}
-          </>
-        )}
-
-        {/* ── Step 3: Confirmation ── */}
-        {step === 3 && jobData && companyData && (
+        {/* ── Step 2: Confirmation + publish gate ── */}
+        {step === 2 && jobData && companyData && (
           <>
             <Typography variant="h4" fontWeight={800} sx={{ mb: 1 }}>
               Verifică și publică
@@ -805,12 +830,16 @@ export const AnuntWizard: React.FC = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Acesta este cum va arăta anunțul tău. Poți edita orice detaliu înainte de publicare.
             </Typography>
-            {registeredEmail && !user && (
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Contul tău a fost creat pentru <strong>{registeredEmail}</strong>.
-                Confirmă adresa de e-mail, apoi revino pentru a publica anunțul.
+
+            {/* Draft restored after email confirmation */}
+            {draftRestored && (
+              <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+                <AlertTitle fontWeight={700}>Ciornă restaurată</AlertTitle>
+                Anunțul tău a fost salvat. Acum că ți-ai confirmat adresa de e-mail, poți publica.
               </Alert>
             )}
+
+            {/* Preview (pure display, no publish button) */}
             <ConfirmationStep
               jobData={jobData}
               jobBenefits={jobBenefits}
@@ -818,16 +847,68 @@ export const AnuntWizard: React.FC = () => {
               companyLogoUrl={companyLogoUrl}
               onEditJob={() => setStep(0)}
               onEditCompany={() => setStep(1)}
-              onPublish={handlePublish}
-              publishing={publishing}
-              error={publishError}
             />
+
+            {/* ── Publish area ── */}
+            <Box sx={{ mt: 3 }}>
+              {/* Case 1: anonymous/unauthenticated — needs to create / log in to a real account */}
+              {isAnonymous && !isPendingConfirmation && (
+                <UpgradeAuthGate
+                  emailRedirectTo={emailRedirectTo}
+                  onRegistered={handleRegistered}
+                />
+              )}
+
+              {/* Case 2: just registered — waiting for email confirmation */}
+              {isPendingConfirmation && (
+                <Alert
+                  severity="info"
+                  icon={<MarkEmailReadIcon fontSize="inherit" />}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <AlertTitle fontWeight={700}>Confirmă adresa de e-mail</AlertTitle>
+                  Am trimis un link de confirmare la{" "}
+                  <strong>{registeredEmail}</strong>. După ce apeși pe link, vei fi
+                  redirecționat înapoi aici și anunțul tău va fi publicat automat.
+                  <br />
+                  <Typography variant="caption" color="text.secondary">
+                    Verifică și dosarul Spam dacă nu primești e-mailul.
+                  </Typography>
+                </Alert>
+              )}
+
+              {/* Case 3: confirmed account — ready to publish */}
+              {canPublish && (
+                <Stack spacing={2}>
+                  {publishError && (
+                    <Alert severity="error" sx={{ borderRadius: 2 }}>
+                      {publishError}
+                    </Alert>
+                  )}
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    disabled={publishing}
+                    startIcon={
+                      publishing
+                        ? <CircularProgress size={20} color="inherit" />
+                        : <RocketLaunchIcon />
+                    }
+                    onClick={handlePublish}
+                    sx={{ py: 1.75, fontSize: "1rem", fontWeight: 700 }}
+                  >
+                    {publishing ? "Se publică..." : "Publică anunțul"}
+                  </Button>
+                </Stack>
+              )}
+            </Box>
           </>
         )}
       </Paper>
 
-      {/* Navigation footer */}
-      {step !== 3 && (
+      {/* Navigation footer (steps 0 and 1 only) */}
+      {step < 2 && (
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -843,19 +924,28 @@ export const AnuntWizard: React.FC = () => {
           >
             Înapoi
           </Button>
-
-          {/* Auth step: navigation is handled by the forms themselves */}
-          {step !== 2 && (
-            <Button
-              variant="contained"
-              endIcon={<ArrowForwardIcon />}
-              onClick={handleNext}
-              sx={{ px: 4 }}
-            >
-              Continuă
-            </Button>
-          )}
+          <Button
+            variant="contained"
+            endIcon={<ArrowForwardIcon />}
+            onClick={handleNext}
+            sx={{ px: 4 }}
+          >
+            Continuă
+          </Button>
         </Stack>
+      )}
+
+      {/* Back button on step 2 */}
+      {step === 2 && (
+        <Box sx={{ mt: 3 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={handleBack}
+          >
+            Înapoi
+          </Button>
+        </Box>
       )}
     </>
   );

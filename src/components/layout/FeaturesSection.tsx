@@ -88,7 +88,7 @@ export const FeaturesSection: React.FC = () => (
             De ce să alegi {appSettings.name}
           </Typography>
           <Typography variant="h2" sx={{ mb: 2 }}>
-            Tot ce ai nevoie pentru a-ți{" "}
+            Tot ce ai nevoie pentru{" "}
             <Box
               component="span"
               sx={{
@@ -98,11 +98,11 @@ export const FeaturesSection: React.FC = () => (
                 backgroundClip: "text",
               }}
             >
-              lansa cariera juridică
+              cariera ta juridică
             </Box>
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: "auto" }}>
-            O platformă inteligentă construită special pentru profesioniștii din domeniul juridic pentru a face diferența in cariera juridică.
+            O platformă inteligentă construită special pentru juriști
           </Typography>
         </Box>
 

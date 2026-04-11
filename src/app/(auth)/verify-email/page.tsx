@@ -4,17 +4,16 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
+  Alert,
+  AlertTitle,
   Box,
   Button,
   CircularProgress,
   Container,
-  Paper,
   Typography,
 } from "@mui/material";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useAuth } from "@/hooks/useAuth";
-import appSettings from "@/config/app.settings.json";
 
 const VerifyEmailContent: React.FC = () => {
   const searchParams = useSearchParams();
@@ -39,131 +38,93 @@ const VerifyEmailContent: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
-      <Paper
-        sx={{
-          p: { xs: 3, sm: 5 },
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 3,
-          textAlign: "center",
-        }}
-      >
-        {/* Icon */}
-        <Box
-          sx={{
-            width: 72,
-            height: 72,
-            borderRadius: "50%",
-            bgcolor: sent ? "success.main" : "primary.main",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            mx: "auto",
-            mb: 3,
-            transition: "background-color 0.3s",
-          }}
-          aria-hidden="true"
-        >
-          {sent ? (
-            <CheckCircleIcon sx={{ fontSize: 36, color: "#fff" }} />
-          ) : (
-            <MarkEmailReadIcon sx={{ fontSize: 36, color: "#fff" }} />
-          )}
-        </Box>
-
-        <Typography variant="h3" sx={{ mb: 1.5 }}>
-          Confirmă adresa de e-mail
-        </Typography>
-
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Trebuie să îți confirmi adresa de e-mail înainte de a te putea conecta.
-        </Typography>
-
-        {email && (
-          <Typography
-            component="p"
-            sx={{
-              display: "inline-block",
-              px: 2,
-              py: 0.75,
-              mb: 3,
-              borderRadius: 1.5,
-              bgcolor: "action.hover",
-              fontWeight: 700,
-              fontSize: "0.95rem",
-              wordBreak: "break-all",
-            }}
-            aria-label={`Adresa de e-mail: ${email}`}
-          >
+    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 }, minHeight: "calc(100vh - 200px)" }}>
+      {/* Primary alert */}
+      {sent ? (
+        <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }} role="status">
+          <AlertTitle sx={{ fontWeight: 700 }}>E-mail retrimis</AlertTitle>
+          Am trimis un nou link de confirmare la{" "}
+          <Box component="strong" sx={{ wordBreak: "break-all" }}>
             {email}
-          </Typography>
-        )}
+          </Box>
+          . Verifică-ți căsuța de intrare și dosarul Spam.
+        </Alert>
+      ) : (
+        <Alert
+          severity="warning"
+          icon={<MarkEmailReadIcon fontSize="inherit" />}
+          sx={{ mb: 2, borderRadius: 2 }}
+        >
+          <AlertTitle sx={{ fontWeight: 700 }}>
+            Confirmă adresa de e-mail
+          </AlertTitle>
+          Contul asociat cu{" "}
+          {email ? (
+            <Box
+              component="strong"
+              sx={{ wordBreak: "break-all" }}
+              aria-label={`Adresa de e-mail: ${email}`}
+            >
+              {email}
+            </Box>
+          ) : (
+            "adresa ta de e-mail"
+          )}{" "}
+          nu a fost confirmat încă. Verifică-ți căsuța de intrare și apasă pe
+          link-ul de confirmare primit, sau solicită un link nou mai jos.
+        </Alert>
+      )}
 
-        {sent ? (
-          <Typography
-            color="success.main"
-            fontWeight={600}
-            sx={{ mb: 3 }}
-            role="status"
-          >
-            E-mailul de confirmare a fost retrimis. Verifică-ți căsuța de intrare.
-          </Typography>
-        ) : (
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Am trimis un link de confirmare la adresa de mai sus. Dacă nu l-ai
-            primit, poți solicita unul nou.
-          </Typography>
-        )}
+      {/* Error feedback */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} role="alert">
+          {error}
+        </Alert>
+      )}
 
-        {error && (
-          <Typography
-            color="error"
-            variant="body2"
-            role="alert"
-            sx={{ mb: 2 }}
-          >
-            {error}
-          </Typography>
-        )}
-
-        {!sent && (
-          <Button
-            variant="contained"
-            size="large"
-            fullWidth
-            disabled={sending || !email}
-            startIcon={
-              sending ? <CircularProgress size={18} color="inherit" /> : null
-            }
-            onClick={handleResend}
-            sx={{ mb: 2, py: 1.5 }}
-          >
-            {sending ? "Se trimite..." : "Retrimite e-mailul de confirmare"}
-          </Button>
-        )}
-
+      {/* Resend button */}
+      {!sent && (
         <Button
-          component={Link}
-          href="/login"
-          variant="outlined"
-          fullWidth
+          variant="contained"
           size="large"
-          sx={{ py: 1.5 }}
+          fullWidth
+          disabled={sending || !email}
+          startIcon={
+            sending ? (
+              <CircularProgress size={18} color="inherit" />
+            ) : (
+              <MarkEmailReadIcon />
+            )
+          }
+          onClick={handleResend}
+          aria-label="Retrimite e-mailul de confirmare"
+          sx={{ mb: 1.5, py: 1.5 }}
         >
-          Înapoi la conectare
+          {sending ? "Se trimite..." : "Retrimite e-mailul de confirmare"}
         </Button>
+      )}
 
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          display="block"
-          sx={{ mt: 3 }}
-        >
-          Verifică și dosarul Spam dacă nu găsești e-mailul în căsuța principală.
-          Link-ul de confirmare expiră după 24 de ore.
-        </Typography>
-      </Paper>
+      {/* Back to login */}
+      <Button
+        component={Link}
+        href="/login"
+        variant="outlined"
+        fullWidth
+        size="large"
+        sx={{ py: 1.5 }}
+      >
+        Înapoi la conectare
+      </Button>
+
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        display="block"
+        align="center"
+        sx={{ mt: 2 }}
+      >
+        Link-ul de confirmare expiră după 24 de ore.
+      </Typography>
     </Container>
   );
 };
@@ -177,7 +138,7 @@ export default function VerifyEmailPage() {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            minHeight: "60vh",
+            minHeight: "80vh",
           }}
         >
           <CircularProgress aria-label="Se încarcă..." />
