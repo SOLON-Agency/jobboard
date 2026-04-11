@@ -41,9 +41,9 @@ import {
 } from "@/services/companies.service";
 import { slugify, parseSupabaseError } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
-import { AddEditCompany } from "@/components/dashboard/AddEditCompany";
+import { AddEditCompany } from "@/components/forms/AddEditCompany";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import type { CompanyFormData } from "@/components/dashboard/AddEditCompany";
+import type { CompanyFormData } from "@/components/forms/AddEditCompany";
 
 interface CompanyActionsProps {
   company: CompanyWithJobCount;

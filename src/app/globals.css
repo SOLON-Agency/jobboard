@@ -8,3 +8,9 @@
 * {
   scrollbar-width: thin;
 }
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}

@@ -152,6 +152,7 @@ export const sendApplicationNotificationEmails = async (
         siteUrl,
         siteName: appSettings.name,
       }),
+      idempotencyKey: `application-poster/${jobId}/${user.id}`,
     });
   }
 
@@ -203,6 +204,7 @@ export const sendApplicationNotificationEmails = async (
         siteUrl,
         siteName: appSettings.name,
       }),
+      idempotencyKey: `application-applicant/${jobId}/${user.id}`,
     });
   }
 

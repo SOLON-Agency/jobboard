@@ -350,7 +350,7 @@ export const JobFilters: React.FC = () => {
           {searchBar}
         </Box>
         <Box sx={{ px: 2.5 }}>{filtersBody}</Box>
-        <Box sx={{ p: 2.5 }}>
+        {activeFilterCount > 0 && <Box sx={{ p: 2.5 }}>
           <Button
             variant="contained"
             fullWidth
@@ -360,7 +360,7 @@ export const JobFilters: React.FC = () => {
           >
             Resetează filtrele{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </Button>
-        </Box>
+        </Box>}
       </Box>
     );
   }
@@ -410,20 +410,21 @@ export const JobFilters: React.FC = () => {
             )}
           </Stack>
         </Box>
-        {mobileOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+        {mobileOpen ? <ExpandLessIcon sx={{ marginLeft: activeFilterCount > 0 ? 2 : 0, color: "text.secondary" }} fontSize="small" /> : <ExpandMoreIcon sx={{ marginLeft: activeFilterCount > 0 ? 2 : 0, color: "text.secondary" }} fontSize="small" />}
       </Box>
       <Collapse in={mobileOpen}>
         <Box sx={{ px: 2, pb: 2 }}>
           {filtersBody}
-          <Button
-            variant="contained"
-            fullWidth
-            onClick={clearFilters}
-            disabled={activeFilterCount === 0}
-            sx={{ mt: 2, borderRadius: 2 }}
-          >
-            Resetează filtrele{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-          </Button>
+          {activeFilterCount > 0 && (
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={clearFilters}
+              sx={{ mt: 2, borderRadius: 2 }}
+            >
+              Resetează filtrele ({activeFilterCount})
+            </Button>
+          )}
         </Box>
       </Collapse>
     </Box>

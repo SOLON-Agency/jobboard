@@ -22,9 +22,9 @@ import { createBenefit } from "@/services/benefits.service";
 import { slugify, parseSupabaseError } from "@/lib/utils";
 import { JobList } from "@/components/jobs/JobList";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
-import { AddEditJob } from "@/components/dashboard/AddEditJob";
+import { AddEditJob } from "@/components/forms/AddEditJob";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/dashboard/AddEditJob";
+import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/forms/AddEditJob";
 
 
 export default function JobsPage() {

@@ -1,59 +1,49 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
-  Checkbox,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Drawer,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormHelperText,
-  FormLabel,
-  IconButton,
-  Radio,
-  RadioGroup,
-  Skeleton,
   Stack,
-  TextField,
   Typography,
+  useTheme,
+  useMediaQuery,
   type SxProps,
   type Theme,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
-import { getFormWithFields } from "@/services/forms.service";
 import { trackCompanyEngage } from "@/services/companies.service";
 import { parseSupabaseError } from "@/lib/utils";
+import { ApplicationForm } from "@/components/forms/ApplicationForm";
 import type { Tables } from "@/types/database";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type FormField = Tables<"form_fields">;
-type FormWithFields = Tables<"forms"> & { form_fields: FormField[] };
-
 export interface ApplyButtonProps {
   job: Pick<
     Tables<"job_listings">,
-    "id" | "slug" | "title" | "application_url" | "application_form_id" | "company_id"
-    | "location" | "job_type" | "salary_min" | "salary_max"
+    | "id"
+    | "slug"
+    | "title"
+    | "application_url"
+    | "application_form_id"
+    | "company_id"
+    | "location"
+    | "job_type"
+    | "salary_min"
+    | "salary_max"
   >;
   company?: Pick<Tables<"companies">, "name" | "logo_url" | "slug"> | null;
   label?: string;
@@ -62,182 +52,6 @@ export interface ApplyButtonProps {
   variant?: "contained" | "outlined";
   sx?: SxProps<Theme>;
 }
-
-// ─── Field renderer ───────────────────────────────────────────────────────────
-
-interface FieldProps {
-  field: FormField;
-  value: string;
-  fileValue: File | null;
-  error?: string;
-  onChange: (val: string) => void;
-  onFileChange: (file: File | null) => void;
-}
-
-const FormFieldInput: React.FC<FieldProps> = ({ field, value, fileValue, error, onChange, onFileChange }) => {
-  const options = Array.isArray(field.options)
-    ? (field.options as string[])
-    : typeof field.options === "string"
-    ? (field.options as string).split(",").map((s: string) => s.trim()).filter(Boolean)
-    : [];
-
-  const selectedCheckboxes = value ? value.split("|||") : [];
-
-  switch (field.field_type) {
-    case "textarea":
-      return (
-        <TextField
-          label={field.label}
-          placeholder={field.placeholder ?? undefined}
-          required={field.is_required}
-          multiline
-          minRows={3}
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          error={!!error}
-          helperText={error}
-          size="small"
-        />
-      );
-
-    case "number":
-      return (
-        <TextField
-          label={field.label}
-          placeholder={field.placeholder ?? undefined}
-          required={field.is_required}
-          type="number"
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          error={!!error}
-          helperText={error}
-          size="small"
-        />
-      );
-
-    case "radio":
-      return (
-        <FormControl required={field.is_required} error={!!error} fullWidth>
-          <FormLabel sx={{ fontSize: "0.875rem" }}>
-            {field.label}{field.is_required ? " *" : ""}
-          </FormLabel>
-          <RadioGroup value={value} onChange={(e) => onChange(e.target.value)}>
-            {options.map((opt) => (
-              <FormControlLabel key={opt} value={opt} control={<Radio size="small" />} label={opt} />
-            ))}
-          </RadioGroup>
-          {error && <FormHelperText>{error}</FormHelperText>}
-        </FormControl>
-      );
-
-    case "checkbox":
-      return (
-        <FormControl required={field.is_required} error={!!error} fullWidth>
-          <FormLabel sx={{ fontSize: "0.875rem" }}>
-            {field.label}{field.is_required ? " *" : ""}
-          </FormLabel>
-          <FormGroup>
-            {options.map((opt) => (
-              <FormControlLabel
-                key={opt}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedCheckboxes.includes(opt)}
-                    onChange={(e) => {
-                      const next = e.target.checked
-                        ? [...selectedCheckboxes, opt]
-                        : selectedCheckboxes.filter((v) => v !== opt);
-                      onChange(next.join("|||"));
-                    }}
-                  />
-                }
-                label={opt}
-              />
-            ))}
-          </FormGroup>
-          {error && <FormHelperText>{error}</FormHelperText>}
-        </FormControl>
-      );
-
-    case "upload":
-      return (
-        <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-            {field.label}{field.is_required ? " *" : ""}
-          </Typography>
-          <Button
-            component="label"
-            variant="outlined"
-            size="small"
-            startIcon={<AttachFileIcon />}
-            sx={{ borderStyle: "dashed" }}
-            color={error ? "error" : "inherit"}
-          >
-            {fileValue ? fileValue.name : "Alege fișier"}
-            <input
-              hidden
-              type="file"
-              accept=".pdf,.doc,.docx,image/*"
-              onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-            />
-          </Button>
-          {error && <FormHelperText error>{error}</FormHelperText>}
-        </Box>
-      );
-
-    case "email":
-      return (
-        <TextField
-          label={field.label}
-          placeholder={field.placeholder ?? "exemplu@email.com"}
-          required={field.is_required}
-          type="email"
-          inputMode="email"
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          error={!!error}
-          helperText={error}
-          size="small"
-        />
-      );
-
-    case "phone":
-      return (
-        <TextField
-          label={field.label}
-          placeholder={field.placeholder ?? "ex: 0721 000 000 sau +40 721 000 000"}
-          required={field.is_required}
-          type="tel"
-          inputMode="tel"
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          error={!!error}
-          helperText={error}
-          size="small"
-        />
-      );
-
-    default: // "text"
-      return (
-        <TextField
-          label={field.label}
-          placeholder={field.placeholder ?? undefined}
-          required={field.is_required}
-          fullWidth
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          error={!!error}
-          helperText={error}
-          size="small"
-        />
-      );
-  }
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -250,7 +64,7 @@ const notifyApplication = (jobId: string) => {
   }).catch((err: unknown) => console.warn("notify-application:", err));
 };
 
-/** Unique violation on `applications` (e.g. job_id + user_id), not other tables in the apply flow. */
+/** Unique violation on `applications` (not form_responses). */
 const isApplicationsDuplicateError = (err: unknown): boolean => {
   if (!err || typeof err !== "object") return false;
   const { code, message = "" } = err as { code?: string; message?: string };
@@ -260,7 +74,7 @@ const isApplicationsDuplicateError = (err: unknown): boolean => {
   return m.includes("application") || /job_id|user_id/.test(m);
 };
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── ApplyButton ──────────────────────────────────────────────────────────────
 
 export const ApplyButton: React.FC<ApplyButtonProps> = ({
   job,
@@ -274,28 +88,18 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   const { user } = useAuth();
   const supabase = useSupabase();
 
-  // ── Form drawer state ──
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [formSpec, setFormSpec] = useState<FormWithFields | null>(null);
-  const [loadingForm, setLoadingForm] = useState(false);
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-  const [fileValues, setFileValues] = useState<Record<string, File | null>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   // ── External URL confirmation dialog state ──
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
-  const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   const commonSx = { borderRadius: 5, fontWeight: 700, ...sx };
 
-  // ── Existing application for this job (prefetch) ────────────────────────────
+  // ── Existing application check (prefetch) ────────────────────────────────────
   useEffect(() => {
     if (!user?.id) {
       setAlreadyApplied(false);
@@ -316,9 +120,12 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
     };
   }, [user?.id, job.id, supabase]);
 
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   // ── No application method → link to job page ──────────────────────────────
   if (!job.application_url && !job.application_form_id) {
-    return (
+    return !isSmallScreen ? (
       <Button
         component={Link}
         href={`/jobs/${job.slug}`}
@@ -330,12 +137,12 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       >
         {label}
       </Button>
-    );
+    ) : null;
   }
 
   const isExternalUrl = !!job.application_url && !job.application_form_id;
 
-  // ── External URL: open confirmation dialog ────────────────────────────────
+  // ── External URL: confirmation dialog handlers ────────────────────────────
   const handleConfirmOpen = () => {
     setConfirmError(null);
     setConfirmed(false);
@@ -364,7 +171,6 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       setConfirmed(true);
       window.open(job.application_url!, "_blank", "noopener,noreferrer");
     } catch (err) {
-      // Only `applications` is inserted here — any unique violation means already applied.
       if (isApplicationsDuplicateError(err) || (err as { code?: string }).code === "23505") {
         setAlreadyApplied(true);
         setConfirmOpen(false);
@@ -376,124 +182,14 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
     }
   };
 
-  // ── Form: open drawer ─────────────────────────────────────────────────────
-  const openDrawer = async () => {
-    setDrawerOpen(true);
-    setSubmitted(false);
-    setSubmitError(null);
-    setErrors({});
-    if (formSpec) return;
-    setLoadingForm(true);
-    try {
-      const form = await getFormWithFields(supabase, job.application_form_id!);
-      setFormSpec(form);
-      const init: Record<string, string> = {};
-      form.form_fields.forEach((f) => { init[f.id] = ""; });
-      setFieldValues(init);
-    } finally {
-      setLoadingForm(false);
-    }
-  };
-
-  const setField = (id: string, val: string) =>
-    setFieldValues((prev) => ({ ...prev, [id]: val }));
-
-  const setFile = (id: string, file: File | null) =>
-    setFileValues((prev) => ({ ...prev, [id]: file }));
-
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-    formSpec?.form_fields.forEach((f) => {
-      const val = fieldValues[f.id]?.trim() ?? "";
-      if (f.field_type === "upload") {
-        if (f.is_required && !fileValues[f.id]) errs[f.id] = "Câmp obligatoriu";
-      } else if (f.field_type === "email") {
-        if (f.is_required && !val) {
-          errs[f.id] = "Câmp obligatoriu";
-        } else if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-          errs[f.id] = "Adresă de email invalidă";
-        }
-      } else if (f.field_type === "phone") {
-        if (f.is_required && !val) {
-          errs[f.id] = "Câmp obligatoriu";
-        } else if (val && !/^(\+?\d[\d\s\-().]{6,19}\d)$/.test(val)) {
-          errs[f.id] = "Număr de telefon invalid (ex: 0721 000 000 sau +40 721 000 000)";
-        }
-      } else if (f.is_required && !val) {
-        errs[f.id] = "Câmp obligatoriu";
+  // ── Shared icon-only sx overrides for mobile ──────────────────────────────
+  const iconOnlySx = isSmallScreen
+    ? {
+        minWidth: 0,
+        px: size === "small" ? 1 : size === "large" ? 1.5 : 1.25,
+        "& .MuiButton-endIcon": { mx: 0 },
       }
-    });
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
-    if (!user) { setSubmitError("Trebuie să fii autentificat pentru a aplica."); return; }
-    if (!user.email?.trim()) {
-      setSubmitError(
-        "Contul tău nu are adresă de email verificată. Adaugă un email în setările contului pentru a aplica.",
-      );
-      return;
-    }
-    setSubmitting(true);
-    setSubmitError(null);
-    try {
-      // Upload files and collect final string values
-      const finalValues: Record<string, string> = { ...fieldValues };
-      for (const [fieldId, file] of Object.entries(fileValues)) {
-        if (!file) continue;
-        const path = `${job.id}/${fieldId}/${Date.now()}-${file.name}`;
-        const { error: upErr } = await supabase.storage.from("attachments").upload(path, file);
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("attachments").getPublicUrl(path);
-        finalValues[fieldId] = data.publicUrl;
-      }
-
-      const response = await fetch("/api/jobs/apply-internal-form", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ job_id: job.id, field_values: finalValues }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-        code?: string;
-      };
-
-      if (!response.ok) {
-        if (response.status === 409 || payload.code === "23505") {
-          setAlreadyApplied(true);
-          setDrawerOpen(false);
-          setSubmitError(null);
-          return;
-        }
-        setSubmitError(
-          payload.error ?? "A apărut o eroare la trimiterea candidaturii. Te rugăm să încerci din nou.",
-        );
-        return;
-      }
-
-      // Fire-and-forget email notifications + engagement tracking
-      notifyApplication(job.id);
-      trackCompanyEngage(supabase, job.company_id).catch(() => {});
-
-      setAlreadyApplied(true);
-      setSubmitted(true);
-    } catch (err) {
-      if (isApplicationsDuplicateError(err)) {
-        setAlreadyApplied(true);
-        setDrawerOpen(false);
-        setSubmitError(null);
-        return;
-      }
-      setSubmitError(parseSupabaseError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, supabase, job, formSpec, fieldValues, fileValues]);
+    : {};
 
   if (alreadyApplied) {
     return (
@@ -504,35 +200,26 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
         size={size}
         fullWidth={fullWidth}
         endIcon={<TaskAltIcon />}
-        sx={commonSx}
+        aria-label={isSmallScreen ? "Aplicat" : undefined}
+        sx={{ ...commonSx, ...iconOnlySx }}
       >
-        Aplicat
+        {isSmallScreen ? null : "Aplicat"}
       </Button>
     );
   }
 
-  const internalFormBusy = !isExternalUrl && (loadingForm || submitting);
-  const applySpinnerSize = size === "small" ? 14 : size === "large" ? 22 : 18;
-
   return (
     <>
       <Button
-        onClick={isExternalUrl ? handleConfirmOpen : openDrawer}
+        onClick={isExternalUrl ? handleConfirmOpen : () => setDrawerOpen(true)}
         variant={variant}
         size={size}
         fullWidth={fullWidth}
-        disabled={internalFormBusy}
-        endIcon={
-          internalFormBusy ? (
-            <CircularProgress size={applySpinnerSize} color="inherit" aria-hidden />
-          ) : (
-            <AutoAwesomeIcon />
-          )
-        }
-        aria-busy={internalFormBusy}
-        sx={commonSx}
+        endIcon={<AutoAwesomeIcon />}
+        aria-label={isSmallScreen ? label : undefined}
+        sx={{ ...commonSx, ...iconOnlySx }}
       >
-        {internalFormBusy ? (submitting ? "Se trimite..." : "Se încarcă...") : label}
+        {isSmallScreen ? null : label}
       </Button>
 
       {/* ── External URL confirmation dialog ──────────────────────────────── */}
@@ -566,7 +253,8 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                 </Alert>
               )}
               <Typography variant="body2" color="text.secondary">
-                Vei fi redirecționat către site-ul extern al angajatorului pentru a finaliza aplicația:
+                Vei fi redirecționat către site-ul extern al angajatorului pentru a finaliza
+                aplicația:
               </Typography>
               <Box
                 sx={{
@@ -583,7 +271,11 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                 }}
               >
                 <OpenInNewIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontFamily: "monospace" }}
+                >
                   {job.application_url}
                 </Typography>
               </Box>
@@ -615,7 +307,13 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                 variant="contained"
                 onClick={handleConfirmApply}
                 disabled={confirming || !user}
-                endIcon={confirming ? <CircularProgress size={14} color="inherit" /> : <OpenInNewIcon />}
+                endIcon={
+                  confirming ? (
+                    <CircularProgress size={14} color="inherit" />
+                  ) : (
+                    <OpenInNewIcon />
+                  )
+                }
                 sx={{ borderRadius: 5, fontWeight: 700 }}
               >
                 {confirming ? "Se înregistrează..." : "Continuă"}
@@ -626,130 +324,15 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       </Dialog>
 
       {/* ── Form application drawer ───────────────────────────────────────── */}
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={() => !submitting && setDrawerOpen(false)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: 480 }, display: "flex", flexDirection: "column" } }}
-      >
-        {/* Header */}
-        <Box sx={{ flexShrink: 0, borderBottom: "1px solid", borderColor: "divider" }}>
-          {/* Close row */}
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 3, pt: 2, pb: 1.5 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1, lineHeight: 1 }}>
-              Aplică acum
-            </Typography>
-            <IconButton onClick={() => !submitting && setDrawerOpen(false)} size="small" disabled={submitting}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Stack>
-
-          {/* Job + company card */}
-          <Stack direction="row" spacing={2} alignItems="center" sx={{ px: 3, pb: 2.5 }}>
-            <Avatar
-              src={company?.logo_url ?? undefined}
-              variant="rounded"
-              sx={{ width: 52, height: 52, bgcolor: "action.hover", border: "1px solid", borderColor: "divider", flexShrink: 0 }}
-            >
-              <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 24 }} />
-            </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.3 }}>
-                {job.title}
-              </Typography>
-              {company?.name && (
-                <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>
-                  {company.name}
-                </Typography>
-              )}
-              {job.location && (
-                <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.5 }}>
-                  <LocationOnOutlinedIcon sx={{ fontSize: 13, color: "text.disabled" }} />
-                  <Typography variant="caption" color="text.disabled" noWrap>
-                    {job.location}
-                  </Typography>
-                </Stack>
-              )}
-            </Box>
-          </Stack>
-        </Box>
-
-        {/* Body */}
-        <Box sx={{ flex: 1, overflow: "auto", px: 3, py: 3 }}>
-          {submitted ? (
-            <Stack alignItems="center" spacing={2} sx={{ py: 6, textAlign: "center" }}>
-              <CheckCircleOutlineIcon sx={{ fontSize: 56, color: "success.main" }} />
-              <Typography variant="h5" fontWeight={700}>Aplicație trimisă!</Typography>
-              <Typography color="text.secondary">
-                Candidatura ta a fost înregistrată. Vei fi contactat dacă ești selectat.
-              </Typography>
-              <Button variant="outlined" onClick={() => setDrawerOpen(false)} sx={{ mt: 1 }}>
-                Închide
-              </Button>
-            </Stack>
-          ) : loadingForm ? (
-            <Stack spacing={2}>
-              {[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={56} />)}
-            </Stack>
-          ) : !user ? (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Trebuie să fii <Link href="/login" style={{ color: "inherit", fontWeight: 700 }}>autentificat</Link> pentru a aplica la acest loc de muncă.
-            </Alert>
-          ) : (
-            <Stack spacing={2.5}>
-              {formSpec?.description && (
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {formSpec.description.length > 500 && !descriptionExpanded
-                      ? `${formSpec.description.slice(0, 500)}...`
-                      : formSpec.description}
-                  </Typography>
-                  {formSpec.description.length > 500 && (
-                    <Button
-                      size="small"
-                      onClick={() => setDescriptionExpanded((prev) => !prev)}
-                      sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: "none", fontWeight: 600 }}
-                    >
-                      {descriptionExpanded ? "Citește mai puțin" : "Citește mai mult"}
-                    </Button>
-                  )}
-                </Box>
-              )}
-              {formSpec?.form_fields.map((field) => (
-                <FormFieldInput
-                  key={field.id}
-                  field={field}
-                  value={fieldValues[field.id] ?? ""}
-                  fileValue={fileValues[field.id] ?? null}
-                  error={errors[field.id]}
-                  onChange={(val) => setField(field.id, val)}
-                  onFileChange={(file) => setFile(field.id, file)}
-                />
-              ))}
-              {submitError && <Alert severity="error">{submitError}</Alert>}
-            </Stack>
-          )}
-        </Box>
-
-        {/* Footer */}
-        {!submitted && !loadingForm && user && (
-          <Stack direction="row" spacing={2} sx={{ px: 3, py: 2.5, flexShrink: 0, borderTop: "1px solid", borderColor: "divider" }}>
-            <Button
-              variant="contained"
-              fullWidth
-              disabled={submitting}
-              onClick={handleSubmit}
-              endIcon={submitting ? <CircularProgress size={16} color="inherit" /> : <AutoAwesomeIcon />}
-              sx={{ borderRadius: 5, fontWeight: 700 }}
-            >
-              {submitting ? "Se trimite..." : "Trimite candidatura"}
-            </Button>
-            <Button variant="outlined" onClick={() => setDrawerOpen(false)} disabled={submitting} sx={{ borderRadius: 5 }}>
-              Anulează
-            </Button>
-          </Stack>
-        )}
-      </Drawer>
+      {!isExternalUrl && (
+        <ApplicationForm
+          job={job}
+          company={company}
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          onSubmitted={() => setAlreadyApplied(true)}
+        />
+      )}
     </>
   );
 };

@@ -38,6 +38,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       display: "flex",
       flexDirection: "column",
       height: "100%",
+      position: "relative",
       cursor: "pointer",
       "&:hover": {
         borderColor: "primary.main",
@@ -46,11 +47,14 @@ export const JobCard: React.FC<JobCardProps> = ({
       },
     }}
   >
-    <CardContent
-      component={Link}
+    {/* Full-card overlay link — the only <a> that wraps the card area */}
+    <Link
       href={`/jobs/${job.slug}`}
-      sx={{ textDecoration: "none", color: "inherit", flexGrow: 1, p: 3 }}
-    >
+      aria-label={`Vizualizează anunțul: ${job.title}`}
+      style={{ position: "absolute", inset: 0, zIndex: 0 }}
+    />
+
+    <CardContent sx={{ color: "inherit", flexGrow: 1, p: 3, position: "relative", zIndex: 1 }}>
       <Stack
         direction="row"
         spacing={1.5}
@@ -114,8 +118,9 @@ export const JobCard: React.FC<JobCardProps> = ({
               variant="body2"
               color="text.secondary"
               noWrap
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
               sx={{
+                position: "relative",
+                zIndex: 2,
                 textDecoration: "none",
                 "&:hover": { color: "primary.main" },
               }}
@@ -183,6 +188,8 @@ export const JobCard: React.FC<JobCardProps> = ({
           size="small"
           endIcon={<AutoAwesomeIcon />}
           sx={{
+            position: "relative",
+            zIndex: 2,
             borderRadius: 5,
             px: 2.5,
             py: 0.75,

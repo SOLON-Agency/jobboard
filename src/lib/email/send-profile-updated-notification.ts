@@ -86,6 +86,7 @@ export const sendProfileUpdatedEmail = async (
       siteUrl,
       siteName: appSettings.name,
     }),
+    idempotencyKey: `profile-updated/${user.id}/${Math.floor(Date.now() / 60_000)}`,
   });
 
   return { emailsSent: true };

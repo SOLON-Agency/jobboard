@@ -1,7 +1,16 @@
 /**
- * Transactional email via Resend (Next.js server only).
- * Set RESEND_API_KEY and RESEND_FROM in the app environment (e.g. Vercel).
+ * Transactional email via the Resend Node.js SDK (Next.js server only).
+ *
+ * Required env vars:
+ *   RESEND_API_KEY — API key from https://resend.com/api-keys
+ *   RESEND_FROM    — verified sender address, e.g. "Jobboard <noreply@yourdomain.com>"
+ *
+ * Optional:
+ *   SMTP_FROM — legacy fallback if RESEND_FROM is unset
  */
+import { Resend } from "resend";
+
+// ─── Brand tokens ─────────────────────────────────────────────────────────────
 
 const BRAND_BG = "#03170C";
 const BRAND_FG = "#F0EBD8";
@@ -10,6 +19,8 @@ const BODY_BG = "#F6F8F5";
 const CARD_BG = "#FFFFFF";
 const TEXT_MAIN = "#1A2B1F";
 const TEXT_MUTED = "#6B7C70";
+
+// ─── Template helpers ─────────────────────────────────────────────────────────
 
 function ctaButton(url: string, label: string): string {
   return `
@@ -143,11 +154,14 @@ export function buildEmail({
 </html>`;
 }
 
+// ─── Config ───────────────────────────────────────────────────────────────────
+
 export interface ResendConfig {
   apiKey: string;
   from: string;
 }
 
+/** Returns null when RESEND_API_KEY or a usable From address is missing. */
 export function getResendConfig(): ResendConfig | null {
   const apiKey = process.env.RESEND_API_KEY?.trim();
   const from =
@@ -157,39 +171,41 @@ export function getResendConfig(): ResendConfig | null {
   return { apiKey, from };
 }
 
+// ─── Send ─────────────────────────────────────────────────────────────────────
+
 export interface SendHtmlEmailOptions {
   to: string | string[];
   subject: string;
   html: string;
+  /**
+   * Idempotency key — prevents duplicate delivery on retries.
+   * Recommended pattern: "<event-type>/<entity-id>".
+   * Keys expire after 24 hours and must be ≤ 256 characters.
+   */
+  idempotencyKey?: string;
 }
 
+/**
+ * Sends a transactional HTML email via the Resend SDK.
+ * Throws on API errors so callers can decide how to handle them.
+ */
 export async function sendHtmlEmail(
   cfg: ResendConfig,
-  { to, subject, html }: SendHtmlEmailOptions
-): Promise<{ id?: string }> {
-  const toList = Array.isArray(to) ? to : [to];
+  { to, subject, html, idempotencyKey }: SendHtmlEmailOptions
+): Promise<{ id: string }> {
+  const resend = new Resend(cfg.apiKey);
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${cfg.apiKey}`,
-      "User-Agent": "legaljobs/1.0",
-    },
-    body: JSON.stringify({
-      from: cfg.from,
-      to: toList,
-      subject,
-      html,
-    }),
+  const { data, error } = await resend.emails.send({
+    from: cfg.from,
+    to: Array.isArray(to) ? to : [to],
+    subject,
+    html,
+    ...(idempotencyKey ? { idempotencyKey } : {}),
   });
 
-  const data = (await res.json()) as { id?: string; message?: string };
-
-  if (!res.ok) {
-    const msg = data.message ?? `${res.status} ${res.statusText}`;
-    throw new Error(`Resend: ${msg}`);
+  if (error) {
+    throw new Error(`Resend: ${error.message}`);
   }
 
-  return data;
+  return { id: data!.id };
 }

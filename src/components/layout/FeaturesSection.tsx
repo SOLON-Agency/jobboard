@@ -289,7 +289,7 @@ export const FeaturesSection: React.FC = () => (
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ flexShrink: 0 }}>
               <Button
                 component={Link}
-                href="/register"
+                href="/anunt"
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon />}

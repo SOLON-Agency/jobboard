@@ -42,12 +42,12 @@ import {
   type AddEditJobHandle,
   type JobFormData,
   type BenefitDraft,
-} from "@/components/dashboard/AddEditJob";
+} from "@/components/forms/AddEditJob";
 import {
   AddEditCompany,
   type AddEditCompanyHandle,
   type CompanyFormData,
-} from "@/components/dashboard/AddEditCompany";
+} from "@/components/forms/AddEditCompany";
 import { createJob } from "@/services/jobs.service";
 import { createCompany, updateCompany } from "@/services/companies.service";
 import { createBenefit } from "@/services/benefits.service";

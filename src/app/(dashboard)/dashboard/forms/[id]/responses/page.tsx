@@ -228,7 +228,7 @@ export default function FormResponsesPage() {
               variant="outlined"
               onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}
             >
-              Resetează
+              Resetează filtrele
             </Button>
           )}
         </Stack>

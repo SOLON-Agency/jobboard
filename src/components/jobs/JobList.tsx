@@ -44,8 +44,8 @@ type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> 
 const SORT_OPTIONS: { value: JobSortOption; label: string }[] = [
   { value: "newest",      label: "Cele mai noi" },
   { value: "oldest",      label: "Cele mai vechi" },
-  { value: "salary_high", label: "Salariu: Mare → Mic" },
-  { value: "salary_low",  label: "Salariu: Mic → Mare" },
+  { value: "salary_high", label: "Salariu descrescător" },
+  { value: "salary_low",  label: "Salariu crescător" },
 ];
 
 // ─── Responsive action bar ────────────────────────────────────────────────────
@@ -228,15 +228,12 @@ export const JobList: React.FC<JobListProps> = ({
             {loading ? (
               <Skeleton variant="text" width={120} />
             ) : (
-              <>Au fost găsite <strong>{displayCount}</strong> {displayCount === 1 ? "loc de muncă" : "locuri de muncă"}</>
+              <><strong>{displayCount}</strong> {displayCount === 1 ? "anunț" : "anunțuri"}</>
             )}
           </Typography>
 
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
-              Sortare:
-            </Typography>
-            <FormControl size="small" sx={{ minWidth: 170 }}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ marginLeft: 0 }}>
+            <FormControl size="small" sx={{ minWidth: 0 }}>
               <Select
                 value={sort}
                 onChange={(e) => setParam("sort", e.target.value)}

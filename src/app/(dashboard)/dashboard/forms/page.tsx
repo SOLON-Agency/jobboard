@@ -48,9 +48,9 @@ import { parseSupabaseError, formatDate } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import {
   AddEditForm,
-  type FormData as FormFormData,
+  type FormBuilderData as FormFormData,
   type FormField,
-} from "@/components/dashboard/AddEditForm";
+} from "@/components/forms/AddEditForm";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import type { Tables } from "@/types/database";
 import type { FormWithFields } from "@/services/forms.service";

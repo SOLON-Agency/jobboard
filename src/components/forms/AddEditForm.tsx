@@ -33,74 +33,47 @@ import CheckBoxOutlinedIcon from "@mui/icons-material/CheckBoxOutlined";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
+import {
+  type FieldType,
+  type FormField,
+  type FormBuilderData,
+  FIELD_TYPE_LABELS,
+  FIELD_WITH_OPTIONS,
+  FIELD_WITH_PLACEHOLDER,
+  emptyField,
+} from "@/components/forms/validations/form-builder.schema";
 import type { Tables } from "@/types/database";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+export type { FieldType, FormField, FormBuilderData };
 
-export type FieldType = "text" | "number" | "textarea" | "radio" | "checkbox" | "upload" | "email" | "phone";
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-export interface FormField {
-  id?: string;
-  field_type: FieldType;
-  label: string;
-  placeholder: string;
-  is_required: boolean;
-  /** Comma-separated options string for radio / checkbox */
-  options_raw: string;
-  sort_order: number;
-}
+const FIELD_TYPE_ICONS: Record<FieldType, React.ReactElement> = {
+  text: <ShortTextIcon fontSize="small" />,
+  email: <EmailOutlinedIcon fontSize="small" />,
+  phone: <PhoneOutlinedIcon fontSize="small" />,
+  number: <PinIcon fontSize="small" />,
+  textarea: <SubjectIcon fontSize="small" />,
+  radio: <RadioButtonCheckedIcon fontSize="small" />,
+  checkbox: <CheckBoxOutlinedIcon fontSize="small" />,
+  upload: <CloudUploadOutlinedIcon fontSize="small" />,
+};
 
-export interface FormData {
-  name: string;
-  description: string;
-  company_id: string;
-}
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface AddEditFormProps {
   companies: { id: string; name: string }[];
   editingForm: (Tables<"forms"> & { form_fields: Tables<"form_fields">[] }) | null;
-  defaultValues: FormData;
+  defaultValues: FormBuilderData;
   defaultFields: FormField[];
-  onSubmit: (data: FormData, fields: FormField[], status: "draft" | "published") => Promise<void>;
+  onSubmit: (
+    data: FormBuilderData,
+    fields: FormField[],
+    status: "draft" | "published",
+  ) => Promise<void>;
   onDelete?: () => void;
   onCancel: () => void;
 }
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const FIELD_TYPE_LABELS: Record<FieldType, string> = {
-  text: "Câmp text",
-  email: "Adresă email",
-  phone: "Număr de telefon",
-  number: "Număr",
-  textarea: "Text lung",
-  radio: "Selecție unică (radio)",
-  checkbox: "Selecție multiplă",
-  upload: "Încărcare fișier"
-};
-
-const FIELD_WITH_OPTIONS: FieldType[] = ["radio", "checkbox"];
-const FIELD_WITH_PLACEHOLDER: FieldType[] = ["text", "number", "textarea", "email", "phone"];
-
-const FIELD_TYPE_ICONS: Record<FieldType, React.ReactElement> = {
-  text:     <ShortTextIcon fontSize="small" />,
-  email:    <EmailOutlinedIcon fontSize="small" />,
-  phone:    <PhoneOutlinedIcon fontSize="small" />,
-  number:   <PinIcon fontSize="small" />,
-  textarea: <SubjectIcon fontSize="small" />,
-  radio:    <RadioButtonCheckedIcon fontSize="small" />,
-  checkbox: <CheckBoxOutlinedIcon fontSize="small" />,
-  upload:   <CloudUploadOutlinedIcon fontSize="small" />,
-};
-
-const emptyField = (order: number): FormField => ({
-  field_type: "text",
-  label: "",
-  placeholder: "",
-  is_required: false,
-  options_raw: "",
-  sort_order: order,
-});
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -113,7 +86,7 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
   onDelete,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState<FormData>(defaultValues);
+  const [formData, setFormData] = useState<FormBuilderData>(defaultValues);
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pendingStatus, setPendingStatus] = useState<"draft" | "published" | null>(null);
@@ -122,9 +95,9 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
   // ─── Form data helpers ──────────────────────────────────────────────────────
 
   const setField = useCallback(
-    <K extends keyof FormData>(key: K, value: FormData[K]) =>
+    <K extends keyof FormBuilderData>(key: K, value: FormBuilderData[K]) =>
       setFormData((prev) => ({ ...prev, [key]: value })),
-    []
+    [],
   );
 
   // ─── Field helpers ──────────────────────────────────────────────────────────
@@ -137,7 +110,9 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
   };
 
   const removeField = (index: number) => {
-    setFields((prev) => prev.filter((_, i) => i !== index).map((f, i) => ({ ...f, sort_order: i })));
+    setFields((prev) =>
+      prev.filter((_, i) => i !== index).map((f, i) => ({ ...f, sort_order: i })),
+    );
     setExpandedIndex((prev) => {
       if (prev === false || prev < index) return prev;
       if (prev === index) return false;
@@ -205,13 +180,19 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
               error={!!errors.company_id}
               displayEmpty
             >
-              <MenuItem value="" disabled>Selectează compania...</MenuItem>
+              <MenuItem value="" disabled>
+                Selectează compania...
+              </MenuItem>
               {companies.map((c) => (
-                <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
+                </MenuItem>
               ))}
             </Select>
             {errors.company_id && (
-              <Typography variant="caption" color="error">{errors.company_id}</Typography>
+              <Typography variant="caption" color="error">
+                {errors.company_id}
+              </Typography>
             )}
           </Box>
         )}
@@ -238,7 +219,12 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
 
       {/* ── Fields ────────────────────────────────────────────────────────── */}
       <Stack spacing={0.5}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 2 }}
+        >
           <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>
             Câmpuri formular ({fields.length})
           </Typography>
@@ -274,9 +260,10 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
               elevation={0}
               sx={{
                 border: "1px solid",
-                borderColor: errors[`field_${index}_label`] || errors[`field_${index}_options`]
-                  ? "error.main"
-                  : "divider",
+                borderColor:
+                  errors[`field_${index}_label`] || errors[`field_${index}_options`]
+                    ? "error.main"
+                    : "divider",
                 borderRadius: "8px !important",
                 mb: 1,
                 "&:before": { display: "none" },
@@ -285,9 +272,15 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                sx={{ px: 2, minHeight: 52, "& .MuiAccordionSummary-content": { alignItems: "center", gap: 1.5, my: 0 } }}
+                sx={{
+                  px: 2,
+                  minHeight: 52,
+                  "& .MuiAccordionSummary-content": { alignItems: "center", gap: 1.5, my: 0 },
+                }}
               >
-                <Box sx={{ color: "primary.main", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                <Box
+                  sx={{ color: "primary.main", display: "flex", alignItems: "center", flexShrink: 0 }}
+                >
                   {FIELD_TYPE_ICONS[field.field_type]}
                 </Box>
                 <Typography
@@ -299,7 +292,13 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
                   {field.label || `Câmp ${index + 1} — ${FIELD_TYPE_LABELS[field.field_type]}`}
                 </Typography>
                 {field.is_required && (
-                  <Chip label="Obligatoriu" size="small" color="primary" variant="outlined" sx={{ height: 20, fontSize: "0.65rem", flexShrink: 0 }} />
+                  <Chip
+                    label="Obligatoriu"
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ height: 20, fontSize: "0.65rem", flexShrink: 0 }}
+                  />
                 )}
               </AccordionSummary>
 
@@ -311,10 +310,14 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
                     size="small"
                     fullWidth
                     value={field.field_type}
-                    onChange={(e) => updateField(index, "field_type", e.target.value as FieldType)}
+                    onChange={(e) =>
+                      updateField(index, "field_type", e.target.value as FieldType)
+                    }
                     renderValue={(v) => (
                       <Stack direction="row" alignItems="center" spacing={1}>
-                        <Box sx={{ color: "primary.main", display: "flex" }}>{FIELD_TYPE_ICONS[v as FieldType]}</Box>
+                        <Box sx={{ color: "primary.main", display: "flex" }}>
+                          {FIELD_TYPE_ICONS[v as FieldType]}
+                        </Box>
                         <span>{FIELD_TYPE_LABELS[v as FieldType]}</span>
                       </Stack>
                     )}
@@ -322,7 +325,9 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
                     {(Object.keys(FIELD_TYPE_LABELS) as FieldType[]).map((t) => (
                       <MenuItem key={t} value={t}>
                         <Stack direction="row" alignItems="center" spacing={1.5}>
-                          <Box sx={{ color: "primary.main", display: "flex" }}>{FIELD_TYPE_ICONS[t]}</Box>
+                          <Box sx={{ color: "primary.main", display: "flex" }}>
+                            {FIELD_TYPE_ICONS[t]}
+                          </Box>
                           <Typography variant="body2">{FIELD_TYPE_LABELS[t]}</Typography>
                         </Stack>
                       </MenuItem>
@@ -358,7 +363,10 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
                       onChange={(e) => updateField(index, "options_raw", e.target.value)}
                       placeholder="ex: Opțiunea 1, Opțiunea 2, Opțiunea 3"
                       error={!!errors[`field_${index}_options`]}
-                      helperText={errors[`field_${index}_options`] ?? "Introdu opțiunile separate prin virgulă"}
+                      helperText={
+                        errors[`field_${index}_options`] ??
+                        "Introdu opțiunile separate prin virgulă"
+                      }
                     />
                   )}
 
@@ -377,20 +385,35 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
                     <Stack direction="row" spacing={0}>
                       <Tooltip title="Mută sus">
                         <span>
-                          <IconButton size="small" disabled={index === 0} onClick={() => moveField(index, "up")}>
+                          <IconButton
+                            size="small"
+                            disabled={index === 0}
+                            onClick={() => moveField(index, "up")}
+                            aria-label="Mută câmp sus"
+                          >
                             <ArrowUpwardIcon fontSize="small" />
                           </IconButton>
                         </span>
                       </Tooltip>
                       <Tooltip title="Mută jos">
                         <span>
-                          <IconButton size="small" disabled={index === fields.length - 1} onClick={() => moveField(index, "down")}>
+                          <IconButton
+                            size="small"
+                            disabled={index === fields.length - 1}
+                            onClick={() => moveField(index, "down")}
+                            aria-label="Mută câmp jos"
+                          >
                             <ArrowDownwardIcon fontSize="small" />
                           </IconButton>
                         </span>
                       </Tooltip>
                       <Tooltip title="Șterge câmp">
-                        <IconButton size="small" color="error" onClick={() => removeField(index)}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeField(index)}
+                          aria-label="Șterge câmp"
+                        >
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -417,8 +440,8 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
           {pendingStatus === "draft"
             ? "Se salvează..."
             : editingForm
-            ? "Actualizează formularul"
-            : "Salvează ciornă"}
+              ? "Actualizează formularul"
+              : "Salvează ciornă"}
         </Button>
 
         {!editingForm && (

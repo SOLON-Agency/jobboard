@@ -98,7 +98,7 @@ jobs:
 
       # ── Publish reports ────────────────────────────────────────────────────
       - name: Publish smoke test report
-        if: always()
+        if: always() && hashFiles('e2e/results/smoke.xml') != ''
         uses: dorny/test-reporter@v1
         with:
           name: 🔥 Smoke Tests
@@ -107,7 +107,7 @@ jobs:
           fail-on-error: 'true'
 
       - name: Publish full E2E test report
-        if: always()
+        if: always() && hashFiles('e2e/results/*.xml') != ''
         uses: dorny/test-reporter@v1
         with:
           name: 🧪 Full E2E Tests

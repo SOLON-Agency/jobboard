@@ -126,9 +126,18 @@ src/
 │   ├── auth/           # LoginForm, SocialButtons
 │   ├── chat/           # ChatWindow
 │   ├── companies/      # CompanyDescription, CompanyJobList, CompanyPageTracker
-│   ├── dashboard/      # AddEditJob, AddEditCompany, AddEditForm, DashboardNav,
-│   │                   # DashboardPageHeader, DashboardContent, EmailVerificationBanner
+│   ├── dashboard/      # DashboardNav, DashboardPageHeader, DashboardContent,
+│   │                   # EmailVerificationBanner
 │   ├── editor/         # RichTextEditor (TipTap)
+│   ├── forms/          # All form components (dashboard CRUD + application flow)
+│   │   ├── AddEditCompany.tsx
+│   │   ├── AddEditForm.tsx   # Form-builder UI (custom application forms)
+│   │   ├── AddEditJob.tsx
+│   │   ├── ApplicationForm.tsx
+│   │   └── validations/      # Zod schemas + TS types, one file per form domain
+│   │       ├── company.schema.ts
+│   │       ├── job.schema.ts
+│   │       └── form-builder.schema.ts
 │   ├── jobs/           # JobCard, JobRow, JobList, JobDetail, JobDetailWrapper,
 │   │                   # JobFilters, JobTags, JobsCarousel, ApplyButton
 │   ├── layout/         # Navbar, Footer, HeroSection, FeaturesSection,
@@ -179,11 +188,7 @@ supabase/
 │   ├── 20260406180000_applicant_form_application_rls.sql
 │   └── 20260409120000_secure_applicant_reads_and_notify_rpc.sql
 └── functions/
-    ├── _shared/email.ts    # Legacy — shared email HTML (now superseded by src/lib/email/)
-    ├── scrape-jobs/        # Cron-triggered job scraper (uses service role in Edge secrets)
-    ├── notify-application/ # DEPRECATED — returns 410
-    ├── notify-company-created/  # DEPRECATED — returns 410
-    └── notify-profile-update/   # DEPRECATED — returns 410
+    └── hello-worlds/       # test edge function
 ```
 
 ---

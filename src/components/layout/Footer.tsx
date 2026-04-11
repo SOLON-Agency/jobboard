@@ -7,7 +7,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import appSettings from "@/config/app.settings.json";
 
 const footerLinks = [
-  { label: "Locuri de muncă", href: "/jobs" },
+  { label: "Anunțuri", href: "/jobs" },
   // { label: "Cum funcționează", href: "/how-it-works" },
   { label: "Politică de confidențialitate", href: "/policy" },
 ];

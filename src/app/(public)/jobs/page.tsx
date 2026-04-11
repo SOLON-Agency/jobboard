@@ -25,9 +25,18 @@ export default function JobsPage() {
           alignItems: "start",
         }}
       >
-        <Suspense fallback={<CircularProgress />}>
-          <JobFilters />
-        </Suspense>
+        <Box
+          sx={{
+            position: { md: "sticky" },
+            top: { md: "calc(64px + 16px)" },
+            maxHeight: { md: "calc(100vh - 64px - 32px)" },
+            overflowY: { md: "auto" },
+          }}
+        >
+          <Suspense fallback={<CircularProgress />}>
+            <JobFilters />
+          </Suspense>
+        </Box>
         <Suspense
           fallback={
             <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>

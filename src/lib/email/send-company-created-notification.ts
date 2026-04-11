@@ -109,6 +109,7 @@ export const sendCompanyCreatedEmail = async (
       siteUrl,
       siteName: appSettings.name,
     }),
+    idempotencyKey: `company-created/${companyId}`,
   });
 
   return { emailsSent: true };

@@ -48,6 +48,13 @@ Before changing routing, data fetching, or config:
 
 - **`src/app/`** — App Router: route groups `(public)`, `(auth)`, `(dashboard)`; API route handlers under `src/app/api/`.
 - **`src/components/`** — Feature and layout UI (prefer **named exports** for shared components).
+  - **`src/components/forms/`** — All form components live here (not in `dashboard/` or co-located with trigger components).
+    - `AddEditCompany.tsx`, `AddEditForm.tsx`, `AddEditJob.tsx` — dashboard CRUD forms.
+    - `ApplicationForm.tsx` — job application drawer.
+    - **`src/components/forms/validations/`** — Zod schemas and TypeScript types, one file per form domain:
+      - `company.schema.ts` → `companySchema`, `CompanyFormData`
+      - `job.schema.ts` → `jobSchema`, `JobFormData`
+      - `form-builder.schema.ts` → `FieldType`, `FormField`, `FormBuilderData`, shared constants
 - **`src/services/`** — Data access: async functions that take a typed `SupabaseClient<Database>` (and other params); keep side effects and Supabase shape here rather than duplicating in pages.
 - **`src/hooks/`** — Client hooks (`useAuth`, `useSupabase`, etc.).
 - **`src/lib/`** — Supabase factories (`client`, `server`, `middleware`, `static`), email helpers (`src/lib/email/`), utilities, SEO helpers.
