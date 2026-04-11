@@ -628,7 +628,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                   <FormControlLabel
                     value="url"
                     control={<Radio size="small" />}
-                    label="URL extern"
+                    label="URL extern sau email"
                   />
                   {appSettings.features.forms && !wizardMode && (
                     <FormControlLabel
@@ -658,11 +658,14 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
           {watch("application_method") === "url" && (
             <TextField
               {...register("application_url")}
-              label="Unde vrei să redirecționăm candidații?"
+              label="Unde se va aplica?"
               fullWidth
-              placeholder="https://..."
+              placeholder="https://... sau recrutare@companie.ro"
               error={!!errors.application_url}
-              helperText={errors.application_url?.message}
+              helperText={
+                errors.application_url?.message ??
+                "Acceptă un URL (https://...) sau o adresă de email — candidații vor aplica direct aici"
+              }
             />
           )}
 

@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,6 +55,19 @@ export interface ApplyButtonProps {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** True when the value looks like an email address rather than a URL. */
+const isEmailAddress = (value: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+/**
+ * Builds the pre-filled email subject.
+ * Format: "Candidatură + <companyName> | <jobTitle>"
+ */
+const buildMailtoSubject = (companyName: string | undefined, jobTitle: string): string => {
+  const contact = companyName?.trim();
+  return contact ? `Candidatură + ${contact} | ${jobTitle}` : `Candidatură | ${jobTitle}`;
+};
 
 const notifyApplication = (jobId: string) => {
   void fetch("/api/jobs/notify-application", {
@@ -141,8 +155,16 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   }
 
   const isExternalUrl = !!job.application_url && !job.application_form_id;
+  const isEmailApplication =
+    isExternalUrl && isEmailAddress(job.application_url!);
 
-  // ── External URL: confirmation dialog handlers ────────────────────────────
+  const mailtoHref = isEmailApplication
+    ? `mailto:${job.application_url}?subject=${encodeURIComponent(
+        buildMailtoSubject(company?.name, job.title),
+      )}`
+    : null;
+
+  // ── External URL / email: confirmation dialog handlers ───────────────────
   const handleConfirmOpen = () => {
     setConfirmError(null);
     setConfirmed(false);
@@ -169,7 +191,12 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
       setAlreadyApplied(true);
       setConfirmed(true);
-      window.open(job.application_url!, "_blank", "noopener,noreferrer");
+
+      if (mailtoHref) {
+        window.open(mailtoHref, "_self");
+      } else {
+        window.open(job.application_url!, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
       if (isApplicationsDuplicateError(err) || (err as { code?: string }).code === "23505") {
         setAlreadyApplied(true);
@@ -238,7 +265,9 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
             <Stack alignItems="center" spacing={2} sx={{ py: 2, textAlign: "center" }}>
               <CheckCircleOutlineIcon sx={{ fontSize: 52, color: "success.main" }} />
               <Typography color="text.secondary">
-                Candidatura a fost înregistrată. Link-ul s-a deschis într-o fereastră nouă.
+                {isEmailApplication
+                  ? "Candidatura a fost înregistrată. Clientul tău de email s-a deschis cu subiectul pre-completat."
+                  : "Candidatura a fost înregistrată. Link-ul s-a deschis într-o fereastră nouă."}
               </Typography>
             </Stack>
           ) : (
@@ -253,8 +282,9 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                 </Alert>
               )}
               <Typography variant="body2" color="text.secondary">
-                Vei fi redirecționat către site-ul extern al angajatorului pentru a finaliza
-                aplicația:
+                {isEmailApplication
+                  ? "Vei trimite un email direct angajatorului. Clientul tău de email se va deschide cu adresa și subiectul pre-completate:"
+                  : "Vei fi redirecționat către site-ul extern al angajatorului pentru a finaliza aplicația:"}
               </Typography>
               <Box
                 sx={{
@@ -270,7 +300,11 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                   wordBreak: "break-all",
                 }}
               >
-                <OpenInNewIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
+                {isEmailApplication ? (
+                  <EmailOutlinedIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
+                ) : (
+                  <OpenInNewIcon sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }} />
+                )}
                 <Typography
                   variant="caption"
                   color="text.secondary"
@@ -279,6 +313,33 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                   {job.application_url}
                 </Typography>
               </Box>
+              {isEmailApplication && (
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 1.5,
+                    bgcolor: "action.hover",
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    sx={{ mb: 0.25 }}
+                  >
+                    Subiect pre-completat:
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ fontFamily: "monospace", fontWeight: 600 }}
+                  >
+                    {buildMailtoSubject(company?.name, job.title)}
+                  </Typography>
+                </Box>
+              )}
               {confirmError && <Alert severity="error">{confirmError}</Alert>}
             </Stack>
           )}
@@ -310,13 +371,19 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
                 endIcon={
                   confirming ? (
                     <CircularProgress size={14} color="inherit" />
+                  ) : isEmailApplication ? (
+                    <EmailOutlinedIcon />
                   ) : (
                     <OpenInNewIcon />
                   )
                 }
                 sx={{ borderRadius: 5, fontWeight: 700 }}
               >
-                {confirming ? "Se înregistrează..." : "Continuă"}
+                {confirming
+                  ? "Se înregistrează..."
+                  : isEmailApplication
+                    ? "Deschide email"
+                    : "Continuă"}
               </Button>
             </>
           )}

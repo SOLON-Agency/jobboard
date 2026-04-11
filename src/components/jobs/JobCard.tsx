@@ -46,6 +46,9 @@ export const JobCard: React.FC<JobCardProps> = ({
         transition: "all 0.2s ease",
       },
     }}
+    onClick={() => {
+      router.push(`/jobs/${job.slug}`);
+    }}
   >
     {/* Full-card overlay link — the only <a> that wraps the card area */}
     <Link

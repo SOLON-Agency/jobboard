@@ -16,7 +16,17 @@ export const jobSchema = z.object({
   salary_max: z.string().optional(),
   is_remote: z.boolean(),
   application_method: z.enum(["none", "url", "form"]),
-  application_url: z.string().url("Introdu un URL valid").optional().or(z.literal("")),
+  application_url: z
+    .string()
+    .refine(
+      (v) =>
+        !v ||
+        z.string().url().safeParse(v).success ||
+        z.string().email().safeParse(v).success,
+      "Introdu un URL valid (https://...) sau o adresă de email",
+    )
+    .optional()
+    .or(z.literal("")),
   form_id: z.string().optional().or(z.literal("")),
 });
 
