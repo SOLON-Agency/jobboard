@@ -22,6 +22,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import SecurityIcon from "@mui/icons-material/Security";
 import WorkIcon from "@mui/icons-material/Work";
 import appSettings from "@/config/app.settings.json";
+import { approve, deny } from "./actions";
 
 // ── Scope metadata ──────────────────────────────────────────────────────────
 
@@ -75,54 +76,6 @@ const resolveScope = (scope: string): ScopeInfo =>
     description: `Acces la resursa: ${scope}`,
     icon: <LockIcon fontSize="small" />,
   };
-
-// ── Server Actions ───────────────────────────────────────────────────────────
-
-async function approve(formData: FormData) {
-  "use server";
-  const redirectUri = formData.get("redirect_uri") as string;
-  const state = formData.get("state") as string;
-  const { redirect } = await import("next/navigation");
-  const { createClient } = await import("@/lib/supabase/server");
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Build the redirect with the authorization code.
-  // In a full OAuth server this code would be generated + stored server-side.
-  // Here we use the user's Supabase session token as the authorization artefact
-  // so the downstream app can exchange it at /api/oauth/token.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const code = session?.access_token ?? "";
-
-  const url = new URL(redirectUri);
-  url.searchParams.set("code", code);
-  if (state) url.searchParams.set("state", state);
-
-  redirect(url.toString());
-}
-
-async function deny(formData: FormData) {
-  "use server";
-  const redirectUri = formData.get("redirect_uri") as string;
-  const state = formData.get("state") as string;
-  const { redirect } = await import("next/navigation");
-
-  const url = new URL(redirectUri);
-  url.searchParams.set("error", "access_denied");
-  url.searchParams.set("error_description", "The user denied access");
-  if (state) url.searchParams.set("state", state);
-
-  redirect(url.toString());
-}
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -307,7 +260,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
               Permisiuni solicitate
             </Typography>
 
-            <Stack spacing={1.5} sx={{ mb: 3 }} component="ul" sx={{ pl: 0, listStyle: "none", mb: 3 }}>
+            <Stack spacing={1.5} component="ul" sx={{ pl: 0, listStyle: "none", mb: 3 }}>
               {resolvedScopes.map((s, i) => (
                 <Box
                   key={i}
