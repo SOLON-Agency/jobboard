@@ -10,6 +10,7 @@ export const jobSchema = z.object({
       "Descrierea trebuie să aibă cel puțin 10 caractere",
     ),
   location: z.string().optional().or(z.literal("")),
+  created_at: z.string().optional().or(z.literal("")),
   job_type: z.string().optional().or(z.literal("")),
   experience_level: z.array(z.string()),
   salary_min: z.string().optional(),

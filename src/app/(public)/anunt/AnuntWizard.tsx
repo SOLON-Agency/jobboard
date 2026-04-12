@@ -31,6 +31,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -49,7 +50,7 @@ import {
 import { createJob } from "@/services/jobs.service";
 import { createCompany, updateCompany } from "@/services/companies.service";
 import { createBenefit } from "@/services/benefits.service";
-import { slugify, parseSupabaseError, jobTypeLabels, experienceLevelLabels, formatSalary } from "@/lib/utils";
+import { slugify, parseSupabaseError, jobTypeLabels, experienceLevelLabels, formatSalary, formatDate } from "@/lib/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -401,17 +402,6 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
           {jobData.job_type && (
             <Chip label={jobTypeLabels[jobData.job_type] ?? jobData.job_type} size="small" variant="outlined" />
           )}
-          {jobData.is_remote && (
-            <Chip label="Remote" size="small" color="success" variant="outlined" />
-          )}
-          {jobData.location && (
-            <Chip
-              icon={<LocationOnOutlinedIcon />}
-              label={jobData.location}
-              size="small"
-              variant="outlined"
-            />
-          )}
           {jobData.experience_level.length > 0 && (
             <Chip
               label={jobData.experience_level.map((l) => experienceLevelLabels[l] ?? l).join(" – ")}
@@ -419,9 +409,29 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
               variant="outlined"
             />
           )}
-          {(jobData.salary_min || jobData.salary_max) && (
-            <Chip label={salaryText} size="small" variant="outlined" />
+          {jobData.is_remote && (
+            <Chip label="Remote" size="small" color="info" variant="outlined" />
           )}
+        </Stack>
+
+        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
+            <CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary">
+              {jobData.created_at ? formatDate(jobData.created_at) : "Ciornă"}
+            </Typography>
+            {jobData.location && (
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  {jobData.location}
+                </Typography>
+              </Stack>
+            )}
+            {(jobData.salary_min || jobData.salary_max) && (
+                <Typography variant="body2" fontWeight={700}>
+                {formatSalary(jobData.salary_min ? Number(jobData.salary_min) : null, jobData.salary_max ? Number(jobData.salary_max) : null)}
+              </Typography>
+            )}
         </Stack>
 
         {descriptionText && (

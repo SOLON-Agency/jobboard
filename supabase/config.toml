@@ -361,6 +361,12 @@ authorization_url_path = "/oauth/consent"
 # Allow dynamic client registration
 allow_dynamic_registration = false
 
+[functions.send-email]
+# JWT verification is handled inside the function via supabase.auth.getUser().
+# Disabling gateway-level verification lets the function handle its own auth
+# and avoids the relay rejecting requests before the function code runs.
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

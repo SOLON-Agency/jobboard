@@ -43,7 +43,7 @@ export const JobTags: React.FC<JobTagsProps> = ({ job, sx }) => {
           />
         ))}
       {is_remote && (
-        <Chip label="Remote" size="small" color="primary" variant="outlined" />
+        <Chip label="Remote" size="small" color="info" variant="outlined" />
       )}
       {location && (
         <Chip

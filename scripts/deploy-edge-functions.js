@@ -54,20 +54,22 @@ if (slugs.length === 0) {
 
 console.log(`\nDeploying ${slugs.length} Edge Function(s): ${slugs.join(', ')}\n`);
 
+// ---- Functions that handle JWT verification themselves ---------------------
+// Add a function slug here when its config.toml entry has `verify_jwt = false`.
+const NO_VERIFY_JWT = new Set(['send-email']);
+
 // ---- Deploy ----------------------------------------------------------------
 let failed = false;
 
 for (const slug of slugs) {
   process.stdout.write(`  → ${slug} … `);
+  const args = ['functions', 'deploy', slug, '--project-ref', PROJECT_REF];
+  if (NO_VERIFY_JWT.has(slug)) args.push('--no-verify-jwt');
   try {
-    execFileSync(
-      CLI,
-      ['functions', 'deploy', slug, '--project-ref', PROJECT_REF],
-      {
-        env: { ...process.env, SUPABASE_ACCESS_TOKEN: token },
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }
-    );
+    execFileSync(CLI, args, {
+      env: { ...process.env, SUPABASE_ACCESS_TOKEN: token },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     console.log('✓');
   } catch (err) {
     const stderr = err.stderr?.toString().trim() ?? '';
