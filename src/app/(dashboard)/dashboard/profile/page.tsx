@@ -134,10 +134,9 @@ export default function ProfilePage() {
     } else {
       await loadProfile();
       setMessage({ type: "success", text: "Profil actualizat cu succes." });
-      void fetch("/api/profile/notify-updated", {
-        method: "POST",
-        credentials: "same-origin",
-      }).catch((e) => console.warn("notify-updated failed:", e));
+      void supabase.functions
+        .invoke("send-email", { body: { event: "profile_updated" } })
+        .catch((e: unknown) => console.warn("notify-updated failed:", e));
       setTimeout(closeDrawer, 900);
     }
   };

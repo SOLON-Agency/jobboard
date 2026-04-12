@@ -23,6 +23,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { trackCompanyEngage } from "@/services/companies.service";
@@ -69,13 +70,15 @@ const buildMailtoSubject = (companyName: string | undefined, jobTitle: string): 
   return contact ? `Candidatură + ${contact} | ${jobTitle}` : `Candidatură | ${jobTitle}`;
 };
 
-const notifyApplication = (jobId: string) => {
-  void fetch("/api/jobs/notify-application", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify({ job_id: jobId }),
-  }).catch((err: unknown) => console.warn("notify-application:", err));
+const notifyApplication = (
+  supabase: SupabaseClient,
+  jobId: string
+) => {
+  void supabase.functions
+    .invoke("send-email", {
+      body: { event: "application_notification", job_id: jobId },
+    })
+    .catch((err: unknown) => console.warn("notify-application:", err));
 };
 
 /** Unique violation on `applications` (not form_responses). */
@@ -187,7 +190,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
       });
       if (appErr) throw appErr;
 
-      notifyApplication(job.id);
+      notifyApplication(supabase, job.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
       setAlreadyApplied(true);
       setConfirmed(true);

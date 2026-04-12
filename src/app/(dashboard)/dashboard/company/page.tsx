@@ -276,12 +276,11 @@ export default function CompanyPage() {
           }
 
           setMessage({ type: "success", text: "Companie creată." });
-          void fetch("/api/companies/notify-created", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "same-origin",
-            body: JSON.stringify({ company_id: newCompany.id }),
-          }).catch((e) => console.warn("notify-created failed:", e));
+          void supabase.functions
+            .invoke("send-email", {
+              body: { event: "company_created", company_id: newCompany.id },
+            })
+            .catch((e: unknown) => console.warn("notify-created failed:", e));
         }
         await load();
         setTimeout(closeDrawer, 900);

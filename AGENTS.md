@@ -82,21 +82,41 @@ Path alias: **`@/*` → `./src/*`** (`tsconfig.json`).
 
 **Auth callback:** `src/app/(auth)/auth/callback/route.ts` exchanges the OAuth/email code for a session then redirects.
 
-### Transactional email (Resend)
+### Transactional email (Resend via Edge Function)
 
-All notification emails (job applications, profile updates, company creation) are sent from **Next.js Route Handlers** in `src/app/api/**` using helpers in `src/lib/email/`:
+All notification emails are sent through the **`send-email` Supabase Edge Function** (`supabase/functions/send-email/index.ts`). The caller passes the user's Supabase session JWT automatically when using `supabase.functions.invoke()`, so all database queries inside the function run under RLS.
 
-| Helper | Route |
-|--------|-------|
-| `send-application-notification.ts` | `POST /api/jobs/notify-application` |
-| `send-profile-updated-notification.ts` | `POST /api/profile/notify-updated` |
-| `send-company-created-notification.ts` | `POST /api/companies/notify-created` |
+**Supported events** (pass as `event` in the JSON body):
 
-These handlers use the **user session** (`createClient` from `server.ts`) and **Resend** (not the Supabase service role). Configure `RESEND_API_KEY` and `RESEND_FROM` on the app host (e.g. Vercel).
+| Event | Required body fields | Description |
+|-------|---------------------|-------------|
+| `application_notification` | `job_id: string` | Sends confirmation to applicant + alert to job poster |
+| `profile_updated` | _(none)_ | Profile-update confirmation to the authenticated user |
+| `company_created` | `company_id: string` | Company-creation welcome email to the authenticated user |
+
+**Invocation pattern (client components):**
+```ts
+void supabase.functions
+  .invoke("send-email", {
+    body: { event: "application_notification", job_id: jobId },
+  })
+  .catch((err: unknown) => console.warn("send-email:", err));
+```
+
+**Shared utilities** live in `supabase/functions/_shared/`:
+- `cors.ts` — CORS headers and OPTIONS handler
+- `email-templates.ts` — `buildEmail`, `detailRow`, `infoTable` HTML helpers
+
+**Required Supabase secrets** (set with `supabase secrets set`):
+- `RESEND_API_KEY` — Resend API key
+- `RESEND_FROM` — verified sender, e.g. `"LegalJobs <noreply@yourdomain.com>"`
+- `NEXT_PUBLIC_SITE_URL` — canonical origin, e.g. `"https://legaljobs.ro"` (same value as the Next.js env var)
+
+The old Next.js route handlers (`/api/jobs/notify-application`, `/api/profile/notify-updated`, `/api/companies/notify-created`) are **deprecated stubs** that return HTTP 410. Do not call them from new code.
 
 ### Edge Functions
 
-Legacy `notify-*` Edge Functions are **deprecated stubs** that return HTTP 410. Do not call them from new code. **`scrape-jobs`** is the only Edge Function that legitimately uses the Supabase service role — it does so **entirely within Supabase Edge secrets** and requires `CRON_SECRET` bearer auth from the scheduler.
+**`send-email`** is the active edge function for all transactional email. **`scrape-jobs`** is the only Edge Function that legitimately uses the Supabase service role — it does so **entirely within Supabase Edge secrets** and requires `CRON_SECRET` bearer auth from the scheduler.
 
 ### Environment variables
 
@@ -104,9 +124,9 @@ Legacy `notify-*` Edge Functions are **deprecated stubs** that return HTTP 410. 
 |----------|-----------|---------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel / `.env.local` | Supabase project URL (public) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env.local` | Browser + server anon client (public) |
-| `NEXT_PUBLIC_SITE_URL` | Vercel / `.env.local` | Canonical origin for metadata, sitemap, auth redirects |
-| `RESEND_API_KEY` | Vercel (server-only) | Transactional email via Resend |
-| `RESEND_FROM` | Vercel (server-only) | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |
+| `NEXT_PUBLIC_SITE_URL` | Vercel / `.env.local` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
+| `RESEND_API_KEY` | **Supabase Edge secrets only** | Transactional email via Resend (`send-email` function) |
+| `RESEND_FROM` | **Supabase Edge secrets only** | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | Used solely by `scrape-jobs`; **never** add to Next.js / Vercel env |
 | `CRON_SECRET` | **Supabase Edge secrets only** | Bearer token required by `scrape-jobs` to reject unauthorised calls |
 
@@ -258,8 +278,8 @@ Add tests for non-trivial logic (utils, services where mockable, critical UI beh
 ## Supabase Edge Functions (ops)
 
 - `npm run supabase:deploy:all` — deploy all functions (see `package.json` for project ref).
-- Shared code: `supabase/functions/_shared/`.
-- Do not add new notify-* Edge Functions; use the Next.js API route pattern instead.
+- Shared code: `supabase/functions/_shared/` — add reusable Deno helpers here (CORS, email templates, etc.).
+- All transactional email goes through the `send-email` Edge Function. Do **not** add new email-sending code to Next.js API routes.
 
 ---
 

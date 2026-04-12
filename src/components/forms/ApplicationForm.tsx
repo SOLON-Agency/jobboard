@@ -29,6 +29,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getFormWithFields } from "@/services/forms.service";
@@ -254,13 +255,12 @@ const FormFieldInput: React.FC<FieldProps> = ({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const notifyApplication = (jobId: string) => {
-  void fetch("/api/jobs/notify-application", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify({ job_id: jobId }),
-  }).catch((err: unknown) => console.warn("notify-application:", err));
+const notifyApplication = (supabase: SupabaseClient, jobId: string) => {
+  void supabase.functions
+    .invoke("send-email", {
+      body: { event: "application_notification", job_id: jobId },
+    })
+    .catch((err: unknown) => console.warn("notify-application:", err));
 };
 
 const isApplicationsDuplicateError = (err: unknown): boolean => {
@@ -403,7 +403,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         return;
       }
 
-      notifyApplication(job.id);
+      notifyApplication(supabase, job.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
       setSubmitted(true);
       onSubmitted();

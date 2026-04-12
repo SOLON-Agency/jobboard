@@ -698,12 +698,11 @@ export const AnuntWizard: React.FC = () => {
         );
       }
 
-      void fetch("/api/companies/notify-created", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ company_id: company.id }),
-      });
+      void supabase.functions
+        .invoke("send-email", {
+          body: { event: "company_created", company_id: company.id },
+        })
+        .catch((e: unknown) => console.warn("notify-created failed:", e));
 
       router.push(`/jobs/${job.slug}`);
     } catch (err) {

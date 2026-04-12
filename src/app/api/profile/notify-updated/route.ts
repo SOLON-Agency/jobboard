@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { sendProfileUpdatedEmail } from "@/lib/email/send-profile-updated-notification";
 
-const siteUrl = () =>
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
-
+/**
+ * Deprecated — email sending has moved to the Supabase Edge Function `send-email`.
+ * Callers should use `supabase.functions.invoke("send-email", { body: { event: "profile_updated" } })`.
+ */
 export async function POST() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-
-  if (authErr || !user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    await sendProfileUpdatedEmail(supabase, user, siteUrl());
-  } catch (err) {
-    console.warn("notify-updated:", err);
-  }
-
-  return NextResponse.json({ ok: true as const });
+  return NextResponse.json(
+    { error: "Gone — use the send-email Edge Function instead." },
+    { status: 410 }
+  );
 }
