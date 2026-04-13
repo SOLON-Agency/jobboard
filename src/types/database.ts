@@ -778,6 +778,8 @@ export type Database = {
           id: string
           is_public: boolean
           location: string | null
+          notifications_email: boolean
+          notifications_sms: boolean
           phone: string | null
           slug: string | null
           updated_at: string
@@ -793,6 +795,8 @@ export type Database = {
           id: string
           is_public?: boolean
           location?: string | null
+          notifications_email?: boolean
+          notifications_sms?: boolean
           phone?: string | null
           slug?: string | null
           updated_at?: string
@@ -808,6 +812,8 @@ export type Database = {
           id?: string
           is_public?: boolean
           location?: string | null
+          notifications_email?: boolean
+          notifications_sms?: boolean
           phone?: string | null
           slug?: string | null
           updated_at?: string

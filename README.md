@@ -347,9 +347,9 @@ Set **server-side** environment variables in the Vercel dashboard:
 |----------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public |
-| `NEXT_PUBLIC_SITE_URL` | e.g. `https://legaljobs.ro` |
+| `NEXT_PUBLIC_SITE_URL` | e.g. `https://jobboard-sand.vercel.app/` |
 | `RESEND_API_KEY` | Server only |
-| `RESEND_FROM` | Server only, e.g. `"LegalJobs <noreply@legaljobs.ro>"` |
+| `RESEND_FROM` | Server only, e.g. `"LegalJobs <legaljobs@solon.agency>"` |
 
 **Do not add `SUPABASE_SERVICE_ROLE_KEY` to Vercel.** It belongs only in Supabase Edge Function secrets.
 

@@ -75,12 +75,13 @@ export const ExperienceTimeline: React.FC<ExperienceTimelineProps> = ({ items })
                       sx={{ height: 18, fontSize: "0.62rem", fontWeight: 700 }} />
                   )}
                 </Stack>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
+                <Typography variant="subtitle1" fontWeight={700}
+                  sx={{ lineHeight: 1.3, width: "100%", overflowWrap: "break-word", wordBreak: "break-word" }}>
                   {item.title} ({item.company})
                 </Typography>
                 {item.description && (
                   <Typography variant="body2" color="text.secondary"
-                    sx={{ mt: 0.75, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                    sx={{ mt: 0.75, lineHeight: 1.7, whiteSpace: "pre-wrap", width: "100%", overflowWrap: "break-word", wordBreak: "break-word" }}>
                     {item.description}
                   </Typography>
                 )}

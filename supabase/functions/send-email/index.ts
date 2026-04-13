@@ -25,6 +25,7 @@ import {
   detailRow,
   infoTable,
 } from "../_shared/email-templates.ts";
+import { sendResendEmail } from "../_shared/resend.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,42 +33,6 @@ type EmailEvent =
   | { event: "application_notification"; job_id: string }
   | { event: "profile_updated" }
   | { event: "company_created"; company_id: string };
-
-interface ResendPayload {
-  from: string;
-  to: string[];
-  subject: string;
-  html: string;
-  headers?: Record<string, string>;
-}
-
-// ─── Resend helper ────────────────────────────────────────────────────────────
-
-async function sendEmail(
-  apiKey: string,
-  from: string,
-  payload: Omit<ResendPayload, "from"> & { idempotencyKey?: string }
-): Promise<void> {
-  const { idempotencyKey, ...rest } = payload;
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  };
-  if (idempotencyKey) {
-    headers["Idempotency-Key"] = idempotencyKey;
-  }
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ from, ...rest }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`Resend API error ${res.status}: ${text}`);
-  }
-}
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
@@ -97,8 +62,6 @@ async function handleApplicationNotification(
   // deno-lint-ignore no-explicit-any
   userMeta: Record<string, any>,
   jobId: string,
-  apiKey: string,
-  from: string,
   siteUrl: string,
   siteName: string
 ): Promise<void> {
@@ -190,7 +153,7 @@ async function handleApplicationNotification(
       ${publicProfileUrl ? `<p>Poți vizualiza profilul candidatului pentru mai multe detalii.</p>` : ""}
     `;
 
-    await sendEmail(apiKey, from, {
+    await sendResendEmail({
       to: [posterEmail],
       subject: `Candidatură nouă pentru „${j.title}"`,
       html: buildEmail({
@@ -244,7 +207,7 @@ async function handleApplicationNotification(
       </p>
     `;
 
-    await sendEmail(apiKey, from, {
+    await sendResendEmail({
       to: [applicantEmail],
       subject: `Candidatura ta pentru „${j.title}" a fost trimisă!`,
       html: buildEmail({
@@ -266,8 +229,6 @@ async function handleProfileUpdated(
   supabase: any,
   userId: string,
   userEmail: string | undefined,
-  apiKey: string,
-  from: string,
   siteUrl: string,
   siteName: string
 ): Promise<void> {
@@ -321,7 +282,7 @@ async function handleProfileUpdated(
     </p>
   `;
 
-  await sendEmail(apiKey, from, {
+  await sendResendEmail({
     to: [to],
     subject: "Profilul tău a fost actualizat",
     html: buildEmail({
@@ -345,8 +306,6 @@ async function handleCompanyCreated(
   // deno-lint-ignore no-explicit-any
   userMeta: Record<string, any>,
   companyId: string,
-  apiKey: string,
-  from: string,
   siteUrl: string,
   siteName: string
 ): Promise<void> {
@@ -425,7 +384,7 @@ async function handleCompanyCreated(
     </p>
   `;
 
-  await sendEmail(apiKey, from, {
+  await sendResendEmail({
     to: [to],
     subject: `Compania „${c.name as string}" a fost creată cu succes!`,
     html: buildEmail({
@@ -454,19 +413,10 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const apiKey = Deno.env.get("RESEND_API_KEY")?.trim();
-  const from = Deno.env.get("RESEND_FROM")?.trim();
   const siteUrl = (
     Deno.env.get("NEXT_PUBLIC_SITE_URL") ?? "http://localhost:3000"
   ).replace(/\/$/, "");
   const siteName = Deno.env.get("SITE_NAME") ?? "LegalJobs";
-
-  if (!apiKey || !from) {
-    console.warn("send-email: RESEND_API_KEY or RESEND_FROM not configured");
-    return new Response(JSON.stringify({ ok: true, emailsSent: false }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -525,8 +475,6 @@ Deno.serve(async (req: Request) => {
           // deno-lint-ignore no-explicit-any
           (user.user_metadata ?? {}) as Record<string, any>,
           body.job_id,
-          apiKey,
-          from,
           siteUrl,
           siteName
         );
@@ -537,8 +485,6 @@ Deno.serve(async (req: Request) => {
           supabase,
           user.id,
           user.email,
-          apiKey,
-          from,
           siteUrl,
           siteName
         );
@@ -561,8 +507,6 @@ Deno.serve(async (req: Request) => {
           // deno-lint-ignore no-explicit-any
           (user.user_metadata ?? {}) as Record<string, any>,
           body.company_id,
-          apiKey,
-          from,
           siteUrl,
           siteName
         );

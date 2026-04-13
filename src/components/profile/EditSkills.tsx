@@ -51,6 +51,11 @@ export const EditSkills: React.FC<EditSkillsProps> = ({
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Sync when the parent finishes loading and passes real data for the first time.
+  useEffect(() => {
+    setItems(initialItems ?? []);
+  }, [initialItems]);
+
   // Load master skills catalogue on mount
   useEffect(() => {
     getAllSkills(supabase)
@@ -215,6 +220,7 @@ export const EditSkills: React.FC<EditSkillsProps> = ({
                 borderRadius: 2,
                 border: "1px solid",
                 borderColor: "divider",
+                overflow: "hidden",
                 "&:hover": { bgcolor: "action.hover" },
               }}
             >

@@ -49,15 +49,17 @@ Before changing routing, data fetching, or config:
 - **`src/app/`** — App Router: route groups `(public)`, `(auth)`; plain `dashboard/` segment; API route handlers under `src/app/api/`.
 - **`src/components/`** — Feature and layout UI (prefer **named exports** for shared components).
   - **`src/components/forms/`** — All form components live here (not in `dashboard/` or co-located with trigger components).
-    - `AddEditCompany.tsx`, `AddEditForm.tsx`, `AddEditJob.tsx` — dashboard CRUD forms.
+    - `AddEditCompany.tsx`, `AddEditForm.tsx`, `AddEditJob.tsx`, `AddEditExperience.tsx`, `AddEditEducation.tsx` — dashboard CRUD forms.
     - `ApplicationForm.tsx` — job application drawer.
     - **`src/components/forms/validations/`** — Zod schemas and TypeScript types, one file per form domain:
       - `company.schema.ts` → `companySchema`, `CompanyFormData`
       - `job.schema.ts` → `jobSchema`, `JobFormData`
+      - `experience.schema.ts` → `experienceSchema`, `ExperienceFormData`
+      - `education.schema.ts` → `educationSchema`, `EducationFormData`
       - `form-builder.schema.ts` → `FieldType`, `FormField`, `FormBuilderData`, shared constants
 - **`src/services/`** — Data access: async functions that take a typed `SupabaseClient<Database>` (and other params); keep side effects and Supabase shape here rather than duplicating in pages.
 - **`src/hooks/`** — Client hooks (`useAuth`, `useSupabase`, etc.).
-- **`src/lib/`** — Supabase factories (`client`, `server`, `middleware`, `static`), email helpers (`src/lib/email/`), utilities, SEO helpers.
+- **`src/lib/`** — Supabase factories (`client`, `server`, `middleware`, `static`), utilities, SEO helpers.
 - **`src/theme/`** — MUI theme, palette, `ThemeRegistry`.
 - **`src/types/`** — `database.ts` (generated/hand-maintained Supabase types), shared app types (`index.ts`).
 - **`src/config/app.settings.json`** — Product name, salary defaults, feature flags, brand colors.
@@ -112,11 +114,53 @@ void supabase.functions
 - `RESEND_FROM` — verified sender, e.g. `"LegalJobs <noreply@yourdomain.com>"`
 - `NEXT_PUBLIC_SITE_URL` — canonical origin, e.g. `"https://legaljobs.ro"` (same value as the Next.js env var)
 
-The old Next.js route handlers (`/api/jobs/notify-application`, `/api/profile/notify-updated`, `/api/companies/notify-created`) are **deprecated stubs** that return HTTP 410. Do not call them from new code.
+### Edge Functions inventory
 
-### Edge Functions
+| Function | Status | Auth | Notes |
+|----------|--------|------|-------|
+| `send-email` | **Active** | user JWT | Context-aware transactional emails (application, profile update, company created). Fetches data under user RLS. |
+| `notifications` | **Active** | user JWT **or** service-role key | Generic notification dispatcher — see below. |
+| `scrape-jobs` | **Active** (Supabase-only) | `CRON_SECRET` bearer | Job scraper; uses service role key; not in this repo. |
 
-**`send-email`** is the active edge function for all transactional email. **`scrape-jobs`** is the only Edge Function that legitimately uses the Supabase service role — it does so **entirely within Supabase Edge secrets** and requires `CRON_SECRET` bearer auth from the scheduler.
+Both `send-email` and `notifications` use `verify_jwt = false` and handle auth inside the function.
+
+#### `notifications` edge function
+
+Sends a notification to any user by `userId` through the specified channel. Respects the user's per-channel opt-in flags on `profiles`.
+
+**Body fields:**
+
+| Field | Type | Required | Default |
+|-------|------|----------|---------|
+| `recipient` | `string` (userId) | ✅ | — |
+| `channel` | `"email" \| "sms"` | ✅ | `"email"` |
+| `body` | `string` | ✅ | — |
+| `subject` | `string` | — | site name |
+
+**From React:**
+```ts
+void supabase.functions
+  .invoke("notifications", {
+    body: { recipient: userId, channel: "email", subject: "Titlu", body: "Mesaj..." },
+  })
+  .catch(console.warn);
+```
+
+**From another edge function (service-role call):**
+```ts
+await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notifications`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ recipient: userId, channel: "email", subject: "...", body: "..." }),
+});
+```
+
+**Profile preference columns** (added by migration `20260412000000`):
+- `profiles.notifications_email boolean DEFAULT true`
+- `profiles.notifications_sms boolean DEFAULT false` (SMS provider TBD)
 
 ### Environment variables
 
@@ -143,6 +187,25 @@ Never commit secrets. Add new server-only variables to `.env.example` with a pla
 - **MUI:** Use theme tokens and `sx` consistently; respect the brand palette in `src/theme/palette.ts` and `app.settings.json`.
 - **Feature flags:** Check `src/config/app.settings.json` `features` before exposing UI for areas that are intentionally disabled (e.g. `alerts`, `messages`).
 - **SEO:** `src/lib/seo.ts`, `sitemap.ts`, `robots.ts` — keep URLs aligned with `NEXT_PUBLIC_SITE_URL`.
+
+### Form validation (mandatory for all forms)
+
+Every form — new **and** existing — must follow this pattern without exception:
+
+1. **Schema file first.** Define a Zod schema in `src/components/forms/validations/<domain>.schema.ts`. Export the schema constant and the inferred `type …FormData`. Never define a schema inline inside a component.
+2. **`react-hook-form` + `zodResolver`.** Wire the schema with `useForm<FormData>({ resolver: zodResolver(schema) })`. Never use uncontrolled validation or manual `useState` error tracking for form fields.
+3. **Cross-field rules via `.superRefine()`.** Conditional requirements (e.g. *end date required when not current*) and inter-field comparisons (e.g. *end ≥ start*) must be expressed as `superRefine` rules in the schema — not as ad-hoc checks in submit handlers.
+4. **Surface errors on every field.** Pass `error={!!errors.field}`, `helperText={errors.field?.message}`, and `aria-describedby` pointing to the helper text id on every `TextField`. Use `<FormHelperText>` for contextual hints alongside field-level errors.
+5. **`noValidate` on `<form>`.** Add `noValidate` to every `<Box component="form">` so browser built-in validation doesn't conflict with Zod messages.
+6. **Disable submit during flight.** Use `isSubmitting` from `formState` to `disabled` the submit button; show a Romanian "Se salvează…" label while pending.
+
+**Naming conventions:**
+
+| Artifact | Location | Export name pattern |
+|---|---|---|
+| Zod schema | `src/components/forms/validations/<domain>.schema.ts` | `<domain>Schema` |
+| Inferred type | same file | `<Domain>FormData` |
+| Form component | `src/components/forms/AddEdit<Domain>.tsx` | `AddEdit<Domain>` |
 
 ---
 

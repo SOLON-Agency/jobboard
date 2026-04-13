@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Box,
   Button,
   Checkbox,
   Chip,
   FormControlLabel,
+  FormHelperText,
   IconButton,
   Paper,
   Skeleton,
@@ -23,7 +24,6 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
@@ -36,37 +36,19 @@ import {
   type EducationItem,
 } from "@/services/education.service";
 import { parseSupabaseError } from "@/lib/utils";
+import { educationSchema, type EducationFormData } from "./validations/education.schema";
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
+// ─── Props ────────────────────────────────────────────────────────────────────
 
-const schema = z.object({
-  title: z.string().min(1, "Titlul este obligatoriu"),
-  institution: z.string().min(1, "Instituția este obligatorie"),
-  description: z.string().max(1000).optional().or(z.literal("")),
-  is_current: z.boolean(),
-  start_year: z
-    .string()
-    .optional()
-    .refine((v) => !v || /^\d{4}$/.test(v), "An invalid (ex: 2018)")
-    .or(z.literal("")),
-  end_year: z
-    .string()
-    .optional()
-    .refine((v) => !v || /^\d{4}$/.test(v), "An invalid (ex: 2022)")
-    .or(z.literal("")),
-});
-
-type FormData = z.infer<typeof schema>;
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
-interface EditEducationProps {
+export interface AddEditEducationProps {
   initialItems?: EducationItem[];
   loading?: boolean;
   onReload?: () => void;
 }
 
-export const EditEducation: React.FC<EditEducationProps> = ({
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export const AddEditEducation: React.FC<AddEditEducationProps> = ({
   initialItems,
   loading = false,
   onReload,
@@ -75,6 +57,11 @@ export const EditEducation: React.FC<EditEducationProps> = ({
   const supabase = useSupabase();
 
   const [items, setItems] = useState<EducationItem[]>(initialItems ?? []);
+
+  // Sync when the parent finishes loading and passes real data for the first time.
+  useEffect(() => {
+    setItems(initialItems ?? []);
+  }, [initialItems]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -88,7 +75,10 @@ export const EditEducation: React.FC<EditEducationProps> = ({
     control,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { is_current: false } });
+  } = useForm<EducationFormData>({
+    resolver: zodResolver(educationSchema),
+    defaultValues: { is_current: false },
+  });
 
   const isCurrent = watch("is_current");
 
@@ -99,7 +89,8 @@ export const EditEducation: React.FC<EditEducationProps> = ({
     onReload?.();
   }, [user, supabase, onReload]);
 
-  // ── Open drawer ───────────────────────────────────────────────────────────
+  // ── Drawer helpers ────────────────────────────────────────────────────────
+
   const openAdd = () => {
     setEditingId(null);
     setMessage(null);
@@ -128,7 +119,8 @@ export const EditEducation: React.FC<EditEducationProps> = ({
   };
 
   // ── Save ──────────────────────────────────────────────────────────────────
-  const onSubmit = async (data: FormData) => {
+
+  const onSubmit = async (data: EducationFormData) => {
     if (!user) return;
     setMessage(null);
     const payload = {
@@ -140,8 +132,8 @@ export const EditEducation: React.FC<EditEducationProps> = ({
       end_year: data.is_current
         ? new Date().getFullYear()
         : data.end_year
-        ? parseInt(data.end_year)
-        : null,
+          ? parseInt(data.end_year)
+          : null,
     };
 
     try {
@@ -159,12 +151,16 @@ export const EditEducation: React.FC<EditEducationProps> = ({
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────
+
   const handleDelete = async (id: string) => {
     try {
       await deleteEducationItem(supabase, id);
       const updated = items.filter((i) => i.id !== id);
       const reordered = updated.map((item, idx) => ({ ...item, sort_order: idx }));
-      await reorderEducationItems(supabase, reordered.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+      await reorderEducationItems(
+        supabase,
+        reordered.map((i) => ({ id: i.id, sort_order: i.sort_order }))
+      );
       setItems(reordered);
       setDeleteConfirmId(null);
     } catch (err) {
@@ -173,6 +169,7 @@ export const EditEducation: React.FC<EditEducationProps> = ({
   };
 
   // ── Reorder ───────────────────────────────────────────────────────────────
+
   const move = async (idx: number, dir: -1 | 1) => {
     const next = idx + dir;
     if (next < 0 || next >= items.length) return;
@@ -180,20 +177,29 @@ export const EditEducation: React.FC<EditEducationProps> = ({
     [reordered[idx], reordered[next]] = [reordered[next], reordered[idx]];
     const withOrder = reordered.map((item, i) => ({ ...item, sort_order: i }));
     setItems(withOrder);
-    await reorderEducationItems(supabase, withOrder.map((i) => ({ id: i.id, sort_order: i.sort_order })));
+    await reorderEducationItems(
+      supabase,
+      withOrder.map((i) => ({ id: i.id, sort_order: i.sort_order }))
+    );
   };
 
   // ── Sorted for display: current items first ───────────────────────────────
-  const sortedItems = [...items].sort((a, b) => Number(b.is_current) - Number(a.is_current) || a.sort_order - b.sort_order);
+
+  const sortedItems = [...items].sort(
+    (a, b) => Number(b.is_current) - Number(a.is_current) || a.sort_order - b.sort_order
+  );
 
   // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <>
       <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
             <SchoolOutlinedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-            <Typography variant="subtitle1" fontWeight={700}>Educație</Typography>
+            <Typography variant="subtitle1" fontWeight={700}>
+              Educație
+            </Typography>
           </Stack>
           <Button size="small" startIcon={<AddIcon />} variant="outlined" onClick={openAdd}>
             Adaugă
@@ -202,7 +208,9 @@ export const EditEducation: React.FC<EditEducationProps> = ({
 
         {loading ? (
           <Stack spacing={1.5}>
-            {[1, 2].map((i) => <Skeleton key={i} variant="rounded" height={72} />)}
+            {[1, 2].map((i) => (
+              <Skeleton key={i} variant="rounded" height={72} />
+            ))}
           </Stack>
         ) : items.length === 0 ? (
           <Typography variant="body2" color="text.disabled" sx={{ py: 1 }}>
@@ -213,56 +221,88 @@ export const EditEducation: React.FC<EditEducationProps> = ({
             {sortedItems.map((item, idx) => (
               <Paper key={item.id} variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 2 }}>
                 <Stack direction="row" alignItems="flex-start" spacing={1}>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.25 }}>
-                      <Typography variant="subtitle2" fontWeight={700} noWrap>
+                  <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                    <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.25, minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ flex: 1, minWidth: 0 }}>
                         {item.title}
                       </Typography>
                       {item.is_current && (
-                        <Chip label="Prezent" size="small" color="success" variant="outlined"
-                          sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700 }} />
+                        <Chip
+                          label="Prezent"
+                          size="small"
+                          color="success"
+                          variant="outlined"
+                          sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700, flexShrink: 0 }}
+                        />
                       )}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {item.institution}
                       {(item.start_year || item.end_year) && (
-                        <> &middot; {item.start_year ?? "?"} — {item.is_current ? "prezent" : (item.end_year ?? "prezent")}</>
+                        <>
+                          {" "}
+                          &middot; {item.start_year ?? "?"} —{" "}
+                          {item.is_current ? "prezent" : (item.end_year ?? "prezent")}
+                        </>
                       )}
                     </Typography>
                   </Box>
+
                   <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
-                    <Tooltip title="Mută sus"><span>
-                      <IconButton size="small" onClick={() => move(idx, -1)} disabled={idx === 0}>
-                        <ArrowUpwardIcon fontSize="small" />
-                      </IconButton>
-                    </span></Tooltip>
-                    <Tooltip title="Mută jos"><span>
-                      <IconButton size="small" onClick={() => move(idx, 1)} disabled={idx === sortedItems.length - 1}>
-                        <ArrowDownwardIcon fontSize="small" />
-                      </IconButton>
-                    </span></Tooltip>
+                    <Tooltip title="Mută sus">
+                      <span>
+                        <IconButton size="small" onClick={() => move(idx, -1)} disabled={idx === 0}
+                          aria-label="Mută sus">
+                          <ArrowUpwardIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Mută jos">
+                      <span>
+                        <IconButton
+                          size="small"
+                          onClick={() => move(idx, 1)}
+                          disabled={idx === sortedItems.length - 1}
+                          aria-label="Mută jos"
+                        >
+                          <ArrowDownwardIcon fontSize="small" />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                     <Tooltip title="Editează">
-                      <IconButton size="small" onClick={() => openEdit(item)}>
+                      <IconButton size="small" onClick={() => openEdit(item)} aria-label="Editează">
                         <EditIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
+
                     {deleteConfirmId === item.id ? (
                       <>
-                        <Button size="small" color="error" variant="contained"
+                        <Button
+                          size="small"
+                          color="error"
+                          variant="contained"
                           sx={{ ml: 0.5, fontSize: "0.7rem", px: 1, minWidth: 0 }}
-                          onClick={() => handleDelete(item.id)}>
+                          onClick={() => handleDelete(item.id)}
+                        >
                           Confirm
                         </Button>
-                        <Button size="small" variant="outlined"
+                        <Button
+                          size="small"
+                          variant="outlined"
                           sx={{ fontSize: "0.7rem", px: 1, minWidth: 0 }}
-                          onClick={() => setDeleteConfirmId(null)}>
+                          onClick={() => setDeleteConfirmId(null)}
+                        >
                           Anulează
                         </Button>
                       </>
                     ) : (
                       <Tooltip title="Șterge">
-                        <IconButton size="small" sx={{ color: "error.main" }}
-                          onClick={() => setDeleteConfirmId(item.id)}>
+                        <IconButton
+                          size="small"
+                          sx={{ color: "error.main" }}
+                          onClick={() => setDeleteConfirmId(item.id)}
+                          aria-label="Șterge educație"
+                        >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -275,32 +315,74 @@ export const EditEducation: React.FC<EditEducationProps> = ({
         )}
       </Paper>
 
-      <EditSideDrawer open={drawerOpen} onClose={closeDrawer}
+      <EditSideDrawer
+        open={drawerOpen}
+        onClose={closeDrawer}
         title={editingId ? "Editează educație" : "Adaugă educație"}
-        message={message} onMessageClose={() => setMessage(null)}>
-        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        message={message}
+        onMessageClose={() => setMessage(null)}
+      >
+        <Box
+          component="form"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+          aria-label={editingId ? "Formular editare educație" : "Formular adăugare educație"}
+        >
           <Stack spacing={2.5}>
-            <TextField {...register("title")} label="Titlu / Diplomă"
-              placeholder="ex. Licențiat în Drept" fullWidth required
-              error={!!errors.title} helperText={errors.title?.message} />
-            <TextField {...register("institution")} label="Instituție"
-              placeholder="ex. Universitatea din București" fullWidth required
-              error={!!errors.institution} helperText={errors.institution?.message} />
+            <TextField
+              {...register("title")}
+              label="Titlu / Diplomă"
+              placeholder="ex. Licențiat în Drept"
+              fullWidth
+              required
+              error={!!errors.title}
+              helperText={errors.title?.message}
+              inputProps={{ "aria-describedby": errors.title ? "title-error" : undefined }}
+            />
+
+            <TextField
+              {...register("institution")}
+              label="Instituție"
+              placeholder="ex. Universitatea din București"
+              fullWidth
+              required
+              error={!!errors.institution}
+              helperText={errors.institution?.message}
+              inputProps={{ "aria-describedby": errors.institution ? "institution-error" : undefined }}
+            />
+
             <Stack direction="row" spacing={2}>
-              <TextField {...register("start_year")} label="An început" placeholder="2018"
-                fullWidth inputProps={{ maxLength: 4 }}
-                error={!!errors.start_year} helperText={errors.start_year?.message} />
               <TextField
-                {...register("end_year")}
-                label="An finalizare"
-                placeholder="2022"
+                {...register("start_year")}
+                label="An început"
+                placeholder="2018"
                 fullWidth
-                inputProps={{ maxLength: 4 }}
-                disabled={isCurrent}
-                error={!!errors.end_year}
-                helperText={isCurrent ? "Setat automat la anul curent" : errors.end_year?.message}
+                inputProps={{ maxLength: 4, inputMode: "numeric", "aria-describedby": errors.start_year ? "start-year-error" : undefined }}
+                error={!!errors.start_year}
+                helperText={errors.start_year?.message}
               />
+              <Box sx={{ flex: 1 }}>
+                <TextField
+                  {...register("end_year")}
+                  label="An finalizare"
+                  placeholder="2022"
+                  fullWidth
+                  inputProps={{ maxLength: 4, inputMode: "numeric", "aria-describedby": errors.end_year ? "end-year-error" : undefined }}
+                  disabled={isCurrent}
+                  error={!!errors.end_year}
+                  helperText={
+                    isCurrent
+                      ? "Setat automat la anul curent"
+                      : errors.end_year?.message
+                  }
+                  required={!isCurrent}
+                />
+                {!isCurrent && !errors.end_year && (
+                  <FormHelperText>Obligatoriu dacă nu studiezi în prezent</FormHelperText>
+                )}
+              </Box>
             </Stack>
+
             <Controller
               name="is_current"
               control={control}
@@ -322,15 +404,25 @@ export const EditEducation: React.FC<EditEducationProps> = ({
                 />
               )}
             />
-            <TextField {...register("description")} label="Descriere (opțional)"
+
+            <TextField
+              {...register("description")}
+              label="Descriere (opțional)"
               placeholder="Specializare, activități, distincții..."
-              fullWidth multiline rows={3}
-              error={!!errors.description} helperText={errors.description?.message} />
+              fullWidth
+              multiline
+              rows={3}
+              error={!!errors.description}
+              helperText={errors.description?.message}
+            />
+
             <Stack direction="row" spacing={2}>
               <Button type="submit" variant="contained" disabled={isSubmitting} sx={{ px: 4 }}>
                 {isSubmitting ? "Se salvează..." : "Salvează"}
               </Button>
-              <Button variant="outlined" onClick={closeDrawer}>Anulează</Button>
+              <Button variant="outlined" onClick={closeDrawer}>
+                Anulează
+              </Button>
             </Stack>
           </Stack>
         </Box>

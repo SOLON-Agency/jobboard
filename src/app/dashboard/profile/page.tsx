@@ -18,6 +18,7 @@ import {
   Skeleton,
   FormControlLabel,
   Switch,
+  CircularProgress,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
@@ -31,8 +32,8 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { experienceLevelLabels } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
-import { EditEducation } from "@/components/profile/EditEducation";
-import { EditExperience } from "@/components/profile/EditExperience";
+import { AddEditEducation } from "@/components/forms/AddEditEducation";
+import { AddEditExperience } from "@/components/forms/AddEditExperience";
 import { EditSkills } from "@/components/profile/EditSkills";
 import { getEducationItems, type EducationItem } from "@/services/education.service";
 import { getExperienceItems, type ExperienceItem } from "@/services/experience.service";
@@ -65,6 +66,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [cvUploading, setCvUploading] = useState(false);
 
   const {
     register,
@@ -169,19 +171,26 @@ export default function ProfilePage() {
         setMessage({ type: "error", text: "CV-ul trebuie să fie mai mic de 5MB." });
         return;
       }
-      const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
+      setCvUploading(true);
+      setMessage(null);
+      try {
+        const path = `${user.id}/${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
 
-      if (error) {
-        setMessage({ type: "error", text: "Eroare la încărcarea CV-ului." });
-        return;
+        if (error) {
+          setMessage({ type: "error", text: "Eroare la încărcarea CV-ului." });
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from("cvs").getPublicUrl(path);
+        await supabase.from("profiles").update({ cv_url: urlData.publicUrl }).eq("id", user.id);
+        await loadProfile();
+        setMessage({ type: "success", text: "CV încărcat cu succes." });
+      } finally {
+        setCvUploading(false);
       }
-
-      const { data: urlData } = supabase.storage.from("cvs").getPublicUrl(path);
-      await supabase.from("profiles").update({ cv_url: urlData.publicUrl }).eq("id", user.id);
-      setMessage({ type: "success", text: "CV încărcat cu succes." });
     },
-    [user, supabase]
+    [user, supabase, loadProfile]
   );
   
   const openViewProfile = () => {
@@ -306,15 +315,29 @@ export default function ProfilePage() {
             {profile.cv_url ? (
               <Stack direction="row" spacing={2} alignItems="center">
                 <Typography variant="body2" color="text.secondary">CV încărcat</Typography>
-                <Button variant="outlined" size="small" component="label">
-                  Înlocuiește
-                  <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  component="label"
+                  disabled={cvUploading}
+                  startIcon={cvUploading ? <CircularProgress size={14} color="inherit" /> : undefined}
+                  aria-busy={cvUploading}
+                >
+                  {cvUploading ? "Se încarcă…" : "Înlocuiește"}
+                  <input type="file" hidden accept=".pdf" onChange={handleCvUpload} disabled={cvUploading} />
                 </Button>
               </Stack>
             ) : (
-              <Button variant="outlined" size="small" component="label">
-                Încarcă CV (PDF, max 5MB)
-                <input type="file" hidden accept=".pdf" onChange={handleCvUpload} />
+              <Button
+                variant="outlined"
+                size="small"
+                component="label"
+                disabled={cvUploading}
+                startIcon={cvUploading ? <CircularProgress size={14} color="inherit" /> : undefined}
+                aria-busy={cvUploading}
+              >
+                {cvUploading ? "Se încarcă…" : "Încarcă CV (PDF, max 5MB)"}
+                <input type="file" hidden accept=".pdf" onChange={handleCvUpload} disabled={cvUploading} />
               </Button>
             )}
           </Box>
@@ -330,7 +353,7 @@ export default function ProfilePage() {
       </Box>
 
       <Box sx={{ mt: 3 }}>
-        <EditExperience
+        <AddEditExperience
           initialItems={experience}
           loading={loading}
           onReload={loadProfile}
@@ -338,7 +361,7 @@ export default function ProfilePage() {
       </Box>
 
       <Box sx={{ mt: 3 }}>
-        <EditEducation
+        <AddEditEducation
           initialItems={education}
           loading={loading}
           onReload={loadProfile}

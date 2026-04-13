@@ -367,6 +367,10 @@ allow_dynamic_registration = false
 # and avoids the relay rejecting requests before the function code runs.
 verify_jwt = false
 
+[functions.notifications]
+# Auth is handled inside the function (accepts user JWTs + service-role key).
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
