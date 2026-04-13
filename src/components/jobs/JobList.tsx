@@ -365,7 +365,7 @@ const JobActionsRow: React.FC<JobActionsRowProps> = ({
       onClick: () => { onStatusChange(job.id, "draft"); },
     } : null,
     onArchive && appSettings.features.archiveJobs && job.status !== "archived" ? {
-      key: "archive", label: "Arhivează", color: "error" as ActionColor,
+      key: "archive", label: "Arhivează", color: "warning" as ActionColor,
       icon: <ArchiveIcon fontSize="small" />,
       onClick: () => onArchive(job),
     } : null,

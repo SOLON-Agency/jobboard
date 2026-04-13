@@ -60,7 +60,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onArch
   const archiveAction = appSettings.features.archiveJobs ? {
     label: company.is_archived ? "Dezarhivează" : "Arhivează",
     icon: company.is_archived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />,
-    color: "error" as const,
+    color: "warning" as const,
     onClick: () => onArchive(company),
   } : null;
 
@@ -121,7 +121,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onArch
                 onClick={() => { archiveAction.onClick(); setMenuAnchor(null); }}
                 sx={{ gap: 1.5, py: 1 }}
               >
-                <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
+                <ListItemIcon sx={{ minWidth: 0, color: "warning.main" }}>
                   {archiveAction.icon}
                 </ListItemIcon>
                 <ListItemText

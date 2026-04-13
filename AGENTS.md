@@ -46,7 +46,7 @@ Before changing routing, data fetching, or config:
 
 ## Repository layout (high level)
 
-- **`src/app/`** — App Router: route groups `(public)`, `(auth)`, `(dashboard)`; API route handlers under `src/app/api/`.
+- **`src/app/`** — App Router: route groups `(public)`, `(auth)`; plain `dashboard/` segment; API route handlers under `src/app/api/`.
 - **`src/components/`** — Feature and layout UI (prefer **named exports** for shared components).
   - **`src/components/forms/`** — All form components live here (not in `dashboard/` or co-located with trigger components).
     - `AddEditCompany.tsx`, `AddEditForm.tsx`, `AddEditJob.tsx` — dashboard CRUD forms.
