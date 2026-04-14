@@ -287,7 +287,7 @@ export default function JobsPage() {
               : "Adaugă un anunț nou pentru compania selectată."}
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Creează anunț
+            Creează anunț de muncă
           </Button>
         </Paper>
       ) : (
@@ -303,7 +303,7 @@ export default function JobsPage() {
       <EditSideDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editingJob ? `Editează: ${editingJob.title}` : "Creează anunț"}
+        title={editingJob ? `Editează: ${editingJob.title}` : "Creează anunț de muncă"}
         message={message}
         onMessageClose={() => setMessage(null)}
         width={540}

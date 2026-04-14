@@ -440,7 +440,7 @@ export const DashboardContent: React.FC<DashboardStats> = ({
       {/* ── Form responses chart ──────────────────────────────────────────── */}
       {formsEnabled && hasCompanies && (
         <ChartCard
-          title="Răspunsuri formulare — ultimele 6 luni"
+          title="Răspunsuri formulare"
           subtitle="Numărul de răspunsuri primite lunar"
           empty={!hasFormResponses}
           emptyLabel="Niciun răspuns în ultimele 6 luni"
@@ -461,7 +461,6 @@ export const DashboardContent: React.FC<DashboardStats> = ({
         </ChartCard>
       )}
 
-      <Divider />
 
       {/* ── Quick actions ─────────────────────────────────────────────────── */}
       <Box>

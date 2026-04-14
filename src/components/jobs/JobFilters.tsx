@@ -252,7 +252,7 @@ export const JobFilters: React.FC = () => {
 
       {/* Remote */}
       <Box>
-        <SectionHeader label="La distanță" open={open.remote} onToggle={() => toggle("remote")} />
+        <SectionHeader label="Remote" open={open.remote} onToggle={() => toggle("remote")} />
         <Collapse in={open.remote}>
           <Box sx={{ pb: 2 }}>
             <FormControlLabel
@@ -264,7 +264,20 @@ export const JobFilters: React.FC = () => {
                   size="small"
                 />
               }
-              label={<Typography variant="body2">Doar remote</Typography>}
+              label={<Typography variant="body2">Doar la distanță</Typography>}
+            />
+          </Box>
+          <Box sx={{ pb: 2 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={searchParams.get("remote") === "false"}
+                  onChange={(e) => updateParam("remote", e.target.checked ? "false" : null)}
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2">Doar la birou</Typography>}
             />
           </Box>
         </Collapse>

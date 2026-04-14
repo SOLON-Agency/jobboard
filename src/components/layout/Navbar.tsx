@@ -40,7 +40,8 @@ const CREAM_HOVER = "rgba(240, 235, 216, 0.12)";
 
 const navLinks = [
   { label: "Postează un anunț", href: "/anunt" },
-  { label: "Cum funcționează", href: "/how-it-works" },
+  // { label: "Cum funcționează", href: "/how-it-works" },
+  { label: "Vezi anunțuri", href: "/jobs" },
 ];
 
 export const Navbar: React.FC = () => {
@@ -178,7 +179,7 @@ export const Navbar: React.FC = () => {
                     href="/dashboard"
                     startIcon={<DashboardIcon sx={{ fontSize: "16px !important" }} />}
                     sx={{
-                      color: CREAM_MUTED,
+                      color: "white",
                       fontWeight: 400,
                       fontSize: "0.875rem",
                       px: 1.5,

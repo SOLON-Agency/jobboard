@@ -32,7 +32,7 @@ export const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
     }}
     spacing={{ xs: 2, md: 0 }}
     gap={{ md: 2 }}
-    sx={{ mb: 3, ...sx }}
+    sx={{ mb: 2, ...sx }}
   >
     <Box sx={{ minWidth: 0, flex: { md: alignTop ? 1 : "0 1 auto" } }}>
       {title}

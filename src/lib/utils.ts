@@ -62,9 +62,12 @@ export const formatSalary = (
   });
 
   if (min && max) return `${fmt.format(min)} – ${fmt.format(max)}`;
-  if (min) return `De la ${fmt.format(min)}`;
-  if (max) return `Până la ${fmt.format(max)}`;
-  return "Nespecificat";
+  if (min) return `de la ${fmt.format(min)}`;
+  // if (min) return `> ${fmt.format(min)}`;
+  if (max) return `până la ${fmt.format(max)}`;
+  // if (max) return `< ${fmt.format(max)}`;
+  // return "Salariu nespecificat";
+  return "";
 };
 
 export const formatDate = (date: string): string =>
@@ -142,6 +145,9 @@ export const jobTypeChipSx: Record<string, Record<string, string>> = {
     bgcolor: "rgba(195,174,97,0.12)",
   },
 };
+
+export const truncate = (text: string, maxLength = 100): string =>
+  text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
 
 export const experienceLevelLabels: Record<string, string> = {
   entry: "Junior",

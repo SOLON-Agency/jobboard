@@ -39,7 +39,7 @@ import {
   archiveCompany,
   type CompanyWithJobCount,
 } from "@/services/companies.service";
-import { slugify, parseSupabaseError } from "@/lib/utils";
+import { slugify, parseSupabaseError, truncate } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditCompany } from "@/components/forms/AddEditCompany";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
@@ -126,7 +126,7 @@ const CompanyActions: React.FC<CompanyActionsProps> = ({ company, onEdit, onArch
                 </ListItemIcon>
                 <ListItemText
                   primary={archiveAction.label}
-                  primaryTypographyProps={{ variant: "body2", color: "error.main", fontWeight: 500 }}
+                  primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }}
                 />
               </MuiMenuItem>
             </>
@@ -143,7 +143,7 @@ export default function CompanyPage() {
 
   const [companies, setCompanies] = useState<CompanyWithJobCount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived, setShowArchived] = useState(true);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyWithJobCount | null>(null);
@@ -360,22 +360,23 @@ export default function CompanyPage() {
               </Avatar>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                  <Typography variant="h5" noWrap>
+                <Stack direction="row" alignItems="flex-start" flexWrap="wrap" gap={0.75} sx={{ mb: 0.5 }}>
+                  <Typography variant="h5"
+                    sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
                     {company.name}
                   </Typography>
                   <Chip
                     label={company.role}
                     size="small"
                     variant="outlined"
-                    sx={{ fontSize: "0.65rem", height: 20, textTransform: "capitalize" }}
+                    sx={{ fontSize: "0.65rem", height: 20, textTransform: "capitalize", flexShrink: 0, mt: "4px" }}
                   />
                   {company.is_archived && (
                     <Chip
                       label="Arhivată"
                       size="small"
                       color="default"
-                      sx={{ fontSize: "0.65rem", height: 20 }}
+                      sx={{ fontSize: "0.65rem", height: 20, flexShrink: 0, mt: "4px" }}
                     />
                   )}
                 </Stack>
@@ -387,7 +388,8 @@ export default function CompanyPage() {
                   {company.location && (
                     <Stack direction="row" spacing={0.5} alignItems="center">
                       <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary"
+                        sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
                         {company.location}
                       </Typography>
                     </Stack>
@@ -401,13 +403,26 @@ export default function CompanyPage() {
                         href={company.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        sx={{ color: "text.secondary", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                        sx={{
+                          color: "text.secondary",
+                          textDecoration: "none",
+                          wordBreak: "break-all",
+                          overflowWrap: "break-word",
+                          "&:hover": { textDecoration: "underline" },
+                        }}
                       >
                         {company.website}
                       </Typography>
                     </Stack>
                   )}
                 </Stack>
+
+                {company.description && (
+                  <Typography variant="body2" color="text.secondary"
+                    sx={{ mt: 1, wordBreak: "break-word", overflowWrap: "break-word" }}>
+                    {truncate(company.description)}
+                  </Typography>
+                )}
               </Box>
 
               {/* Job count badge */}

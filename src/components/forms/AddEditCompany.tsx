@@ -70,8 +70,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
                   width: 72,
                   height: 72,
                   bgcolor: "background.default",
-                  border: "2px dashed",
-                  borderColor: "divider",
+                  borderRadius: 0,
                 }}
               >
                 <BusinessIcon sx={{ fontSize: 32, color: "text.secondary" }} />

@@ -15,9 +15,10 @@ type JobTagsJob = Pick<
 interface JobTagsProps {
   job: JobTagsJob;
   sx?: SxProps<Theme>;
+  hideLocation?: boolean;
 }
 
-export const JobTags: React.FC<JobTagsProps> = ({ job, sx }) => {
+export const JobTags: React.FC<JobTagsProps> = ({ job, sx, hideLocation = false }) => {
   const { job_type, experience_level, is_remote, location } = job;
 
   const hasExperience = experience_level && experience_level.length > 0;
@@ -45,7 +46,7 @@ export const JobTags: React.FC<JobTagsProps> = ({ job, sx }) => {
       {is_remote && (
         <Chip label="Remote" size="small" color="info" variant="outlined" />
       )}
-      {location && (
+      {location && !hideLocation && (
         <Chip
           icon={<LocationOnOutlinedIcon />}
           label={location}

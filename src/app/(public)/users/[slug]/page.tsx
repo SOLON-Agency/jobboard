@@ -86,6 +86,19 @@ export default async function PublicProfilePage({ params }: Props) {
     getProfileSkills(supabase, profile.id).catch(() => [] as ProfileSkillWithName[]),
   ]);
 
+  // Build a signed download URL so browsers trigger Save-As instead of opening inline.
+  // The public URL format is: .../storage/v1/object/public/cvs/<path>
+  let cvDownloadUrl: string | null = profile.cv_url;
+  if (profile.cv_url) {
+    const pathMatch = profile.cv_url.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
+    if (pathMatch) {
+      const { data } = await supabase.storage
+        .from("cvs")
+        .createSignedUrl(pathMatch[1], 300, { download: true });
+      if (data?.signedUrl) cvDownloadUrl = data.signedUrl;
+    }
+  }
+
   const experienceLabel = profile.experience_level
     ? (experienceLevelLabels[
         profile.experience_level as keyof typeof experienceLevelLabels
@@ -193,13 +206,12 @@ export default async function PublicProfilePage({ params }: Props) {
               </Tooltip>
 
               {/* CV download */}
-              {profile.cv_url && (
+              {cvDownloadUrl && (
                 <>
                   <Button
                     component="a"
-                    href={profile.cv_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={cvDownloadUrl}
+                    download
                     variant="contained"
                     size="medium"
                     endIcon={<DownloadIcon sx={{ fontSize: "16px !important" }} />}
@@ -212,15 +224,13 @@ export default async function PublicProfilePage({ params }: Props) {
                       display: { xs: "none", sm: "inline-flex" },
                     }}
                   >
-                    <Typography sx={{ display: { sm: "none", md: "inline-flex" } }}>Descarcă CV</Typography>
-                    <Typography sx={{ display: { xs: "inline-flex", md: "none" } }}>CV</Typography>
+                    Descarcă CV
                   </Button>
                   <Tooltip title="Descarcă CV">
                     <Button
                       component="a"
-                      href={profile.cv_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={cvDownloadUrl}
+                      download
                       variant="contained"
                       size="medium"
                       sx={{
@@ -292,7 +302,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: "background.paper",
+                  bgcolor: "background.default",
                   border: "2px solid",
                   borderColor: "divider",
                 }}

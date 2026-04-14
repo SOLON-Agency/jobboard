@@ -33,7 +33,7 @@ import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSupabase } from "@/hooks/useSupabase";
-import { jobTypeLabels, experienceLevelLabels, parseSupabaseError } from "@/lib/utils";
+import { jobTypeLabels, experienceLevelLabels, parseSupabaseError, truncate } from "@/lib/utils";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditForm, type FormBuilderData, type FormField } from "@/components/forms/AddEditForm";
@@ -228,6 +228,8 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
         const { data } = await supabase
           .from("forms")
           .select("id, name")
+          .eq("status", "published")
+          .eq("is_archived", false)
           .eq("company_id", companyId);
         setFormsList(data ?? []);
       },
@@ -279,6 +281,16 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [supabase, selectedCompanyId, loadForms, setValue],
     );
+
+    useEffect(() => {
+      const subscription = watch((value, { name, type }) => {
+        // If "is_remote" changed and is true, clear the location.
+        if (name === "is_remote" && value.is_remote === true) {
+          setValue("location", "", { shouldValidate: true, shouldDirty: true });
+        }
+      });
+      return () => subscription.unsubscribe();
+    }, [watch, setValue]);
 
     return (
       <Box component="form" onSubmit={(e) => e.preventDefault()}>
@@ -332,7 +344,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
           />
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <TextField {...register("location")} label="Locație" fullWidth />
+            <TextField {...register("location")} disabled={watch("is_remote")} label="Locație" fullWidth />
             <Controller
               name="is_remote"
               control={control}
@@ -356,7 +368,6 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                 <FormControl sx={{ flex: 1, maxWidth: 150 }}>
                   <InputLabel>Tip de contract</InputLabel>
                   <Select {...field} label="Tip de contract" value={field.value ?? ""}>
-                    <MenuItem value="">Nespecificat</MenuItem>
                     {Object.entries(jobTypeLabels).map(([val, label]) => (
                       <MenuItem key={val} value={val}>
                         {label}
@@ -495,13 +506,13 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                     ) : (
                       <Typography
                         variant="body2"
-                        sx={{ flex: 1, cursor: "text" }}
+                        sx={{ flex: 1, cursor: "text", wordBreak: "break-word", overflowWrap: "break-word" }}
                         onDoubleClick={() => {
                           setEditingBenefitId(benefit.id);
                           setEditingBenefitTitle(benefit.title);
                         }}
                       >
-                        {benefit.title}
+                        {truncate(benefit.title)}
                       </Typography>
                     )}
 
@@ -621,13 +632,13 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             render={({ field }) => (
               <FormControl component="fieldset">
                 <FormLabel component="h3" sx={{ mb: 0, fontSize: "0.875rem", fontWeight: 600 }}>
-                  Unde vor aplica candidații?
+                  Modalitatea de aplicare a candidaților
                 </FormLabel>
                 <RadioGroup row {...field}>
                   <FormControlLabel
                     value="url"
                     control={<Radio size="small" />}
-                    label="URL extern sau email"
+                    label="website sau email"
                   />
                   {appSettings.features.forms && !wizardMode && (
                     <FormControlLabel
@@ -636,7 +647,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                       sx={{ marginBottom: 0 }}
                       label={
                         <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <span>Formular intern personalizat</span>
+                          <span>formular intern personalizat</span>
                           <Tooltip
                             title="Creează, gestionează și publică formulare de aplicare complet gratuit. Pentru a salva timp, poți refolosi același formular pentru multiple anunțuri de muncă."
                             placement="top"
@@ -659,12 +670,13 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             <TextField
               {...register("application_url")}
               label="Unde se va aplica?"
+              sx={{ mt: 0 }}
               fullWidth
               placeholder="https://... sau recrutare@companie.ro"
               error={!!errors.application_url}
               helperText={
                 errors.application_url?.message ??
-                "Acceptă un URL (https://...) sau o adresă de email — candidații vor aplica direct aici"
+                "Introduceți un URL (https://...) sau o adresă de email — candidații vor aplica direct aici"
               }
             />
           )}

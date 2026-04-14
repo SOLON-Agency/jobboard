@@ -58,7 +58,7 @@ export interface HeroCounts {
 
 // ── Pills ─────────────────────────────────────────────────────────────────────
 
-const pills = ["Acces gratuit", "Aplicare directă", "Alerte inteligente"] as const;
+const pills = ["Acces gratuit", "Aplicare rapidă", "Alerte inteligente"] as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 

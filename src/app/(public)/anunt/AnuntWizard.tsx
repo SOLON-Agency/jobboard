@@ -909,7 +909,7 @@ export const AnuntWizard: React.FC = () => {
             {step === 0 && (
               <>
                 <Typography variant="h5" fontWeight={800} sx={{ mb: 0.5 }}>
-                  Detalii anunț
+                  Detalii anunț de angajare
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Descrie postul pe care îl oferi. Cu cât ești mai specific, cu atât atragi candidații mai potriviți.
@@ -1061,14 +1061,7 @@ export const AnuntWizard: React.FC = () => {
           <Box
             sx={{
               // Mobile: fixed bar
-              position: { xs: "fixed", md: "static" },
-              bottom: { xs: 0, md: "auto" },
-              left: { xs: 0, md: "auto" },
-              right: { xs: 0, md: "auto" },
-              zIndex: { xs: "appBar", md: "auto" },
-              bgcolor: { xs: "background.paper", md: "transparent" },
-              borderTop: { xs: "1px solid", md: "none" },
-              borderColor: { xs: "divider", md: "transparent" },
+  
               px: { xs: 2, md: 0 },
               py: { xs: 1.5, md: 0 },
               mt: { xs: 0, md: 3 },

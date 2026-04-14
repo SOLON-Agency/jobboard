@@ -19,10 +19,13 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import type { Tables } from "@/types/database";
-import { formatSalary, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
+import { formatSalary, jobTypeLabels, jobTypeChipSx, truncate } from "@/lib/utils";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
+import type { BenefitItem } from "@/services/benefits.service";
+import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
+import { JobTags } from "./JobTags";
 
-type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
+type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> | null; benefits_count: number };
 
 const AUTO_MS = 5500;
 const SWIPE_MIN_PX = 48;
@@ -299,13 +302,15 @@ export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jo
             {visible.map((job) => (
               <Paper
                 key={job.id}
+                component={Link}
+                href={`/jobs/${job.slug}`}
                 variant="outlined"
                 sx={{
                   p: 2.5,
                   borderRadius: 3,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1.5,
+                  gap: 1,
                   minWidth: 0,
                   transition: "border-color 0.2s, box-shadow 0.2s",
                   "&:hover": {
@@ -314,74 +319,47 @@ export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jo
                   },
                 }}
               >
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Stack direction="row" justifyContent="flex-start" alignItems="flex-start">
                   <Avatar
                     src={job.companies?.logo_url ?? undefined}
                     sx={{
                       width: 44,
                       height: 44,
                       bgcolor: "background.default",
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 2,
+                      borderRadius: 0,
                     }}
                   >
                     <WorkOutlineIcon sx={{ fontSize: 20, color: "text.secondary" }} />
                   </Avatar>
+                  <Stack direction="column" spacing={0} alignItems="flex-start" sx={{ ml: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={700}>
+                      {truncate(job.title, 20)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {truncate(job.companies?.name ?? "", 30)}
+                    </Typography>
+                  </Stack>
                 </Stack>
 
-                <Box>
-                  {job.job_type && (
-                    <Chip
-                      label={jobTypeLabels[job.job_type] ?? job.job_type}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: "0.68rem",
-                        height: 20,
-                        mb: 1,
-                        ...jobTypeChipSx[job.job_type],
-                      }}
-                    />
-                  )}
-                  <Typography
-                    component={Link}
-                    href={`/jobs/${job.slug}`}
-                    variant="subtitle1"
-                    fontWeight={700}
-                    sx={{
-                      display: "-webkit-box",
-                      textDecoration: "none",
-                      color: "text.primary",
-                      lineHeight: 1.35,
-                      overflow: "hidden",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      "&:hover": { color: "primary.main" },
-                    }}
-                  >
-                    {job.title}
+                <JobTags job={job} sx={{ mb: 1 }} />
+
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatSalary(job.salary_min, job.salary_max)}
                   </Typography>
-                </Box>
-
-                <Typography variant="body2" color="text.secondary">
-                  {formatSalary(job.salary_min, job.salary_max, job.salary_currency)}
-                </Typography>
-
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: "auto" }}>
-                  {job.location ? (
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-                      <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary", flexShrink: 0 }} />
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {job.location}
-                      </Typography>
-                    </Stack>
-                  ) : (
-                    <Box />
-                  )}
-                  <ApplyButton job={job} size="small" sx={{ px: 2, fontSize: "0.72rem", flexShrink: 0 }} />
+                  {job.benefits_count > 0 && (
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <CardGiftcardOutlinedIcon sx={{ fontSize: 16, color: "success.main" }} />
+                        <Typography variant="body2" fontWeight={600} color="success.main">
+                          {job.benefits_count} {job.benefits_count === 1 ? "beneficiu" : "beneficii"}
+                        </Typography>
+                      </Stack>
+                    )}
                 </Stack>
+                
+                {/* <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: "auto" }}>
+                  <ApplyButton job={job} size="small" sx={{ px: 2, fontSize: "0.72rem", flexShrink: 0 }} />
+                </Stack> */}
               </Paper>
             ))}
           </motion.div>

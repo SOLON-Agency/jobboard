@@ -213,7 +213,7 @@ export const JobList: React.FC<JobListProps> = ({
   const activeView = isControlled ? "list" : view;
 
   return (
-    <Stack direction="column" gap={1} sx={{ mb: 2 }}>
+    <Stack direction="column" gap={1} sx={{ mb: 0 }}>
       {/* Controls bar */}
       {shouldShowControls && (
         <Stack

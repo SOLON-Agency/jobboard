@@ -18,7 +18,7 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import type { Tables } from "@/types/database";
-import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx } from "@/lib/utils";
+import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx, truncate } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
@@ -69,28 +69,21 @@ export const JobCard: React.FC<JobCardProps> = ({
             height: 44,
             flexShrink: 0,
             bgcolor: "background.default",
-            border: "1px solid",
-            borderColor: "divider",
+            borderRadius: 0,
           }}
         >
           <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 20 }} />
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+          <Stack direction="row" alignItems="flex-start" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
             <Typography
               variant="subtitle1"
               fontWeight={700}
-              sx={{
-                overflow: "hidden",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                lineHeight: 1.3,
-              }}
+              sx={{ lineHeight: 1.3, wordBreak: "break-word", overflowWrap: "break-word" }}
             >
-              {job.title}
+              {truncate(job.title)}
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flexShrink: 0 }}>
               {job.job_type && (
                 <Chip
                   label={jobTypeLabels[job.job_type] ?? job.job_type}
@@ -118,19 +111,21 @@ export const JobCard: React.FC<JobCardProps> = ({
               href={`/companies/${job.companies.slug}`}
               variant="body2"
               color="text.secondary"
-              noWrap
               sx={{
                 position: "relative",
                 zIndex: 2,
                 textDecoration: "none",
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
                 "&:hover": { color: "primary.main" },
               }}
             >
-              {job.companies.name}
+              {truncate(job.companies.name)}
             </Typography>
           ) : (
-            <Typography variant="body2" color="text.secondary" noWrap>
-              {job.companies?.name}
+            <Typography variant="body2" color="text.secondary"
+              sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+              {truncate(job.companies?.name ?? "")}
             </Typography>
           )}
         </Box>

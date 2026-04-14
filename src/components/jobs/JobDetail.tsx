@@ -142,7 +142,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
           <Typography variant="caption" color="text.secondary">
             {job.published_at ? formatDate(job.published_at) : "Ciornă"}
           </Typography>
-          <JobTags job={job} sx={{ ml: 1 }} />
+          <JobTags job={job} sx={{ ml: 1 }} hideLocation={true} />
         </Stack>
 
 
@@ -299,7 +299,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               {/* <CardGiftcardOutlinedIcon sx={{ color: "success.main", fontSize: 22 }} /> */}
               <Typography variant="h3" fontWeight={700}>Beneficii </Typography>
               <Chip
-                label={benefits.length}
+                icon={<CardGiftcardOutlinedIcon sx={{ fontSize: "12px !important" }} />}
+                label={benefits.length === 1 ? "1 beneficiu" : `${benefits.length} beneficii`}
                 size="small"
                 color="success"
                 variant="outlined"
@@ -313,12 +314,9 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                   <Typography
                     variant="body2"
                     fontWeight={500}
-                    title={benefit.title.length > 50 ? benefit.title : undefined}
-                    sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}
+                    sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}
                   >
-                    {benefit.title.length > 80
-                      ? `${benefit.title.slice(0, 80)}…`
-                      : benefit.title}
+                    {benefit.title}
                   </Typography>
                 </Stack>
               ))}
@@ -357,9 +355,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               sx={{
                 width: 64,
                 height: 64,
-                bgcolor: "background.paper",
-                border: "1px solid",
-                borderColor: "divider",
+                bgcolor: "background.default",
+                borderRadius: 0,
                 mb: 1.5,
               }}
             >

@@ -220,11 +220,11 @@ export const EditSkills: React.FC<EditSkillsProps> = ({
                 borderRadius: 2,
                 border: "1px solid",
                 borderColor: "divider",
-                overflow: "hidden",
                 "&:hover": { bgcolor: "action.hover" },
               }}
             >
-              <Typography variant="body2" fontWeight={500} sx={{ flex: 1, minWidth: 0 }} noWrap>
+              <Typography variant="body2" fontWeight={500}
+                sx={{ flex: 1, minWidth: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>
                 {item.skill.name}
               </Typography>
 

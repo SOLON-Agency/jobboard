@@ -24,6 +24,8 @@ import {
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
@@ -34,8 +36,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getFormWithFields } from "@/services/forms.service";
 import { trackCompanyEngage } from "@/services/companies.service";
-import { parseSupabaseError } from "@/lib/utils";
+import { parseSupabaseError, truncate } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 import type { Tables } from "@/types/database";
+import { JobTags } from "../jobs/JobTags";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,7 +49,7 @@ type FormWithFields = Tables<"forms"> & { form_fields: FormField[] };
 export interface ApplicationFormProps {
   job: Pick<
     Tables<"job_listings">,
-    "id" | "title" | "application_form_id" | "company_id" | "location"
+    "id" | "title" | "description" | "application_form_id" | "company_id" | "location" | "job_type" | "experience_level" | "is_remote"
   >;
   company?: Pick<Tables<"companies">, "name" | "logo_url" | "slug"> | null;
   open: boolean;
@@ -461,30 +465,25 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
             sx={{
               width: 52,
               height: 52,
-              bgcolor: "action.hover",
-              border: "1px solid",
-              borderColor: "divider",
+              bgcolor: "background.default",
+              borderRadius: 0,
               flexShrink: 0,
             }}
           >
             <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 24 }} />
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.3 }}>
-              {job.title}
-            </Typography>
+            
+            <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.5 }}>
+              <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.3, mr: 2 }}>
+                {job.title}
+              </Typography>
+              <JobTags job={job} sx={{ ml: 2 }} />
+            </Stack>
             {company?.name && (
               <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>
                 {company.name}
               </Typography>
-            )}
-            {job.location && (
-              <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.5 }}>
-                <LocationOnOutlinedIcon sx={{ fontSize: 13, color: "text.disabled" }} />
-                <Typography variant="caption" color="text.disabled" noWrap>
-                  {job.location}
-                </Typography>
-              </Stack>
             )}
           </Box>
         </Stack>
@@ -521,24 +520,62 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           </Alert>
         ) : (
           <Stack spacing={2.5}>
-            {formSpec?.description && (
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  {formSpec.description.length > 500 && !descriptionExpanded
-                    ? `${formSpec.description.slice(0, 500)}...`
-                    : formSpec.description}
-                </Typography>
-                {formSpec.description.length > 500 && (
-                  <Button
-                    size="small"
-                    onClick={() => setDescriptionExpanded((prev) => !prev)}
-                    sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: "none", fontWeight: 600 }}
-                  >
-                    {descriptionExpanded ? "Citește mai puțin" : "Citește mai mult"}
-                  </Button>
-                )}
-              </Box>
-            )}
+            {job.description && (() => {
+              const isHtml = job.description.trimStart().startsWith("<");
+              const plainText = isHtml
+                ? job.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+                : job.description;
+              const isLong = plainText.length > 500;
+
+              return (
+                <Box>
+                  {descriptionExpanded ? (
+                    isHtml ? (
+                      <Box
+                        dangerouslySetInnerHTML={{ __html: job.description }}
+                        sx={{
+                          fontSize: "0.875rem",
+                          "& p": { mb: 1, lineHeight: 1.7, color: "text.secondary" },
+                          "& ul, & ol": { pl: 2.5, mb: 1, color: "text.secondary" },
+                          "& li": { mb: 0.25 },
+                          "& strong": { color: "text.primary", fontWeight: 700 },
+                          "& a": { color: "primary.main" },
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          fontSize: "0.875rem",
+                          color: "text.secondary",
+                          "& p": { mb: 1, lineHeight: 1.7 },
+                          "& ul, & ol": { pl: 2.5, mb: 1 },
+                          "& li": { mb: 0.25 },
+                          "& strong": { color: "text.primary", fontWeight: 700 },
+                          "& a": { color: "primary.main" },
+                        }}
+                      >
+                        <ReactMarkdown>{job.description}</ReactMarkdown>
+                      </Box>
+                    )
+                  ) : (
+                    <Typography variant="body2" color="text.secondary"
+                      sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+                      {truncate(plainText, 500)}
+                    </Typography>
+                  )}
+                  {isLong && (
+                    <Button
+                      size="small"
+                      onClick={() => setDescriptionExpanded((prev) => !prev)}
+                      sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: "none", fontWeight: 600 }}
+                      endIcon={descriptionExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />} 
+                    >
+                      {descriptionExpanded ? "Citește mai puțin" : "Citește toată descrierea"}
+                    </Button>
+                  )}
+                </Box>
+              );
+            })()}
             {formSpec?.form_fields.map((field) => (
               <FormFieldInput
                 key={field.id}

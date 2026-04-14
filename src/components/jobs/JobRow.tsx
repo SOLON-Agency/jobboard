@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { truncate } from "@/lib/utils";
 import Link from "next/link";
 import {
   Paper,
@@ -76,9 +77,7 @@ export const JobRow: React.FC<JobRowProps> = ({
           height: { xs: 44, sm: 52 },
           flexShrink: 0,
           bgcolor: "background.default",
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 2,
+          borderRadius: 0,
         }}
       >
         <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 22 }} />
@@ -120,12 +119,14 @@ export const JobRow: React.FC<JobRowProps> = ({
           ))}
         </Stack>
 
-        <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ lineHeight: 1.3, mb: 0.5 }}>
-          {job.title}
+        <Typography variant="subtitle2" fontWeight={700}
+          sx={{ lineHeight: 1.3, mb: 0.5, wordBreak: "break-word", overflowWrap: "break-word" }}>
+          {truncate(job.title)}
         </Typography>
 
-        <Typography variant="caption" color="text.secondary" noWrap>
-          {job.companies?.name}
+        <Typography variant="caption" color="text.secondary"
+          sx={{ wordBreak: "break-word", overflowWrap: "break-word", lineHeight: 0.75 }}>
+          {truncate(job.companies?.name ?? "", 50)}
         </Typography>
 
         {/* Salary — visible on mobile only, shown in right column on sm+ */}

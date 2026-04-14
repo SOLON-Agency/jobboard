@@ -35,7 +35,7 @@ import {
   reorderEducationItems,
   type EducationItem,
 } from "@/services/education.service";
-import { parseSupabaseError } from "@/lib/utils";
+import { parseSupabaseError, truncate } from "@/lib/utils";
 import { educationSchema, type EducationFormData } from "./validations/education.schema";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -221,10 +221,11 @@ export const AddEditEducation: React.FC<AddEditEducationProps> = ({
             {sortedItems.map((item, idx) => (
               <Paper key={item.id} variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 2 }}>
                 <Stack direction="row" alignItems="flex-start" spacing={1}>
-                  <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-                    <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.25, minWidth: 0 }}>
-                      <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ flex: 1, minWidth: 0 }}>
-                        {item.title}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Stack direction="row" alignItems="flex-start" flexWrap="wrap" gap={0.75} sx={{ mb: 0.25 }}>
+                      <Typography variant="subtitle2" fontWeight={700}
+                        sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+                        {truncate(item.title)}
                       </Typography>
                       {item.is_current && (
                         <Chip
@@ -232,12 +233,13 @@ export const AddEditEducation: React.FC<AddEditEducationProps> = ({
                           size="small"
                           color="success"
                           variant="outlined"
-                          sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700, flexShrink: 0 }}
+                          sx={{ height: 18, fontSize: "0.65rem", fontWeight: 700, flexShrink: 0, mt: "2px" }}
                         />
                       )}
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {item.institution}
+                    <Typography variant="body2" color="text.secondary"
+                      sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+                      {truncate(item.institution, 80)}
                       {(item.start_year || item.end_year) && (
                         <>
                           {" "}
@@ -246,6 +248,12 @@ export const AddEditEducation: React.FC<AddEditEducationProps> = ({
                         </>
                       )}
                     </Typography>
+                    {item.description && (
+                      <Typography variant="caption" color="text.disabled"
+                        sx={{ mt: 0.25, display: "block", wordBreak: "break-word", overflowWrap: "break-word" }}>
+                        {truncate(item.description)}
+                      </Typography>
+                    )}
                   </Box>
 
                   <Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>

@@ -193,7 +193,7 @@ export default function ApplicationsPage() {
                         bgcolor: "action.hover",
                       }}
                     >
-                      <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+                      <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ display: "block", mb: .5, mt: 1 }}>
                         Răspunsuri formular
                       </Typography>
                       <Box

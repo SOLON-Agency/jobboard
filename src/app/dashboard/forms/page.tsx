@@ -44,7 +44,7 @@ import {
   archiveForm,
   getFormWithFields,
 } from "@/services/forms.service";
-import { parseSupabaseError, formatDate } from "@/lib/utils";
+import { parseSupabaseError, formatDate, truncate } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import {
   AddEditForm,
@@ -385,9 +385,17 @@ export default function FormsPage() {
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-                  <Typography variant="subtitle2" fontWeight={700} noWrap>
-                    {form.name}
-                  </Typography>
+                  <Stack direction="column" spacing={0.5}>
+                    <Typography variant="subtitle2" fontWeight={700}
+                      sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+                      {truncate(form.name)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary"
+                      sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
+                      {truncate(form.description ?? "")}
+                    </Typography>
+                  </Stack>
+
                   <Chip
                     label={form.status}
                     size="small"

@@ -29,7 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
-import { experienceLevelLabels } from "@/lib/utils";
+import { experienceLevelLabels, truncate } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { AddEditEducation } from "@/components/forms/AddEditEducation";
@@ -41,6 +41,7 @@ import { getProfileSkills, type ProfileSkillWithName } from "@/services/skills.s
 import type { Tables } from "@/types/database";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const schema = z.object({
   email: z.string().email("Introdu o adresă email validă"),
@@ -193,6 +194,20 @@ export default function ProfilePage() {
     [user, supabase, loadProfile]
   );
   
+  const handleCvDownload = useCallback(async () => {
+    if (!profile?.cv_url) return;
+    const pathMatch = profile.cv_url.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
+    if (!pathMatch) { window.open(profile.cv_url, "_blank"); return; }
+    const { data } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(pathMatch[1], 300, { download: true });
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.click();
+    }
+  }, [profile, supabase]);
+
   const openViewProfile = () => {
     if (!profile) return;
     window.open(`/users/${profile.slug}`, "_blank");
@@ -303,7 +318,7 @@ export default function ProfilePage() {
           {profile.bio && (
             <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
               <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
-                {profile.bio}
+                {truncate(profile.bio ?? "")}
               </Typography>
             </Box>
           )}
@@ -313,8 +328,15 @@ export default function ProfilePage() {
               CV / Curriculum Vitae
             </Typography>
             {profile.cv_url ? (
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Typography variant="body2" color="text.secondary">CV încărcat</Typography>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleCvDownload}
+                >
+                  Descarcă CV
+                </Button>
                 <Button
                   variant="outlined"
                   size="small"
@@ -418,7 +440,6 @@ export default function ProfilePage() {
                 <FormControl fullWidth>
                   <InputLabel>Nivel de experiență</InputLabel>
                   <Select {...field} label="Nivel de experiență" value={field.value ?? ""}>
-                    <MenuItem value="">Nespecificat</MenuItem>
                     {Object.entries(experienceLevelLabels).map(([val, label]) => (
                       <MenuItem key={val} value={val}>{label}</MenuItem>
                     ))}

@@ -306,9 +306,8 @@ export default async function CompanyPage({ params }: Props) {
                   sx={{
                     width: 72,
                     height: 72,
-                    bgcolor: "background.paper",
-                    border: "1px solid",
-                    borderColor: "divider",
+                    bgcolor: "background.default",
+                    borderRadius: 0,
                   }}
                 >
                   <BusinessIcon sx={{ fontSize: 36, color: "text.secondary" }} />

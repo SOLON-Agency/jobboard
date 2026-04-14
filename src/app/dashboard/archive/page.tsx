@@ -47,7 +47,7 @@ const jobStatusColor: Record<string, "default" | "success" | "warning"> = {
   archived: "default",
 };
 
-function EmptyArchive({ label }: { label: string }) {
+function EmptyArchive({ title = "Niciun element arhivat", description = "Elementele pe care le arhivezi vor apărea aici." }: { title?: string; description?: string }) {
   return (
     <Paper
       sx={{
@@ -60,10 +60,10 @@ function EmptyArchive({ label }: { label: string }) {
     >
       <InboxIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
       <Typography variant="h6" sx={{ mb: 0.5 }}>
-        Niciun {label} arhivat
+        {title}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Elementele pe care le arhivezi vor apărea aici.
+        {description}
       </Typography>
     </Paper>
   );
@@ -137,11 +137,6 @@ function ArchiveContent() {
     <>
       <DashboardPageHeader
         title={<Typography variant="h3">Arhivă</Typography>}
-        subtitle={
-          <Typography variant="body2" color="text.secondary">
-            Elementele arhivate nu apar în paginile principale ale dashboard-ului.
-          </Typography>
-        }
       />
 
       <Tabs
@@ -187,7 +182,7 @@ function ArchiveContent() {
       {/* ── Companies tab ──────────────────────────────────────────────────── */}
       {tab === 0 && (
         loading ? <RowSkeleton /> :
-        companies.length === 0 ? <EmptyArchive label="anunț" /> : (
+        companies.length === 0 ? <EmptyArchive title="Nicio companie arhivată" description="Companiile pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
           <Stack spacing={1.5}>
             {companies.map((company) => (
               <Paper
@@ -230,7 +225,7 @@ function ArchiveContent() {
       {/* ── Jobs tab ───────────────────────────────────────────────────────── */}
       {tab === 1 && (
         loading ? <RowSkeleton /> :
-        jobs.length === 0 ? <EmptyArchive label="anunț" /> : (
+        jobs.length === 0 ? <EmptyArchive title="Niciun anunț arhivat" description="Anunțurile pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
           <Stack spacing={1.5}>
             {jobs.map((job) => (
               <Paper
@@ -281,7 +276,7 @@ function ArchiveContent() {
       {/* ── Forms tab ──────────────────────────────────────────────────────── */}
       {tab === 2 && (
         loading ? <RowSkeleton /> :
-        forms.length === 0 ? <EmptyArchive label="formular" /> : (
+        forms.length === 0 ? <EmptyArchive title="Niciun formular arhivat" description="Formulele pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
           <Stack spacing={1.5}>
             {forms.map((form) => (
               <Paper

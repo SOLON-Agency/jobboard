@@ -16,37 +16,37 @@ import appSettings from "@/config/app.settings.json";
 
 const features = [
   {
-    icon: <SearchIcon sx={{ fontSize: 28 }} />,
-    title: "Căutare avansată",
-    description:
-      "Filtrează după locație, salariu, nivel de experiență, tip de contract și altele. Găsești exact ce cauți în câteva secunde.",
-    color: "#3E5C76",
-    lightBg: "rgba(62,92,118,0.06)",
-    border: "rgba(62,92,118,0.15)",
-  },
-  {
-    icon: <BusinessIcon sx={{ fontSize: 28 }} />,
-    title: "Profiluri de companii",
-    description:
-      "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile într-un singur loc.",
-    color: "#c3ae61",
-    lightBg: "rgba(195,174,97,0.06)",
-    border: "rgba(195,174,97,0.2)",
-  },
-  {
     icon: <ArticleOutlinedIcon sx={{ fontSize: 28 }} />,
-    title: "Aplicare directă",
+    title: "Gestionare profil",
     description:
-      "Trimite candidatura direct prin platformă cu formulare inteligente - daca ai profilul completat!",
+      `Gestionează profilul tău și toate aplicațiile tale la toate joburile juridice - direct prin platforma ${appSettings.name}.`,
     color: "#2d6a4f",
     lightBg: "rgba(45,106,79,0.06)",
     border: "rgba(45,106,79,0.15)",
   },
   {
+    icon: <BusinessIcon sx={{ fontSize: 28 }} />,
+    title: "Profiluri de companii",
+    description:
+      "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile ale unei companii într-un singur loc.",
+    color: "#c3ae61",
+    lightBg: "rgba(195,174,97,0.06)",
+    border: "rgba(195,174,97,0.2)",
+  },
+  {
+    icon: <SearchIcon sx={{ fontSize: 28 }} />,
+    title: "Căutare avansată",
+    description:
+      "Filtrează după locație, salariu, nivel de experiență, tip de contract, beneficii și altele. Găsești exact ce cauți.",
+    color: "#3E5C76",
+    lightBg: "rgba(62,92,118,0.06)",
+    border: "rgba(62,92,118,0.15)",
+  },
+  {
     icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
     title: "Alerte inteligente",
     description:
-      "Salvează filtrele ca alerte și primești notificări când apar noi poziții care corespund criteriilor tale.",
+      "Salvează filtrele de căutare ca alerte și primești notificări când apar noi poziții care corespund criteriilor tale.",
     color: "#748CAB",
     lightBg: "rgba(116,140,171,0.06)",
     border: "rgba(116,140,171,0.15)",
@@ -56,9 +56,9 @@ const features = [
 // ── How it works steps ────────────────────────────────────────────────────────
 
 const steps = [
-  { number: "01", title: "Creează un cont gratuit", body: "Înregistrare simplă — fără card, fără costuri ascunse." },
-  { number: "02", title: "Completează-ți profilul", body: "Adaugă experiența, educația și competențele pentru a fi remarcat." },
-  { number: "03", title: "Aplică cu un singur click", body: "Găsește postul potrivit și trimite candidatura direct din platformă." },
+  { number: "01", title: "Creează un cont gratuit", body: "Înregistrare rapidă, simplă și gratuită - fără abonamente sau costuri ascunse." },
+  // { number: "02", title: "Completează-ți profilul", body: "Adaugă experiența, educația și competențele pentru a fi remarcat de angajatori." },
+  { number: "02", title: "Aplică instant", body: `Găsește postul potrivit pentru tine și aplică instant direct din platforma ${appSettings.name}.` },
 ];
 
 // ── Framer variants ───────────────────────────────────────────────────────────
@@ -85,10 +85,10 @@ export const FeaturesSection: React.FC = () => (
             variant="overline"
             sx={{ color: "primary.main", fontWeight: 700, letterSpacing: "0.2em", display: "block", mb: 1.5 }}
           >
-            De ce să alegi {appSettings.name}
+            De ce să alegi {appSettings.name}?
           </Typography>
           <Typography variant="h2" sx={{ mb: 2 }}>
-            Tot ce ai nevoie pentru{" "}
+            O platformă inteligentă pentru{" "}
             <Box
               component="span"
               sx={{
@@ -101,9 +101,9 @@ export const FeaturesSection: React.FC = () => (
               cariera ta juridică
             </Box>
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: "auto" }}>
+          {/* <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: "auto" }}>
             O platformă inteligentă construită special pentru juriști
-          </Typography>
+          </Typography> */}
         </Box>
 
         <Box
@@ -190,26 +190,29 @@ export const FeaturesSection: React.FC = () => (
 
       <Container maxWidth="lg" sx={{ position: "relative" }}>
         <Box sx={{ textAlign: "center", mb: 8 }}>
-          <Typography
+          {/* <Typography
             variant="overline"
             sx={{ color: "rgba(195,174,97,0.8)", fontWeight: 700, letterSpacing: "0.2em", display: "block", mb: 1.5 }}
           >
             Simplu și rapid
-          </Typography>
+          </Typography> */}
           <Typography variant="h2" sx={{ color: "#F0EBD8", mb: 2 }}>
-            Cum funcționează
+            Cum funcționează?
           </Typography>
           <Typography sx={{ color: "rgba(240,235,216,0.55)", maxWidth: 480, mx: "auto" }}>
-            Trei pași simpli te separă de următoarea oportunitate din cariera ta juridică.
+            Doi pași simpli te separă de următoarea oportunitate juridică.
           </Typography>
         </Box>
 
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+            gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
             gap: 4,
+            px: 8,
             mb: 8,
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
           {steps.map((step, i) => (
