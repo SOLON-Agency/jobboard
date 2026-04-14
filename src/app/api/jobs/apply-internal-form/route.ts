@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
   const { data: job, error: jobErr } = await supabase
     .from("job_listings")
-    .select("id, company_id, application_form_id, status, is_archived")
+    .select("id, title, company_id, application_form_id, status, is_archived")
     .eq("id", jobId)
     .single();
 
@@ -165,6 +165,31 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  // Fire-and-forget: notify the applicant by email.
+  // Errors here must not block the response.
+  void (async () => {
+    try {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("name")
+        .eq("id", job.company_id)
+        .maybeSingle();
+
+      const companyLabel = company?.name ? ` la ${company.name}` : "";
+
+      await supabase.functions.invoke("notifications", {
+        body: {
+          recipient: user.id,
+          channel: "email",
+          subject: "Candidatura ta a fost înregistrată",
+          body: `Candidatura ta pentru postul de <strong>${job.title}</strong>${companyLabel} a fost înregistrată cu succes. Vei fi contactat în curând de echipa angajatorului.`,
+        },
+      });
+    } catch (err) {
+      console.warn("apply-internal-form: notification failed silently:", err);
+    }
+  })();
 
   return NextResponse.json({ ok: true as const });
 }

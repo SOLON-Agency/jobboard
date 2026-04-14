@@ -458,6 +458,8 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         </Stack>
 
         {/* Job + company summary */}
+        <JobTags job={job} sx={{ px: 3, pb: 2.5 }} />
+
         <Stack direction="row" spacing={2} alignItems="center" sx={{ px: 3, pb: 2.5 }}>
           <Avatar
             src={company?.logo_url ?? undefined}
@@ -475,10 +477,9 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           <Box sx={{ minWidth: 0 }}>
             
             <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.5 }}>
-              <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.3, mr: 2 }}>
+              <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.3, mr: 1 }}>
                 {job.title}
               </Typography>
-              <JobTags job={job} sx={{ ml: 2 }} />
             </Stack>
             {company?.name && (
               <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.25 }}>
