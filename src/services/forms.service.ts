@@ -11,7 +11,7 @@ export type FormResponseWithValues = Tables<"form_responses"> & {
 export const getUserForms = async (
   supabase: SupabaseClient<Database>,
   userId: string
-): Promise<(Tables<"forms"> & { response_count: number })[]> => {
+): Promise<(Tables<"forms"> & { job_count: number })[]> => {
   const { data: companies } = await supabase
     .from("company_users")
     .select("company_id")
@@ -23,14 +23,14 @@ export const getUserForms = async (
 
   const { data } = await supabase
     .from("forms")
-    .select("*, form_responses(count)")
+    .select("*, job_listings!application_form_id(count)")
     .in("company_id", companyIds)
     .eq("is_archived", false)
     .order("created_at", { ascending: false });
 
   return (data ?? []).map((f) => ({
     ...f,
-    response_count: (f.form_responses as unknown as { count: number }[])[0]?.count ?? 0,
+    job_count: (f.job_listings as unknown as { count: number }[])[0]?.count ?? 0,
   }));
 };
 
@@ -128,6 +128,7 @@ export type ResponseFilters = {
   q?: string;
   dateFrom?: string;
   dateTo?: string;
+  jobId?: string;
 };
 
 export const getFormResponses = async (
@@ -148,6 +149,7 @@ export const getFormResponses = async (
   }
   if (filters.dateFrom) query = query.gte("created_at", filters.dateFrom);
   if (filters.dateTo) query = query.lte("created_at", filters.dateTo);
+  if (filters.jobId) query = query.eq("job_listing_id", filters.jobId);
 
   const { data, error } = await query;
   if (error) throw error;

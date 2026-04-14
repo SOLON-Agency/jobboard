@@ -8,9 +8,13 @@ import {
   Button,
   Chip,
   Collapse,
+  FormControl,
   IconButton,
   InputAdornment,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Skeleton,
   Stack,
   Table,
@@ -52,10 +56,14 @@ export default function FormResponsesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Jobs that use this form (for the filter dropdown)
+  const [linkedJobs, setLinkedJobs] = useState<{ id: string; title: string }[]>([]);
+
   // Filters
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [jobId, setJobId] = useState("");
 
   // Row expansion
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -68,6 +76,15 @@ export default function FormResponsesPage() {
       return next;
     });
 
+  useEffect(() => {
+    supabase
+      .from("job_listings")
+      .select("id, title")
+      .eq("application_form_id", formId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setLinkedJobs(data ?? []));
+  }, [supabase, formId]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -78,6 +95,7 @@ export default function FormResponsesPage() {
           q: search || undefined,
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
+          jobId: jobId || undefined,
         }),
       ]);
       setForm(formData);
@@ -87,7 +105,7 @@ export default function FormResponsesPage() {
     } finally {
       setLoading(false);
     }
-  }, [supabase, formId, search, dateFrom, dateTo]);
+  }, [supabase, formId, search, dateFrom, dateTo, jobId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -204,6 +222,21 @@ export default function FormResponsesPage() {
             }}
             sx={{ flex: 1, minWidth: 200 }}
           />
+          {linkedJobs.length > 1 && (
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Anunț</InputLabel>
+              <Select
+                value={jobId}
+                label="Anunț"
+                onChange={(e) => setJobId(e.target.value)}
+              >
+                <MenuItem value="">Toate anunțurile</MenuItem>
+                {linkedJobs.map((j) => (
+                  <MenuItem key={j.id} value={j.id}>{j.title}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
           <TextField
             size="small"
             type="date"
@@ -222,11 +255,11 @@ export default function FormResponsesPage() {
             onChange={(e) => setDateTo(e.target.value)}
             sx={{ width: 160 }}
           />
-          {(search || dateFrom || dateTo) && (
+          {(search || dateFrom || dateTo || jobId) && (
             <Button
               size="small"
               variant="outlined"
-              onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}
+              onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); setJobId(""); }}
             >
               Resetează filtrele
             </Button>
@@ -258,7 +291,7 @@ export default function FormResponsesPage() {
           <InboxOutlinedIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
           <Typography variant="h6" sx={{ mb: 0.5 }}>Niciun răspuns</Typography>
           <Typography variant="body2" color="text.secondary">
-            {search || dateFrom || dateTo
+            {search || dateFrom || dateTo || jobId
               ? "Niciun răspuns nu corespunde filtrelor selectate."
               : "Formularul nu a primit niciun răspuns încă."}
           </Typography>

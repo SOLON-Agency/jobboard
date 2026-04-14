@@ -344,7 +344,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
           />
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <TextField {...register("location")} disabled={watch("is_remote")} label="Locație" fullWidth />
+            <TextField {...register("location")} disabled={watch("is_remote")} label={watch("is_remote") ? "Remote" : "Locație"} fullWidth />
             <Controller
               name="is_remote"
               control={control}
@@ -365,7 +365,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
               name="job_type"
               control={control}
               render={({ field }) => (
-                <FormControl sx={{ flex: 1, maxWidth: 150 }}>
+                <FormControl sx={{ flex: 1, maxWidth: 220 }}>
                   <InputLabel>Tip de contract</InputLabel>
                   <Select {...field} label="Tip de contract" value={field.value ?? ""}>
                     {Object.entries(jobTypeLabels).map(([val, label]) => (

@@ -55,7 +55,7 @@ import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader"
 import type { Tables } from "@/types/database";
 import type { FormWithFields } from "@/services/forms.service";
 
-type FormWithCount = Tables<"forms"> & { response_count: number };
+type FormWithCount = Tables<"forms"> & { job_count: number };
 type CompanyOption = { id: string; name: string };
 
 const statusColor: Record<string, "default" | "success" | "warning"> = {
@@ -171,13 +171,13 @@ const FormActionsRow: React.FC<FormActionsRowProps> = ({ form, onEdit, onArchive
         )}
 
         {/* Șterge — destructive, always last */}
-        <Divider />
+        {/* <Divider />
         <MuiMenuItem onClick={() => { onDelete(form); setMenuAnchor(null); }} sx={{ gap: 1.5, py: 1 }}>
           <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
             <DeleteOutlineIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Șterge" primaryTypographyProps={{ variant: "body2", color: "error.main", fontWeight: 500 }} />
-        </MuiMenuItem>
+        </MuiMenuItem> */}
       </Menu>
     </Stack>
   );
@@ -404,7 +404,7 @@ export default function FormsPage() {
                   />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
-                  {form.response_count} {form.response_count === 1 ? "răspuns" : "răspunsuri"} • creat {formatDate(form.created_at)}
+                  folosit în {form.job_count} {form.job_count === 1 ? "anunț" : "anunțuri"} • creat {formatDate(form.created_at)}
                 </Typography>
               </Box>
 

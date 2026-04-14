@@ -129,7 +129,18 @@ export const JobDetail: React.FC<JobDetailProps> = ({
       {/* ── LEFT: main content ── */}
       <Box>
         {/* Date + company byline */}
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          divider={
+            <Box
+              component="span"
+              sx={{ width: "1px", height: 14, bgcolor: "divider", display: "inline-block" }}
+            />
+          }
+          sx={{ mb: 2 }}
+        >
           {job.location && (
             <Stack direction="row" alignItems="center" spacing={0.5}>
               <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
@@ -138,10 +149,12 @@ export const JobDetail: React.FC<JobDetailProps> = ({
               </Typography>
             </Stack>
           )}
-          <CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-          <Typography variant="caption" color="text.secondary">
-            {job.published_at ? formatDate(job.published_at) : "Ciornă"}
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary">
+              {job.published_at ? formatDate(job.published_at) : "Ciornă"}
+            </Typography>
+          </Stack>
           <JobTags job={job} sx={{ ml: 1 }} hideLocation={true} />
         </Stack>
 
@@ -410,7 +423,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
             >
               <MetaItem
                 label="Salariu"
-                value={formatSalary(job.salary_min, job.salary_max)}
+                value={(job.salary_min || job.salary_max) ? formatSalary(job.salary_min, job.salary_max) : " - "}
               />
               <MetaItem
                 label="Experiență"

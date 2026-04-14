@@ -34,15 +34,19 @@ interface Props {
 
 // ── Two-line meta cell (mirrors company page MetaCell) ───────────────────────
 
-const MetaCell = ({ label, value }: { label: string; value: string }) => (
+const MetaCell = ({ label, value, icon = null }: { label: string; value: string; icon?: React.ReactNode }) => (
   <Box>
-    <Typography
-      variant="caption"
-      color="text.disabled"
-      sx={{ fontWeight: 600, letterSpacing: 0.4, display: "block", mb: 0.25 }}
-    >
-      {label}
-    </Typography>
+    <Stack direction="row" alignItems="center" spacing={0.5}>
+      {icon && icon}
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        sx={{ fontWeight: 600, letterSpacing: 0.4, display: "block", mb: 0.25 }}
+      >
+        {label}
+      </Typography>
+    </Stack>
+    
     <Typography variant="body2" fontWeight={700} color="text.primary">
       {value}
     </Typography>
@@ -133,17 +137,19 @@ export default async function PublicProfilePage({ params }: Props) {
         )}
         {experienceLabel && (
           <Stack direction="row" alignItems="center" spacing={0.5}>
-            <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <LabelOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
               {experienceLabel}
             </Typography>
           </Stack>
         )}
         {skills.length > 0 && (
-          <Typography variant="caption" color="success.main" fontWeight={600}>
-            {skills.length}{" "}
-            {skills.length === 1 ? "competență" : "competențe"}
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              {skills.length} {skills.length === 1 ? "competență" : "competențe"}
+            </Typography>
+          </Stack>
         )}
       </Stack>
 
@@ -332,10 +338,10 @@ export default async function PublicProfilePage({ params }: Props) {
                   }}
                 >
                   {profile.location && (
-                    <MetaCell label="Locație" value={profile.location} />
+                    <MetaCell label="Locație" value={profile.location} icon={<LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />} />
                   )}
                   {experienceLabel && (
-                    <MetaCell label="Experiență" value={experienceLabel} />
+                    <MetaCell label="Experiență" value={experienceLabel} icon={<LabelOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />} />
                   )}
                 </Box>
               </>
@@ -347,7 +353,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 <Divider />
                 <Box sx={{ p: 2.5 }}>
                   <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
-                    <LabelOutlinedIcon sx={{ fontSize: 13, color: "text.disabled" }} />
+                    <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
                     <Typography
                       variant="caption"
                       color="text.disabled"

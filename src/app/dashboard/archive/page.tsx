@@ -30,6 +30,7 @@ import { formatDate } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import appSettings from "@/config/app.settings.json";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { JobTags } from "@/components/jobs/JobTags";
 
 type ArchivedJob = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
 type ArchivedForm = Tables<"forms">;
@@ -247,12 +248,7 @@ function ArchiveContent() {
                     <Typography variant="subtitle2" fontWeight={700} noWrap>
                       {job.title}
                     </Typography>
-                    <Chip
-                      label={jobStatusLabels[job.status] ?? job.status}
-                      size="small"
-                      color={jobStatusColor[job.status] ?? "default"}
-                      sx={{ height: 20, fontSize: "0.68rem" }}
-                    />
+                    <JobTags job={job} sx={{ ml: 2 }} />
                   </Stack>
                   <Typography variant="caption" color="text.secondary">
                     {job.companies?.name ?? "—"} • Arhivat {job.archived_at ? formatDate(job.archived_at) : "—"}
@@ -298,12 +294,6 @@ function ArchiveContent() {
                     <Typography variant="subtitle2" fontWeight={700} noWrap>
                       {form.name}
                     </Typography>
-                    <Chip
-                      label={form.status}
-                      size="small"
-                      color={form.status === "published" ? "success" : "warning"}
-                      sx={{ height: 20, fontSize: "0.68rem" }}
-                    />
                   </Stack>
                   <Typography variant="caption" color="text.secondary">
                     Arhivat {form.archived_at ? formatDate(form.archived_at) : "—"}

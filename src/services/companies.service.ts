@@ -159,24 +159,36 @@ export const getUserCompaniesWithJobCount = async (
 ): Promise<CompanyWithJobCount[]> => {
   const { data, error } = await supabase
     .from("company_users")
-    .select("role, companies(*, job_listings(count))")
+    .select("role, companies(*)")
     .eq("user_id", userId)
     .not("accepted_at", "is", null);
 
   if (error) throw error;
 
-  return (data ?? []).flatMap((row) => {
+  const companies = (data ?? []).flatMap((row) => {
     if (!row.companies) return [];
-    const company = row.companies as Tables<"companies"> & {
-      job_listings: { count: number }[];
-    };
+    const company = row.companies as Tables<"companies">;
     if (!includeArchived && company.is_archived) return [];
-    return [{
-      ...company,
-      role: row.role,
-      jobCount: company.job_listings?.[0]?.count ?? 0,
-    }];
+    return [{ ...company, role: row.role }];
   });
+
+  if (companies.length === 0) return [];
+
+  // Fetch only active (published + not archived) job listings in one batch query
+  // so the badge reflects real open positions, not total historical count.
+  const { data: activeJobs } = await supabase
+    .from("job_listings")
+    .select("company_id")
+    .in("company_id", companies.map((c) => c.id))
+    .eq("status", "published")
+    .eq("is_archived", false);
+
+  const countByCompany = (activeJobs ?? []).reduce<Record<string, number>>((acc, j) => {
+    acc[j.company_id] = (acc[j.company_id] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return companies.map((c) => ({ ...c, jobCount: countByCompany[c.id] ?? 0 }));
 };
 
 export const getCompanyMembers = async (

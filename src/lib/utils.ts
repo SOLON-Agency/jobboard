@@ -100,8 +100,8 @@ export const timeAgo = (date: string): string => {
 };
 
 export const jobTypeLabels: Record<string, string> = {
-  "full-time": "Fulltime",
-  "part-time": "Parttime",
+  "full-time": "Normă întreagă",
+  "part-time": "Jumătate de normă",
   contract: "Colaborator",
   internship: "Practică",
   freelance: "Freelance",
@@ -150,8 +150,8 @@ export const truncate = (text: string, maxLength = 100): string =>
   text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
 
 export const experienceLevelLabels: Record<string, string> = {
+  mid: "Student",
   entry: "Junior",
-  mid: "Nivel mediu",
   senior: "Senior",
   lead: "Lider",
   executive: "Executiv",

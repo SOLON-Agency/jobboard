@@ -143,7 +143,7 @@ export default function CompanyPage() {
 
   const [companies, setCompanies] = useState<CompanyWithJobCount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showArchived, setShowArchived] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyWithJobCount | null>(null);
@@ -365,12 +365,13 @@ export default function CompanyPage() {
                     sx={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
                     {company.name}
                   </Typography>
-                  <Chip
-                    label={company.role}
+                  {company.industry && <Chip
+                    label={company.industry}
                     size="small"
-                    variant="outlined"
-                    sx={{ fontSize: "0.65rem", height: 20, textTransform: "capitalize", flexShrink: 0, mt: "4px" }}
-                  />
+                      variant="outlined"
+                      sx={{ fontSize: "0.65rem", height: 20, textTransform: "capitalize", flexShrink: 0, mt: "4px" }}
+                    />
+                  }
                   {company.is_archived && (
                     <Chip
                       label="Arhivată"
@@ -382,9 +383,6 @@ export default function CompanyPage() {
                 </Stack>
 
                 <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }} useFlexGap>
-                  {company.industry && (
-                    <Chip label={company.industry} size="small" variant="outlined" />
-                  )}
                   {company.location && (
                     <Stack direction="row" spacing={0.5} alignItems="center">
                       <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
@@ -447,7 +445,7 @@ export default function CompanyPage() {
               >
      
                 <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: "0.65rem" }}>
-                  {company.jobCount}{" "}{company.jobCount === 1 ? isMobile ? "anunț" : "anunț de muncă" : isMobile ? "anunțuri" : "anunțuri de muncă"}
+                  {company.jobCount}{" "}{company.jobCount === 1 ? isMobile ? "anunț activ" : "anunț activ de muncă" : isMobile ? "anunțuri active" : "anunțuri active de muncă"}
                 </Typography>
               </Stack>
 
