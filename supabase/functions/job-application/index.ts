@@ -26,6 +26,9 @@ const TEMPLATE_VARS = {
   JOB_NAME: "job_name",
   COMPANY_NAME: "COMPANY_NAME",
   APPLICANT_NAME: "APPLICANT_NAME",
+  /** Common alternate keys used in Resend dashboard templates */
+  FULL_NAME: "FULL_NAME",
+  fullname: "fullname",
   POSTER_NAME: "POSTER_NAME",
   JOB_URL: "JOB_URL",
   SITE_URL: "SITE_URL",
@@ -236,6 +239,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       [TEMPLATE_VARS.JOB_NAME]: jobTitle,
       [TEMPLATE_VARS.COMPANY_NAME]: companyName,
       [TEMPLATE_VARS.APPLICANT_NAME]: applicantName,
+      [TEMPLATE_VARS.FULL_NAME]: applicantName,
+      [TEMPLATE_VARS.fullname]: applicantName,
       [TEMPLATE_VARS.POSTER_NAME]: posterName,
       [TEMPLATE_VARS.JOB_URL]: jobUrl,
       [TEMPLATE_VARS.SITE_URL]: siteUrl,

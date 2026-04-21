@@ -166,11 +166,21 @@ export async function POST(request: Request) {
     );
   }
 
-  void supabase.functions
-    .invoke("job-application", { body: { job_id: job.id } })
-    .catch((err: unknown) =>
-      console.warn("apply-internal-form: job-application:", err),
-    );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const invokeOpts =
+    session?.access_token != null
+      ? {
+          body: { job_id: job.id },
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }
+      : { body: { job_id: job.id } };
+
+  void supabase.functions.invoke("job-application", invokeOpts).catch((err: unknown) =>
+    console.warn("apply-internal-form: job-application:", err),
+  );
 
   return NextResponse.json({ ok: true as const });
 }
