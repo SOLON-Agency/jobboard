@@ -19,6 +19,8 @@ import {
   FormControlLabel,
   Switch,
   CircularProgress,
+  FormHelperText,
+  Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
@@ -42,6 +44,9 @@ import type { Tables } from "@/types/database";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
+import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
+import appSettings from "@/config/app.settings.json";
 
 const schema = z.object({
   email: z.string().email("Introdu o adresă email validă"),
@@ -56,6 +61,9 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+const allowEmailNotificationOptOut =
+  appSettings.features.allowEmailNotificationOptOut === true;
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const supabase = useSupabase();
@@ -68,6 +76,11 @@ export default function ProfilePage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [cvUploading, setCvUploading] = useState(false);
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifFeedback, setNotifFeedback] = useState<{
+    severity: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const {
     register,
@@ -194,6 +207,37 @@ export default function ProfilePage() {
     [user, supabase, loadProfile]
   );
   
+  const handleEmailNotificationsChange = async (
+    _event: React.ChangeEvent<HTMLInputElement>,
+    checked: boolean,
+  ) => {
+    if (!user || !profile) return;
+    if (!allowEmailNotificationOptOut && !checked) return;
+
+    setNotifSaving(true);
+    setNotifFeedback(null);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ notifications_email: checked })
+      .eq("id", user.id);
+
+    if (error) {
+      setNotifFeedback({
+        severity: "error",
+        message: error.message || "Nu s-a putut actualiza preferința.",
+      });
+    } else {
+      await loadProfile();
+      setNotifFeedback({
+        severity: "success",
+        message: checked
+          ? "Vei primi notificări prin e-mail."
+          : "Nu vei mai primi e-mailuri de notificare.",
+      });
+    }
+    setNotifSaving(false);
+  };
+
   const handleCvDownload = useCallback(async () => {
     if (!profile?.cv_url) return;
     const pathMatch = profile.cv_url.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
@@ -362,6 +406,94 @@ export default function ProfilePage() {
                 <input type="file" hidden accept=".pdf" onChange={handleCvUpload} disabled={cvUploading} />
               </Button>
             )}
+          </Box>
+        </Paper>
+      ) : null}
+
+      {!loading && profile ? (
+        <Paper
+          component="section"
+          aria-labelledby="profile-notifications-heading"
+          sx={{ mt: 3, p: 3, border: "1px solid", borderColor: "divider" }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <NotificationsActiveOutlinedIcon color="primary" aria-hidden />
+            <Typography id="profile-notifications-heading" component="h2" variant="h6" fontWeight={700}>
+              Notificări
+            </Typography>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Controlează cum îți trimitem actualizări despre candidaturi și cont. Respectăm preferințele tale
+            la trimiterea e-mailurilor tranzacționale.
+          </Typography>
+
+          {notifFeedback ? (
+            <Alert
+              severity={notifFeedback.severity}
+              role="status"
+              onClose={() => setNotifFeedback(null)}
+              sx={{ mb: 2 }}
+            >
+              {notifFeedback.message}
+            </Alert>
+          ) : null}
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={profile.notifications_email !== false}
+                onChange={handleEmailNotificationsChange}
+                disabled={
+                  notifSaving ||
+                  (!allowEmailNotificationOptOut && profile.notifications_email !== false)
+                }
+                inputProps={{
+                  "aria-describedby": "profile-email-notif-hint",
+                }}
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  Notificări prin e-mail
+                </Typography>
+                <Typography variant="caption" color="text.secondary" component="span" display="block">
+                  Candidaturi, confirmări și mesaje legate de contul tău.
+                </Typography>
+              </Box>
+            }
+            sx={{ alignItems: "flex-start", mx: 0, gap: 1, mb: 1 }}
+          />
+          <FormHelperText id="profile-email-notif-hint" sx={{ mx: 0, maxWidth: 560 }}>
+            {allowEmailNotificationOptOut
+              ? "Dacă oprești e-mailurile, nu vei mai primi aceste notificări. Poți reactiva oricând."
+              : "E-mailurile sunt activate implicit. Dezactivarea va fi disponibilă când vom oferi și alte canale (ex. SMS), ca să nu ratezi informații importante."}
+          </FormHelperText>
+
+          <Box sx={{ mt: 3, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={profile.notifications_sms === true}
+                  disabled
+                  inputProps={{ "aria-disabled": true }}
+                />
+              }
+              label={
+                <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                  <SmsOutlinedIcon sx={{ fontSize: 18, color: "text.disabled" }} aria-hidden />
+                  <Box>
+                    <Typography variant="body2" fontWeight={600} color="text.disabled">
+                      Notificări SMS
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" component="span" display="block">
+                      În curând — nu există încă alte opțiuni de notificare.
+                    </Typography>
+                  </Box>
+                </Stack>
+              }
+              sx={{ alignItems: "flex-start", mx: 0, gap: 1 }}
+            />
           </Box>
         </Paper>
       ) : null}

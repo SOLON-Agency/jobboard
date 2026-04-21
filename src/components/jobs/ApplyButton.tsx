@@ -73,15 +73,10 @@ const buildMailtoSubject = (companyName: string | undefined, jobTitle: string): 
   return contact ? `Candidatură + ${contact} | ${jobTitle}` : `Candidatură | ${jobTitle}`;
 };
 
-const notifyApplication = (
-  supabase: SupabaseClient,
-  jobId: string
-) => {
+const notifyApplication = (supabase: SupabaseClient, jobId: string) => {
   void supabase.functions
-    .invoke("send-email", {
-      body: { event: "application_notification", job_id: jobId },
-    })
-    .catch((err: unknown) => console.warn("notify-application:", err));
+    .invoke("job-application", { body: { job_id: jobId } })
+    .catch((err: unknown) => console.warn("job-application:", err));
 };
 
 /** Unique violation on `applications` (not form_responses). */

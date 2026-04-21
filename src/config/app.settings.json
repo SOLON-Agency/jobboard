@@ -11,6 +11,7 @@
     "alerts": false,
     "messages": false,
     "notifications": false,
+    "allowEmailNotificationOptOut": false,
     "favouriteJobs": false,
     "favouriteCompanies": false,
     "archiveJobs": true

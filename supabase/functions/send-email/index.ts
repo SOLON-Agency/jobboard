@@ -13,26 +13,22 @@
  *   NEXT_PUBLIC_SITE_URL  — canonical origin, e.g. "https://legaljobs.ro"
  *
  * Supported events (send in the JSON body as `event`):
- *   "application_notification"  — job application confirmation + poster alert
  *   "profile_updated"           — profile-update confirmation to the user
  *   "company_created"           — company-creation welcome email
  *   "custom_email"              — ad-hoc HTML email (body plain text → escaped + line breaks);
  *                                 recipient must match the authenticated user's email (anti-abuse)
+ *
+ * Job-application emails use the `job-application` Edge Function (Resend templates via `notifications`).
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
-import {
-  buildEmail,
-  detailRow,
-  infoTable,
-} from "../_shared/email-templates.ts";
+import { buildEmail, detailRow, infoTable } from "../_shared/email-templates.ts";
 import { sendResendEmail } from "../_shared/resend.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type EmailEvent =
-  | { event: "application_notification"; job_id: string }
   | { event: "profile_updated" }
   | { event: "company_created"; company_id: string }
   | { event: "custom_email"; to: string; subject: string; body: string };
@@ -90,14 +86,6 @@ async function handleCustomEmail(
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
-const JOB_TYPE_LABEL: Record<string, string> = {
-  "full-time": "Full-time",
-  "part-time": "Part-time",
-  contract: "Contract",
-  internship: "Internship",
-  freelance: "Freelance",
-};
-
 const EXPERIENCE_LABEL: Record<string, string> = {
   entry: "Entry-level",
   junior: "Junior",
@@ -107,176 +95,6 @@ const EXPERIENCE_LABEL: Record<string, string> = {
 };
 
 // ─── Email handlers ───────────────────────────────────────────────────────────
-
-async function handleApplicationNotification(
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
-  userId: string,
-  userEmail: string | undefined,
-  // deno-lint-ignore no-explicit-any
-  userMeta: Record<string, any>,
-  jobId: string,
-  siteUrl: string,
-  siteName: string
-): Promise<void> {
-  const { data: appRow, error: appErr } = await supabase
-    .from("applications")
-    .select("id")
-    .eq("job_id", jobId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (appErr) throw appErr;
-  if (!appRow) throw new Error("No application found for this job");
-
-  const { data: job, error: jobErr } = await supabase
-    .from("job_listings")
-    .select(
-      "id, title, slug, location, job_type, salary_min, salary_max, companies ( name, slug, logo_url, location )"
-    )
-    .eq("id", jobId)
-    .single();
-
-  if (jobErr) throw jobErr;
-
-  // deno-lint-ignore no-explicit-any
-  const j = job as any;
-  const company = j.companies as
-    | { name: string; slug: string | null; location: string | null }
-    | null;
-  const companyName = company?.name ?? "Compania";
-  const companyUrl = company?.slug
-    ? `${siteUrl}/companies/${company.slug}`
-    : siteUrl;
-  const jobUrl = `${siteUrl}/jobs/${j.slug}`;
-  const appliedAt = new Date().toLocaleDateString("ro-RO", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-
-  const { data: posterRows, error: posterErr } = await supabase.rpc(
-    "application_notification_recipient",
-    { p_job_id: jobId }
-  );
-  if (posterErr) throw posterErr;
-
-  // deno-lint-ignore no-explicit-any
-  const poster = (posterRows as any[])?.[0];
-  const posterEmail: string | null = poster?.poster_email ?? null;
-  const posterName: string = poster?.poster_name ?? "Angajator";
-
-  const applicantEmail = userEmail ?? null;
-  const applicantName: string =
-    (typeof userMeta?.full_name === "string" ? userMeta.full_name : null) ??
-    applicantEmail ??
-    "Candidatul";
-
-  const { data: applicantProfile } = await supabase
-    .from("profiles")
-    .select("full_name, headline, location, slug, is_public, cv_url")
-    .eq("id", userId)
-    .maybeSingle();
-
-  const publicProfileUrl =
-    // deno-lint-ignore no-explicit-any
-    (applicantProfile as any)?.is_public && (applicantProfile as any)?.slug
-      ? // deno-lint-ignore no-explicit-any
-        `${siteUrl}/users/${(applicantProfile as any).slug}`
-      : null;
-
-  if (posterEmail) {
-    // deno-lint-ignore no-explicit-any
-    const ap = applicantProfile as any;
-    const posterTableRows = [
-      detailRow("Candidat:", applicantName),
-      ...(ap?.headline ? [detailRow("Poziție dorită:", ap.headline)] : []),
-      ...(ap?.location ? [detailRow("Locație:", ap.location)] : []),
-      detailRow("Data aplicării:", appliedAt),
-      detailRow("Post:", j.title),
-      detailRow("Companie:", companyName),
-    ].join("");
-
-    const posterBody = `
-      <p>Salut, ${posterName},</p>
-      <p>
-        Anunțul tău <strong>${j.title}</strong> la <strong>${companyName}</strong>
-        a primit o candidatură nouă de la <strong>${applicantName}</strong>.
-      </p>
-      ${infoTable(posterTableRows)}
-      ${publicProfileUrl ? `<p>Poți vizualiza profilul candidatului pentru mai multe detalii.</p>` : ""}
-    `;
-
-    await sendResendEmail({
-      to: [posterEmail],
-      subject: `Candidatură nouă pentru „${j.title}"`,
-      html: buildEmail({
-        preheader: `${applicantName} a aplicat la postul ${j.title}`,
-        heading: "Ai primit o candidatură nouă! 🎉",
-        bodyHtml: posterBody,
-        ctaUrl: publicProfileUrl ?? `${siteUrl}/dashboard/applications`,
-        ctaLabel: publicProfileUrl
-          ? "Vezi profilul candidatului"
-          : "Vezi candidaturile",
-        siteUrl,
-        siteName,
-      }),
-      idempotencyKey: `application-poster/${jobId}/${userId}`,
-    });
-  }
-
-  if (applicantEmail) {
-    const salaryText =
-      j.salary_min && j.salary_max
-        ? `${(j.salary_min as number).toLocaleString("ro-RO")} – ${(j.salary_max as number).toLocaleString("ro-RO")} RON`
-        : j.salary_min
-          ? `De la ${(j.salary_min as number).toLocaleString("ro-RO")} RON`
-          : null;
-
-    const candidateRows = [
-      detailRow("Post:", j.title),
-      detailRow("Companie:", companyName),
-      ...(j.location ? [detailRow("Locație:", j.location as string)] : []),
-      ...(j.job_type
-        ? [detailRow("Tip:", JOB_TYPE_LABEL[j.job_type as string] ?? (j.job_type as string))]
-        : []),
-      ...(salaryText ? [detailRow("Salariu:", salaryText)] : []),
-      detailRow("Data aplicării:", appliedAt),
-    ].join("");
-
-    const candidateBody = `
-      <p>Salut, ${applicantName},</p>
-      <p>
-        Îți mulțumim pentru candidatura ta! Am înregistrat cu succes
-        aplicația ta pentru postul <strong>${j.title}</strong> la
-        <a href="${companyUrl}" style="color:#03170C;font-weight:600;">${companyName}</a>.
-      </p>
-      ${infoTable(candidateRows)}
-      <p>
-        Echipa de recrutare va analiza aplicația ta și te va contacta dacă profilul
-        corespunde cerințelor postului. Îți dorim mult succes!
-      </p>
-      <p style="font-size:13px;color:#6B7C70;margin-top:16px;">
-        Nu trebuie să faci nimic altceva — candidatura ta este activă.
-      </p>
-    `;
-
-    await sendResendEmail({
-      to: [applicantEmail],
-      subject: `Candidatura ta pentru „${j.title}" a fost trimisă!`,
-      html: buildEmail({
-        preheader: `Aplicația ta la ${companyName} a fost înregistrată cu succes.`,
-        heading: "Candidatură înregistrată cu succes!",
-        bodyHtml: candidateBody,
-        ctaUrl: jobUrl,
-        ctaLabel: "Vezi anunțul",
-        siteUrl,
-        siteName,
-      }),
-      idempotencyKey: `application-applicant/${jobId}/${userId}`,
-    });
-  }
-}
 
 async function handleProfileUpdated(
   // deno-lint-ignore no-explicit-any
@@ -512,28 +330,6 @@ Deno.serve(async (req: Request) => {
 
   try {
     switch (body.event) {
-      case "application_notification":
-        if (!body.job_id || typeof body.job_id !== "string") {
-          return new Response(
-            JSON.stringify({ error: "job_id required" }),
-            {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-        await handleApplicationNotification(
-          supabase,
-          user.id,
-          user.email,
-          // deno-lint-ignore no-explicit-any
-          (user.user_metadata ?? {}) as Record<string, any>,
-          body.job_id,
-          siteUrl,
-          siteName
-        );
-        break;
-
       case "profile_updated":
         await handleProfileUpdated(
           supabase,

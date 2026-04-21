@@ -16,24 +16,39 @@
  * Request body (JSON):
  *   recipient  string   (required) — user ID of the notification recipient
  *   channel    string   (required) — "email" | "sms"  (default: "email")
- *   body       string   (required) — plain-text or HTML body of the notification
- *   subject    string   (optional) — email subject line (defaults to site name)
+ *   body       string   (optional*) — HTML body when not using a Resend template
+ *   subject    string   (optional) — email subject (defaults to site name; overrides template default when set)
+ *   resend_template  object (optional*) — { id: string, variables: Record<string, string|number> }
+ *   idempotency_key  string (optional) — forwarded to Resend
+ *
+ * *Either `body` (non-empty) or `resend_template` with a valid `id` is required for email.
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
-import { sendResendEmail, isResendConfigured } from "../_shared/resend.ts";
+import {
+  sendResendEmail,
+  sendResendTemplateEmail,
+  isResendConfigured,
+} from "../_shared/resend.ts";
 import { buildEmail } from "../_shared/email-templates.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type NotificationChannel = "email" | "sms";
 
+interface ResendTemplatePayload {
+  id: string;
+  variables: Record<string, string | number>;
+}
+
 interface NotificationPayload {
   recipient: string;
   channel?: NotificationChannel;
-  body: string;
+  body?: string;
   subject?: string;
+  resend_template?: ResendTemplatePayload;
+  idempotency_key?: string;
 }
 
 interface NotificationResult {
@@ -108,10 +123,17 @@ async function sendEmailNotification(
   // deno-lint-ignore no-explicit-any
   adminClient: any,
   recipientId: string,
-  body: string,
   subject: string,
   siteName: string,
-  siteUrl: string
+  siteUrl: string,
+  options:
+    | { mode: "html"; body: string }
+    | {
+        mode: "template";
+        template: ResendTemplatePayload;
+        subjectOverride?: string;
+      },
+  idempotencyKey?: string
 ): Promise<void> {
   // Resolve the recipient's email via the admin auth API (not accessible via RLS).
   const {
@@ -125,9 +147,26 @@ async function sendEmailNotification(
     );
   }
 
+  const resolvedIdempotency =
+    idempotencyKey?.trim() ||
+    `notification/${recipientId}/${Date.now()}`;
+
+  if (options.mode === "template") {
+    await sendResendTemplateEmail({
+      to: user.email,
+      subject: options.subjectOverride?.trim(),
+      template: {
+        id: options.template.id,
+        variables: options.template.variables,
+      },
+      idempotencyKey: resolvedIdempotency,
+    });
+    return;
+  }
+
   const html = buildEmail({
     heading: subject,
-    bodyHtml: `<p>${body}</p>`,
+    bodyHtml: `<p>${options.body}</p>`,
     siteUrl,
     siteName,
   });
@@ -136,7 +175,7 @@ async function sendEmailNotification(
     to: user.email,
     subject,
     html,
-    idempotencyKey: `notification/${recipientId}/${Date.now()}`,
+    idempotencyKey: resolvedIdempotency,
   });
 }
 
@@ -182,7 +221,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { recipient, body, subject } = payload;
+  const { recipient, body, subject, resend_template, idempotency_key } = payload;
   const channel: NotificationChannel = payload.channel ?? "email";
 
   if (!recipient || typeof recipient !== "string") {
@@ -191,12 +230,46 @@ Deno.serve(async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  if (!body || typeof body !== "string") {
-    return new Response(JSON.stringify({ error: "body is required" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+
+  const hasTemplate =
+    resend_template &&
+    typeof resend_template === "object" &&
+    typeof resend_template.id === "string" &&
+    resend_template.id.trim() !== "" &&
+    resend_template.variables !== null &&
+    typeof resend_template.variables === "object";
+
+  const hasBody = typeof body === "string" && body.trim() !== "";
+
+  if (!hasTemplate && !hasBody) {
+    return new Response(
+      JSON.stringify({
+        error:
+          'Either non-empty "body" or "resend_template" with id and variables is required',
+      }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
+
+  if (hasTemplate && resend_template) {
+    if (
+      resend_template.variables === null ||
+      typeof resend_template.variables !== "object" ||
+      Array.isArray(resend_template.variables)
+    ) {
+      return new Response(
+        JSON.stringify({ error: "resend_template.variables must be an object" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+  }
+
   if (channel !== "email" && channel !== "sms") {
     return new Response(
       JSON.stringify({ error: 'channel must be "email" or "sms"' }),
@@ -245,14 +318,31 @@ Deno.serve(async (req: Request): Promise<Response> => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      await sendEmailNotification(
-        adminClient,
-        recipient,
-        body,
-        resolvedSubject,
-        siteName,
-        siteUrl
-      );
+      if (hasTemplate && resend_template) {
+        await sendEmailNotification(
+          adminClient,
+          recipient,
+          resolvedSubject,
+          siteName,
+          siteUrl,
+          {
+            mode: "template",
+            template: resend_template,
+            subjectOverride: subject?.trim() || undefined,
+          },
+          idempotency_key
+        );
+      } else {
+        await sendEmailNotification(
+          adminClient,
+          recipient,
+          resolvedSubject,
+          siteName,
+          siteUrl,
+          { mode: "html", body: body ?? "" },
+          idempotency_key
+        );
+      }
     } else {
       await sendSmsNotification(recipient, body);
     }

@@ -60,6 +60,7 @@ const NO_VERIFY_JWT = new Set([
   'send-email',
   'notifications',
   'increase_company_engagement',
+  'job-application',
 ]);
 
 // ---- Deploy ----------------------------------------------------------------

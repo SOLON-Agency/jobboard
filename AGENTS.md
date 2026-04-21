@@ -84,25 +84,24 @@ Path alias: **`@/*` → `./src/*`** (`tsconfig.json`).
 
 **Auth callback:** `src/app/(auth)/auth/callback/route.ts` exchanges the OAuth/email code for a session then redirects.
 
-### Transactional email (Resend via Edge Function)
+### Transactional email (Resend via Edge Functions)
 
-All notification emails are sent through the **`send-email` Supabase Edge Function** (`supabase/functions/send-email/index.ts`). The caller passes the user's Supabase session JWT automatically when using `supabase.functions.invoke()`, so all database queries inside the function run under RLS.
+- **Job applications:** the **`job-application`** Edge Function (`supabase/functions/job-application/index.ts`) runs after a successful apply. It checks `profiles.notifications_email` for the applicant and the job poster, then calls **`notifications`** with Resend dashboard templates (`job-candidat` / `job-creator` by default; overridable via secrets). The applicant’s JWT is required; the function uses the service-role key only internally (never in the Next.js app).
+- **Other transactional mail:** **`send-email`** (`supabase/functions/send-email/index.ts`) — profile updated, company created, custom test email. Callers use `supabase.functions.invoke()` with the user session JWT so DB access stays under RLS.
 
-**Supported events** (pass as `event` in the JSON body):
+**`send-email` events** (pass as `event` in the JSON body):
 
 | Event | Required body fields | Description |
 |-------|---------------------|-------------|
-| `application_notification` | `job_id: string` | Sends confirmation to applicant + alert to job poster |
 | `profile_updated` | _(none)_ | Profile-update confirmation to the authenticated user |
 | `company_created` | `company_id: string` | Company-creation welcome email to the authenticated user |
+| `custom_email` | `to`, `subject`, `body` | Test / ad-hoc send (recipient must match auth user email) |
 
-**Invocation pattern (client components):**
+**Job application emails (client or route handler):**
 ```ts
 void supabase.functions
-  .invoke("send-email", {
-    body: { event: "application_notification", job_id: jobId },
-  })
-  .catch((err: unknown) => console.warn("send-email:", err));
+  .invoke("job-application", { body: { job_id: jobId } })
+  .catch((err: unknown) => console.warn("job-application:", err));
 ```
 
 **Shared utilities** live in `supabase/functions/_shared/`:
@@ -113,16 +112,18 @@ void supabase.functions
 - `RESEND_API_KEY` — Resend API key
 - `RESEND_FROM` — verified sender, e.g. `"LegalJobs <noreply@yourdomain.com>"`
 - `NEXT_PUBLIC_SITE_URL` — canonical origin, e.g. `"https://legaljobs.ro"` (same value as the Next.js env var)
+- `RESEND_TEMPLATE_JOB_CREATOR` / `RESEND_TEMPLATE_JOB_CANDIDAT` — optional; default template aliases `job-creator` and `job-candidat` (must exist and be published in Resend)
 
 ### Edge Functions inventory
 
 | Function | Status | Auth | Notes |
 |----------|--------|------|-------|
-| `send-email` | **Active** | user JWT | Context-aware transactional emails (application, profile update, company created). Fetches data under user RLS. |
-| `notifications` | **Active** | user JWT **or** service-role key | Generic notification dispatcher — see below. |
+| `send-email` | **Active** | user JWT | Profile / company / custom transactional HTML emails under RLS. |
+| `job-application` | **Active** | user JWT (applicant) | Post-apply emails via `notifications` + Resend templates. |
+| `notifications` | **Active** | user JWT **or** service-role key | Dispatcher; HTML body or Resend `resend_template`; uses service role for `auth.admin` + preferences. |
 | `scrape-jobs` | **Active** (Supabase-only) | `CRON_SECRET` bearer | Job scraper; uses service role key; not in this repo. |
 
-Both `send-email` and `notifications` use `verify_jwt = false` and handle auth inside the function.
+`send-email`, `notifications`, and `job-application` use `verify_jwt = false` and validate auth inside the function.
 
 #### `notifications` edge function
 
@@ -134,8 +135,12 @@ Sends a notification to any user by `userId` through the specified channel. Resp
 |-------|------|----------|---------|
 | `recipient` | `string` (userId) | ✅ | — |
 | `channel` | `"email" \| "sms"` | ✅ | `"email"` |
-| `body` | `string` | ✅ | — |
-| `subject` | `string` | — | site name |
+| `body` | `string` | ✅* | — |
+| `resend_template` | `{ id, variables }` | ✅* | — |
+| `subject` | `string` | — | site name (for HTML); overrides template default when using `resend_template` |
+| `idempotency_key` | `string` | — | Resend idempotency |
+
+\* For email, provide either a non-empty `body` (HTML) or `resend_template` with a published template `id` and `variables` object.
 
 **From React:**
 ```ts
@@ -171,7 +176,7 @@ await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notifications`, {
 | `NEXT_PUBLIC_SITE_URL` | Vercel / `.env.local` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
 | `RESEND_API_KEY` | **Supabase Edge secrets only** | Transactional email via Resend (`send-email` function) |
 | `RESEND_FROM` | **Supabase Edge secrets only** | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | Used solely by `scrape-jobs`; **never** add to Next.js / Vercel env |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | `scrape-jobs`, internal calls from `notifications` / `job-application`; **never** add to Next.js / Vercel env |
 | `CRON_SECRET` | **Supabase Edge secrets only** | Bearer token required by `scrape-jobs` to reject unauthorised calls |
 
 Never commit secrets. Add new server-only variables to `.env.example` with a placeholder value and document them in this table.
