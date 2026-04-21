@@ -16,6 +16,8 @@
  *   "application_notification"  — job application confirmation + poster alert
  *   "profile_updated"           — profile-update confirmation to the user
  *   "company_created"           — company-creation welcome email
+ *   "custom_email"              — ad-hoc HTML email (body plain text → escaped + line breaks);
+ *                                 recipient must match the authenticated user's email (anti-abuse)
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -32,7 +34,59 @@ import { sendResendEmail } from "../_shared/resend.ts";
 type EmailEvent =
   | { event: "application_notification"; job_id: string }
   | { event: "profile_updated" }
-  | { event: "company_created"; company_id: string };
+  | { event: "company_created"; company_id: string }
+  | { event: "custom_email"; to: string; subject: string; body: string };
+
+function escapeHtmlPlainText(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+async function handleCustomEmail(
+  userEmail: string | undefined,
+  toRaw: string,
+  subjectRaw: string,
+  bodyRaw: string,
+  siteUrl: string,
+  siteName: string
+): Promise<void> {
+  const to = toRaw.trim();
+  const subject = subjectRaw.trim();
+  const body = bodyRaw.trim();
+  if (!to || !subject || !body) {
+    throw new Error("Câmpurile to, subject și body sunt obligatorii.");
+  }
+
+  const normalizedUser = userEmail?.trim().toLowerCase() ?? "";
+  const normalizedTo = to.toLowerCase();
+  if (!normalizedUser || normalizedTo !== normalizedUser) {
+    throw new Error(
+      "Poți trimite doar către adresa de e-mail a contului tău autentificat."
+    );
+  }
+
+  const bodyHtml = escapeHtmlPlainText(body)
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .join("<br/>");
+
+  await sendResendEmail({
+    to: [to],
+    subject,
+    html: buildEmail({
+      preheader: subject.length > 120 ? `${subject.slice(0, 117)}…` : subject,
+      heading: "E-mail de test",
+      bodyHtml: `<p style="margin:0;font-size:15px;line-height:1.6;">${bodyHtml}</p>`,
+      ctaUrl: siteUrl,
+      ctaLabel: "Deschide site-ul",
+      siteUrl,
+      siteName,
+    }),
+  });
+}
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
@@ -511,6 +565,31 @@ Deno.serve(async (req: Request) => {
           siteName
         );
         break;
+
+      case "custom_email": {
+        if (
+          typeof body.to !== "string" ||
+          typeof body.subject !== "string" ||
+          typeof body.body !== "string"
+        ) {
+          return new Response(
+            JSON.stringify({ error: "to, subject și body trebuie să fie stringuri" }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+        await handleCustomEmail(
+          user.email,
+          body.to,
+          body.subject,
+          body.body,
+          siteUrl,
+          siteName
+        );
+        break;
+      }
 
       default:
         return new Response(JSON.stringify({ error: "Unknown event" }), {
