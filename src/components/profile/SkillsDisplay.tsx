@@ -22,6 +22,7 @@ export const SkillsDisplay: React.FC<SkillsDisplayProps> = ({ items }) => {
   return (
     <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 }, borderRadius: 3 }}>
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+        <LabelOutlinedIcon sx={{ color: "text.secondary", fontSize: 22 }} />
         <Typography variant="h4" fontWeight={700}>
           Competențe
         </Typography>

@@ -56,7 +56,11 @@ console.log(`\nDeploying ${slugs.length} Edge Function(s): ${slugs.join(', ')}\n
 
 // ---- Functions that handle JWT verification themselves ---------------------
 // Add a function slug here when its config.toml entry has `verify_jwt = false`.
-const NO_VERIFY_JWT = new Set(['send-email', 'notifications']);
+const NO_VERIFY_JWT = new Set([
+  'send-email',
+  'notifications',
+  'increase_company_engagement',
+]);
 
 // ---- Deploy ----------------------------------------------------------------
 let failed = false;
