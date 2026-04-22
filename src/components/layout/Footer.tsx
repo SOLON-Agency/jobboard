@@ -12,7 +12,7 @@ const footerLinks = [
   { label: "Politică de confidențialitate", href: "/policy" },
 ];
 
-export const Footer: React.FC = () => {
+export function Footer() {
   const theme = useTheme();
   const brandGradient =
     theme.palette.mode === "dark"
@@ -38,7 +38,7 @@ export const Footer: React.FC = () => {
           spacing={3}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <WorkOutlineIcon sx={{ color: "primary.main", fontSize: 24 }} />
+            <WorkOutlineIcon aria-hidden="true" sx={{ color: "primary.main", fontSize: 24 }} />
             <Typography
               variant="body1"
               sx={{
@@ -52,23 +52,25 @@ export const Footer: React.FC = () => {
             </Typography>
           </Box>
 
-          <Stack direction="row" spacing={3}>
-            {footerLinks.map((link) => (
-              <Typography
-                key={link.href}
-                component={Link}
-                href={link.href}
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  textDecoration: "none",
-                  "&:hover": { color: "primary.main" },
-                }}
-              >
-                {link.label}
-              </Typography>
-            ))}
-          </Stack>
+          <Box component="nav" aria-label="Linkuri utile">
+            <Stack direction="row" spacing={3}>
+              {footerLinks.map((link) => (
+                <Typography
+                  key={link.href}
+                  component={Link}
+                  href={link.href}
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    textDecoration: "none",
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  {link.label}
+                </Typography>
+              ))}
+            </Stack>
+          </Box>
         </Stack>
 
       </Container>

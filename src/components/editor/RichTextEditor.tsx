@@ -42,42 +42,46 @@ interface RichTextEditorProps {
   minHeight?: number;
 }
 
-const ToolbarButton: React.FC<{
+interface ToolbarButtonProps {
   title: string;
   active?: boolean;
   disabled?: boolean;
   onClick: () => void;
   children: React.ReactNode;
-}> = ({ title, active = false, disabled = false, onClick, children }) => (
-  <Tooltip title={title} arrow>
-    <span>
-      <IconButton
-        size="small"
-        onClick={onClick}
-        disabled={disabled}
-        sx={{
-          borderRadius: 1,
-          color: active ? "primary.main" : "text.secondary",
-          bgcolor: active ? "action.selected" : "transparent",
-          "&:hover": { bgcolor: "action.hover" },
-          width: 28,
-          height: 28,
-        }}
-      >
-        {children}
-      </IconButton>
-    </span>
-  </Tooltip>
-);
+}
 
-export const RichTextEditor: React.FC<RichTextEditorProps> = ({
+function ToolbarButton({ title, active = false, disabled = false, onClick, children }: ToolbarButtonProps) {
+  return (
+    <Tooltip title={title} arrow>
+      <span>
+        <IconButton
+          size="small"
+          onClick={onClick}
+          disabled={disabled}
+          sx={{
+            borderRadius: 1,
+            color: active ? "primary.main" : "text.secondary",
+            bgcolor: active ? "action.selected" : "transparent",
+            "&:hover": { bgcolor: "action.hover" },
+            width: 28,
+            height: 28,
+          }}
+        >
+          {children}
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+}
+
+export function RichTextEditor({
   value,
   onChange,
   placeholder = "Write something...",
   error = false,
   helperText,
   minHeight = 220,
-}) => {
+}: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [

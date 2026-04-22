@@ -15,19 +15,12 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { loginSchema, type LoginFormData } from "@/components/forms/validations/login.schema";
 import { SocialButtons } from "@/components/auth/SocialButtons";
 import { useAuth } from "@/hooks/useAuth";
 import appSettings from "@/config/app.settings.json";
 
-const schema = z.object({
-  email: z.string().email("Introduceți o adresă de e-mail validă"),
-  password: z.string().min(6, "Parola trebuie să aibă cel puțin 6 caractere"),
-});
-
-type FormData = z.infer<typeof schema>;
-
-export const LoginForm: React.FC = () => {
+export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
@@ -44,11 +37,11 @@ export const LoginForm: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setError(null);
     const { error: authError } = await signIn(data.email, data.password);
     if (authError) {
@@ -74,7 +67,7 @@ export const LoginForm: React.FC = () => {
           borderRadius: 3,
         }}
       >
-        <Typography variant="h3" sx={{ mb: 1, textAlign: "center" }}>
+        <Typography variant="h3" component="h1" sx={{ mb: 1, textAlign: "center" }}>
           Bine ai revenit
         </Typography>
         <Typography
@@ -99,8 +92,10 @@ export const LoginForm: React.FC = () => {
             label="E-mail"
             type="email"
             fullWidth
+            required
             error={!!errors.email}
             helperText={errors.email?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -108,8 +103,10 @@ export const LoginForm: React.FC = () => {
             label="Parolă"
             type="password"
             fullWidth
+            required
             error={!!errors.password}
             helperText={errors.password?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 3 }}
           />
           <Button

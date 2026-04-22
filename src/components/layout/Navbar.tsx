@@ -44,7 +44,7 @@ const navLinks = [
   { label: "Vezi anunțuri", href: "/jobs" },
 ];
 
-export const Navbar: React.FC = () => {
+export function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -109,6 +109,7 @@ export const Navbar: React.FC = () => {
             <WorkOutlineIcon sx={{ color: CREAM, fontSize: 22, opacity: 0.9 }} />
             <Typography
               variant="h6"
+              component="span"
               sx={{
                 fontWeight: 800,
                 color: CREAM,
@@ -188,19 +189,24 @@ export const Navbar: React.FC = () => {
                   >
                     Dashboard
                   </Button>
-                  {appSettings.features.notifications && <IconButton sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
+                  {appSettings.features.notifications && <IconButton aria-label="Notificări" sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
                     <NotificationsOutlinedIcon />
                   </IconButton>}  
                   {appSettings.features.messages && <IconButton
                     component={Link}
                     href="/dashboard/messages"
                     size="small"
-                    title="Mesaje"
+                    aria-label="Mesaje"
                     sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}
                   >
                     <ChatIcon fontSize="small" />
                   </IconButton>}
-                  <IconButton onClick={handleMenuOpen}>
+                  <IconButton
+                    onClick={handleMenuOpen}
+                    aria-label="Meniu cont"
+                    aria-haspopup="true"
+                    aria-expanded={Boolean(anchorEl)}
+                  >
                     <Avatar
                       src={avatarUrl ?? undefined}
                       sx={{
@@ -294,11 +300,13 @@ export const Navbar: React.FC = () => {
             <>
             <IconButton
               onClick={() => setDrawerOpen(true)}
+              aria-label="Deschide meniul"
+              aria-expanded={drawerOpen}
               sx={{ color: CREAM, ml: 0.5 }}
             >
               <MenuIcon />
             </IconButton>
-            {user && ( <IconButton onClick={redirectToDashboard}>
+            {user && ( <IconButton onClick={redirectToDashboard} aria-label="Tabloul de bord">
               <Avatar
                 src={avatarUrl ?? undefined}
                 sx={{

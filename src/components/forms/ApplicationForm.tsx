@@ -69,14 +69,14 @@ interface FieldProps {
   onFileChange: (file: File | null) => void;
 }
 
-const FormFieldInput: React.FC<FieldProps> = ({
+function FormFieldInput({
   field,
   value,
   fileValue,
   error,
   onChange,
   onFileChange,
-}) => {
+}: FieldProps) {
   const options = Array.isArray(field.options)
     ? (field.options as string[])
     : typeof field.options === "string"
@@ -269,13 +269,13 @@ const isApplicationsDuplicateError = (err: unknown): boolean => {
 
 // ─── ApplicationForm ──────────────────────────────────────────────────────────
 
-export const ApplicationForm: React.FC<ApplicationFormProps> = ({
+export function ApplicationForm({
   job,
   company,
   open,
   onClose,
   onSubmitted,
-}) => {
+}: ApplicationFormProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
 

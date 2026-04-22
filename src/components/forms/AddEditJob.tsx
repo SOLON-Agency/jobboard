@@ -293,7 +293,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
     }, [watch, setValue]);
 
     return (
-      <Box component="form" onSubmit={(e) => e.preventDefault()}>
+      <Box component="form" onSubmit={(e) => e.preventDefault()} noValidate>
         <Stack spacing={2.5}>
           {!editingJob && companies.length > 1 && (
             <Controller
@@ -672,12 +672,14 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
               label="Unde se va aplica?"
               sx={{ mt: 0 }}
               fullWidth
+              required
               placeholder="https://... sau recrutare@companie.ro"
               error={!!errors.application_url}
               helperText={
                 errors.application_url?.message ??
                 "Introduceți un URL (https://...) sau o adresă de email — candidații vor aplica direct aici"
               }
+              inputProps={{ "aria-required": "true" }}
             />
           )}
 

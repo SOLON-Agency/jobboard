@@ -13,7 +13,8 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from "@mui/material";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
@@ -41,20 +42,6 @@ const CREAM_45 = "rgba(240,235,216,0.45)";
 const STEEL = "rgba(62,92,118,0.85)";
 
 // ── Framer variants ───────────────────────────────────────────────────────────
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: "easeOut", delay: i * 0.1 },
-  }),
-};
-
-const stagger: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.12 } },
-};
-
 // ── Data ──────────────────────────────────────────────────────────────────────
 const candidateSteps = [
   {
@@ -150,7 +137,7 @@ const faqs = [
   },
   {
     q: "Cum funcționează alertele de joburi?",
-    a: "Salvezi un set de filtre (locație, tip contract, nivel) și primești un email automat de fiecare dată când apare un post nou care se potrivește.",
+    a: "Salvezi un set de filtre (locație, tip contract, nivel experiență, salariu, etc.) și primești un email sau SMS automat de fiecare dată când apare un post nou care se potrivește.",
   },
   {
     q: "Pot urmări statusul aplicațiilor mele?",
@@ -245,7 +232,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   background: "linear-gradient(135deg, rgba(195,174,97,1) 0%, rgba(116,140,171,0.9) 60%, rgba(240,235,216,0.8) 100%)",
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
                 }}>
-                  {appSettings.name}
+                  {appSettings.name}?
                 </Box>
               </Typography>
             </motion.div>
@@ -375,7 +362,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                     {step.icon}
                   </Box>
 
-                  <Typography variant="h5" sx={{ mb: 1 }}>{step.title}</Typography>
+                  <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{step.title}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                     {step.body}
                   </Typography>
@@ -459,7 +446,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   }}>
                     {step.icon}
                   </Box>
-                  <Typography variant="h4" sx={{ color: CREAM }}>{step.title}</Typography>
+                  <Typography variant="h4" component="h3" sx={{ color: CREAM }}>{step.title}</Typography>
                   <Typography sx={{ color: CREAM_55, lineHeight: 1.75 }}>{step.body}</Typography>
                 </Stack>
               </motion.div>
@@ -526,7 +513,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   }}>
                     {b.icon}
                   </Box>
-                  <Typography variant="h5" sx={{ mb: 1 }}>{b.title}</Typography>
+                  <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{b.title}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                     {b.body}
                   </Typography>

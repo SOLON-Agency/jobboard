@@ -15,25 +15,11 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { registerSchema, type RegisterFormData } from "@/components/forms/validations/register.schema";
 import { useAuth } from "@/hooks/useAuth";
 import appSettings from "@/config/app.settings.json";
 
-const schema = z
-  .object({
-    fullName: z.string().min(2, "Numele trebuie să aibă cel puțin 2 caractere"),
-    email: z.string().email("Introduceți o adresă de e-mail validă"),
-    password: z.string().min(6, "Parola trebuie să aibă cel puțin 6 caractere"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Parolele nu corespund",
-    path: ["confirmPassword"],
-  });
-
-type FormData = z.infer<typeof schema>;
-
-export const RegisterForm: React.FC = () => {
+export function RegisterForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const { user, signUp } = useAuth();
@@ -46,11 +32,11 @@ export const RegisterForm: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: RegisterFormData) => {
     setError(null);
     const { data: authData, error: authError } = await signUp(data.email, data.password);
     if (authError) {
@@ -82,7 +68,7 @@ export const RegisterForm: React.FC = () => {
           borderRadius: 3,
         }}
       >
-        <Typography variant="h3" sx={{ mb: 3, textAlign: "center" }}>
+        <Typography variant="h3" component="h1" sx={{ mb: 3, textAlign: "center" }}>
           Creează cont {appSettings.name}
         </Typography>
 
@@ -99,8 +85,10 @@ export const RegisterForm: React.FC = () => {
             {...register("fullName")}
             label="Nume complet"
             fullWidth
+            required
             error={!!errors.fullName}
             helperText={errors.fullName?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -108,8 +96,10 @@ export const RegisterForm: React.FC = () => {
             label="E-mail"
             type="email"
             fullWidth
+            required
             error={!!errors.email}
             helperText={errors.email?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -117,8 +107,10 @@ export const RegisterForm: React.FC = () => {
             label="Parolă"
             type="password"
             fullWidth
+            required
             error={!!errors.password}
             helperText={errors.password?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -126,8 +118,10 @@ export const RegisterForm: React.FC = () => {
             label="Confirmă parola"
             type="password"
             fullWidth
+            required
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 3 }}
           />
           <Button

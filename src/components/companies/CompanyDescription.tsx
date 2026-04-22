@@ -14,10 +14,10 @@ interface CompanyDescriptionProps {
   companyId: string;
 }
 
-export const CompanyDescription: React.FC<CompanyDescriptionProps> = ({
+export function CompanyDescription({
   description,
   companyId,
-}) => {
+}: CompanyDescriptionProps) {
   const supabase = useSupabase();
   const [expanded, setExpanded] = useState(false);
 

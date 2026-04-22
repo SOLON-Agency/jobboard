@@ -91,7 +91,7 @@ interface ConsentScreenProps {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export const ConsentScreen: React.FC<ConsentScreenProps> = ({
+export function ConsentScreen({
   userEmail,
   clientId,
   clientName,
@@ -99,7 +99,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
   redirectUri,
   scopes,
   state,
-}) => {
+}: ConsentScreenProps) {
   const [approvePending, startApprove] = useTransition();
   const [denyPending, startDeny] = useTransition();
   const pending = approvePending || denyPending;

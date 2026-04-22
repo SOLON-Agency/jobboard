@@ -1,4 +1,6 @@
 "use client";
+// TODO: This component uses manual useState validation instead of react-hook-form + Zod.
+// Migrate to useForm({ resolver: zodResolver(formBuilderSchema) }) following the AGENTS.md form pattern.
 
 import React, { useState, useCallback } from "react";
 import {
@@ -77,7 +79,7 @@ interface AddEditFormProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const AddEditForm: React.FC<AddEditFormProps> = ({
+export function AddEditForm({
   companies,
   editingForm,
   defaultValues,
@@ -85,7 +87,7 @@ export const AddEditForm: React.FC<AddEditFormProps> = ({
   onSubmit,
   onDelete,
   onCancel,
-}) => {
+}: AddEditFormProps) {
   const [formData, setFormData] = useState<FormBuilderData>(defaultValues);
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [errors, setErrors] = useState<Record<string, string>>({});

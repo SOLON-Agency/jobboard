@@ -15,7 +15,7 @@ import {
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import { useAuth } from "@/hooks/useAuth";
 
-const VerifyEmailContent: React.FC = () => {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
   const { resendVerification } = useAuth();

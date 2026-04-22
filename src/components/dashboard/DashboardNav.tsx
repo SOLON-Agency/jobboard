@@ -53,7 +53,8 @@ interface NavListProps {
   onNavigate?: () => void;
 }
 
-const NavList: React.FC<NavListProps> = ({ pathname, onNavigate }) => (
+function NavList({ pathname, onNavigate }: NavListProps) {
+  return (
   <List disablePadding>
     {navItems.map((item) => {
       const isActive = pathname === item.href;
@@ -90,11 +91,12 @@ const NavList: React.FC<NavListProps> = ({ pathname, onNavigate }) => (
       );
     })}
   </List>
-);
+  );
+}
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export const DashboardNav: React.FC = () => {
+export function DashboardNav() {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 

@@ -29,11 +29,12 @@ interface JobCardProps {
   onToggleFavorite?: (jobId: string) => void;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({
+export function JobCard({
   job,
   isFavorite = false,
   onToggleFavorite,
-}) => (
+}: JobCardProps) {
+  return (
   <Card
     sx={{
       display: "flex",
@@ -64,6 +65,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       >
         <Avatar
           src={job.companies?.logo_url ?? undefined}
+          alt={job.companies?.name ?? ""}
           sx={{
             width: 44,
             height: 44,
@@ -213,6 +215,8 @@ export const JobCard: React.FC<JobCardProps> = ({
         {onToggleFavorite && (
           <IconButton
             size="small"
+            aria-label={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}
+            aria-pressed={isFavorite}
             onClick={(e) => {
               e.preventDefault();
               onToggleFavorite(job.id);
@@ -230,3 +234,4 @@ export const JobCard: React.FC<JobCardProps> = ({
     )}
   </Card>
 );
+}

@@ -107,6 +107,12 @@ export const components: Components<Theme> = {
       root: {
         backgroundImage: "none",
       },
+      // `variant="outlined"` → shared bordered card appearance used throughout dashboard
+      outlined: {
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 8,
+      },
     },
   },
   MuiAppBar: {

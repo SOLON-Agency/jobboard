@@ -3,7 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { Box, Button, Container, Paper, Stack, Typography } from "@mui/material";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
 import SearchIcon from "@mui/icons-material/Search";
 import BusinessIcon from "@mui/icons-material/Business";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
@@ -61,20 +62,10 @@ const steps = [
   { number: "02", title: "Aplică instant", body: `Găsește postul potrivit pentru tine și aplică instant direct din platforma ${appSettings.name}.` },
 ];
 
-// ── Framer variants ───────────────────────────────────────────────────────────
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: "easeOut", delay: i * 0.1 },
-  }),
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export const FeaturesSection: React.FC = () => (
+export function FeaturesSection() {
+  return (
   <Box component="section">
 
     {/* ── Features grid ──────────────────────────────────────────────────────── */}
@@ -154,7 +145,7 @@ export const FeaturesSection: React.FC = () => (
                 >
                   {f.icon}
                 </Box>
-                <Typography variant="h5" sx={{ mb: 1, color: "text.primary" }}>
+                <Typography variant="h5" component="h3" sx={{ mb: 1, color: "text.primary" }}>
                   {f.title}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
@@ -239,7 +230,7 @@ export const FeaturesSection: React.FC = () => (
                   {step.number}
                 </Typography>
                 <Box sx={{ width: 40, height: 2, bgcolor: "rgba(195,174,97,0.3)", borderRadius: 1 }} />
-                <Typography variant="h4" sx={{ color: "#F0EBD8" }}>
+                <Typography variant="h4" component="h3" sx={{ color: "#F0EBD8" }}>
                   {step.title}
                 </Typography>
                 <Typography sx={{ color: "rgba(240,235,216,0.55)", lineHeight: 1.7 }}>
@@ -282,7 +273,7 @@ export const FeaturesSection: React.FC = () => (
                   Înregistrare gratuită
                 </Typography>
               </Stack>
-              <Typography variant="h3" sx={{ color: "#F0EBD8", mb: 0.5 }}>
+              <Typography variant="h3" component="h2" sx={{ color: "#F0EBD8", mb: 0.5 }}>
                 Gata să îți lansezi cariera?
               </Typography>
               <Typography sx={{ color: "rgba(240,235,216,0.5)" }}>
@@ -331,4 +322,5 @@ export const FeaturesSection: React.FC = () => (
       </Container>
     </Box>
   </Box>
-);
+  );
+}

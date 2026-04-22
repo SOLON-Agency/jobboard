@@ -10,7 +10,7 @@
     "forms": true,
     "alerts": false,
     "messages": false,
-    "notifications": false,
+    "notifications": true,
     "allowEmailNotificationOptOut": false,
     "favouriteJobs": false,
     "favouriteCompanies": false,

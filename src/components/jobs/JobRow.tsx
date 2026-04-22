@@ -43,13 +43,13 @@ interface JobRowProps {
   actions?: React.ReactNode;
 }
 
-export const JobRow: React.FC<JobRowProps> = ({
+export function JobRow({
   job,
   isFavorite = false,
   onToggleFavorite,
   showStatus = false,
   actions,
-}) => {
+}: JobRowProps) {
   return (
     <Paper
       sx={{

@@ -18,7 +18,7 @@ interface JobTagsProps {
   hideLocation?: boolean;
 }
 
-export const JobTags: React.FC<JobTagsProps> = ({ job, sx, hideLocation = false }) => {
+export function JobTags({ job, sx, hideLocation = false }: JobTagsProps) {
   const { job_type, experience_level, is_remote, location } = job;
 
   const hasExperience = experience_level && experience_level.length > 0;

@@ -3,6 +3,7 @@ import { Saira } from "next/font/google";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { generateWebSiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 import appSettings from "@/config/app.settings.json";
 
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: appSettings.name,
+    locale: "ro_RO",
     title: `${appSettings.name} — Platformă de carieră juridică`,
     description:
       "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură.",
@@ -35,7 +37,22 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: `${appSettings.name} — Platformă de carieră juridică`,
+    description:
+      "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură.",
   },
+};
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const webSiteJsonLd = generateWebSiteJsonLd();
+const rootOrgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
+  name: appSettings.name,
+  url: SITE_URL,
+  description:
+    "Platformă de carieră juridică din România. Locuri de muncă pentru avocați, juriști și consilieri juridici.",
 };
 
 export default function RootLayout({
@@ -44,23 +61,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={saira.variable}>
-      {/* <style dangerouslySetInnerHTML={{ __html: `
-        .main-content {
-          padding-bottom: 100px;
-        }
-        @media (min-width: 768px) {
-          .main-content {
-            padding-bottom: 30px;
-          }
-        }
-      `}} /> */}
+    <html lang="ro" className={saira.variable}>
       <body style={{ fontFamily: "var(--font-saira), sans-serif" }}>
         <ThemeRegistry>
+          {/* Skip navigation — visible only on keyboard focus via CSS */}
+          <a href="#main-content" className="skip-nav">
+            Sari la conținut
+          </a>
           <Navbar />
-          <main style={{ flex: 1 }} className="main-content">{children}</main>
+          <main id="main-content" style={{ flex: 1 }} className="main-content">
+            {children}
+          </main>
           <Footer />
         </ThemeRegistry>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(rootOrgJsonLd) }}
+        />
       </body>
     </html>
   );

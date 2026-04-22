@@ -2,7 +2,8 @@
 
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { slideVariantsFull, slideVariantsReduced, carouselTransition } from "@/lib/motion";
 import {
   Box,
   Typography,
@@ -30,33 +31,6 @@ type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> 
 const AUTO_MS = 5500;
 const SWIPE_MIN_PX = 48;
 
-/** Overlapping slide: incoming above outgoing; full-width horizontal travel. */
-const slideVariantsFull: Variants = {
-  enter: (dir: number) => ({
-    x: dir > 0 ? "100%" : "-100%",
-    zIndex: 2,
-  }),
-  center: {
-    x: 0,
-    zIndex: 2,
-  },
-  exit: (dir: number) => ({
-    x: dir > 0 ? "-100%" : "100%",
-    zIndex: 1,
-  }),
-};
-
-const slideVariantsReduced: Variants = {
-  enter: { opacity: 0 },
-  center: { opacity: 1 },
-  exit: { opacity: 0 },
-};
-
-const carouselTransition = {
-  type: "tween" as const,
-  duration: 0.45,
-  ease: [0.22, 0.61, 0.36, 1] as [number, number, number, number],
-};
 
 const carouselTransitionReduced = {
   type: "tween" as const,
@@ -72,7 +46,7 @@ interface Props {
   autoScroll?: boolean;
 }
 
-export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jobs, autoScroll = false }) => {
+export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = false }: Props) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
@@ -216,6 +190,8 @@ export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jo
 
   return (
     <Box
+      component="section"
+      aria-label={title ?? subtitle ?? "Anunțuri recomandate"}
       sx={{ py: { xs: 3, md: 2 } }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -275,6 +251,8 @@ export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jo
 
       <Box
         ref={viewportRef}
+        aria-live="polite"
+        aria-atomic="false"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         sx={{
@@ -322,6 +300,7 @@ export const JobsCarousel: React.FC<Props> = ({ title, subtitle, description, jo
                 <Stack direction="row" justifyContent="flex-start" alignItems="flex-start">
                   <Avatar
                     src={job.companies?.logo_url ?? undefined}
+                    alt={job.companies?.name ?? ""}
                     sx={{
                       width: 44,
                       height: 44,

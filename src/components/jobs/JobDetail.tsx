@@ -65,23 +65,25 @@ function parseSections(html: string): Array<{ title: string; html: string }> {
     .filter((s) => s.html.length > 0);
 }
 
-const MetaItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <Box>
-    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.25 }}>
-      {label}
-    </Typography>
-    <Typography variant="body2" fontWeight={700}>
-      {value}
-    </Typography>
-  </Box>
-);
+function MetaItem({ label, value }: { label: string; value: string }) {
+  return (
+    <Box>
+      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.25 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={700}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
 
-export const JobDetail: React.FC<JobDetailProps> = ({
+export function JobDetail({
   job,
   benefits = [],
   isFavorite = false,
   onToggleFavorite,
-}) => {
+}: JobDetailProps) {
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMsg, setSnackMsg] = useState("");
 
@@ -177,6 +179,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 <IconButton
                   onClick={onToggleFavorite}
                   size="small"
+                  aria-label={isFavorite ? "Elimină din salvate" : "Salvează anunțul"}
+                  aria-pressed={isFavorite}
                   sx={{
                     border: "1px solid",
                     borderColor: "divider",
@@ -203,6 +207,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 variant="outlined"
                 size="medium"
                 onClick={handleShare}
+                aria-label="Trimite anunțul"
                 sx={{ borderRadius: 5, minWidth: 0, px: 1.5, display: { xs: "inline-flex", md: "none" } }}
               >
                 <ShareOutlinedIcon fontSize="small" />
@@ -241,7 +246,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                   >
                     {idx + 1}
                   </Box> */}
-                  <Typography variant="h3" fontWeight={700}>
+                  <Typography variant="h3" component="h2" fontWeight={700}>
                     {section.title}
                   </Typography>
                 </Stack>
@@ -285,7 +290,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 >
                   1
                 </Box>
-                <Typography variant="h5" fontWeight={700}>Prezentare generală</Typography>
+                <Typography variant="h5" component="h2" fontWeight={700}>Prezentare generală</Typography>
               </Stack>
               <Box
                 sx={{
@@ -310,7 +315,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
           >
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
               {/* <CardGiftcardOutlinedIcon sx={{ color: "success.main", fontSize: 22 }} /> */}
-              <Typography variant="h3" fontWeight={700}>Beneficii </Typography>
+              <Typography variant="h3" component="h2" fontWeight={700}>Beneficii</Typography>
               <Chip
                 icon={<CardGiftcardOutlinedIcon sx={{ fontSize: "12px !important" }} />}
                 label={benefits.length === 1 ? "1 beneficiu" : `${benefits.length} beneficii`}
@@ -365,6 +370,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
           >
             <Avatar
               src={job.companies?.logo_url ?? undefined}
+              alt={job.companies?.name ?? ""}
               sx={{
                 width: 64,
                 height: 64,
@@ -402,6 +408,7 @@ export const JobDetail: React.FC<JobDetailProps> = ({
                 href={job.companies.website}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Vizitează website-ul companiei (se deschide în tab nou)"
                 endIcon={<OpenInNewIcon sx={{ fontSize: "14px !important" }} />}
                 sx={{ mt: 2, borderRadius: 5, px: 3, fontWeight: 700 }}
               >
@@ -478,6 +485,8 @@ export const JobDetail: React.FC<JobDetailProps> = ({
         autoHideDuration={2500}
         onClose={() => setSnackOpen(false)}
         message={snackMsg}
+        // role="status" so screen readers announce the copy confirmation politely
+        ContentProps={{ role: "status" } as object}
       />
     </Box>
   );

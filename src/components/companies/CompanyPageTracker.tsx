@@ -8,7 +8,7 @@ interface CompanyPageTrackerProps {
   companyId: string;
 }
 
-export const CompanyPageTracker: React.FC<CompanyPageTrackerProps> = ({ companyId }) => {
+export function CompanyPageTracker({ companyId }: CompanyPageTrackerProps) {
   const supabase = useSupabase();
   const tracked = useRef(false);
 

@@ -1,21 +1,50 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Container, Box, Typography, CircularProgress } from "@mui/material";
 import { JobFilters } from "@/components/jobs/JobFilters";
 import { JobList } from "@/components/jobs/JobList";
-import type { Metadata } from "next";
+import appSettings from "@/config/app.settings.json";
 
 export const metadata: Metadata = {
-  title: "Browse Jobs",
+  title: "Locuri de muncă juridice",
   description:
-    "Search and filter legal job opportunities from top law firms.",
+    "Răsfoiește sute de locuri de muncă pentru avocați, juriști și consilieri juridici. Filtrează după locație, tip de contract, salariu și beneficii.",
+  alternates: { canonical: "/jobs" },
+  openGraph: {
+    title: `Locuri de muncă juridice | ${appSettings.name}`,
+    description:
+      "Răsfoiește locuri de muncă pentru profesioniști juridici din România. Aplică direct la firmele de top.",
+    url: "/jobs",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Locuri de muncă juridice | ${appSettings.name}`,
+    description:
+      "Răsfoiește locuri de muncă pentru profesioniști juridici din România.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    "max-snippet": -1,
+    "max-image-preview": "large",
+  },
 };
 
 export default function JobsPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* <Typography variant="h2" sx={{ mb: 1 }}>
-        Browse Jobs
-      </Typography> */}
+      <Typography
+        variant="h1"
+        sx={{
+          fontSize: { xs: "1.5rem", md: "1.75rem" },
+          fontWeight: 700,
+          mb: 3,
+          color: "text.primary",
+        }}
+      >
+        Locuri de muncă juridice
+      </Typography>
 
       <Box
         sx={{
@@ -33,13 +62,19 @@ export default function JobsPage() {
             overflowY: { md: "auto" },
           }}
         >
-          <Suspense fallback={<CircularProgress />}>
+          <Suspense
+            fallback={
+              <Box role="status" aria-label="Se încarcă filtrele..." sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress size={24} />
+              </Box>
+            }
+          >
             <JobFilters />
           </Suspense>
         </Box>
         <Suspense
           fallback={
-            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <Box role="status" aria-label="Se încarcă anunțurile..." sx={{ display: "flex", justifyContent: "center", py: 8 }}>
               <CircularProgress />
             </Box>
           }

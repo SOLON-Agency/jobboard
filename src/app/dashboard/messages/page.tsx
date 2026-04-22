@@ -1,9 +1,12 @@
-"use client";
-
-import React from "react";
+import type { Metadata } from "next";
 import { Typography, Paper } from "@mui/material";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import ChatIcon from "@mui/icons-material/Chat";
+
+export const metadata: Metadata = {
+  title: "Mesaje",
+  robots: { index: false },
+};
 
 export default function MessagesPage() {
   return (

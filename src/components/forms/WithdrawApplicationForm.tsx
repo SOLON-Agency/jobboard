@@ -31,9 +31,7 @@ interface WithdrawApplicationFormProps {
   description?: React.ReactNode;
 }
 
-export const WithdrawApplicationForm: React.FC<
-  WithdrawApplicationFormProps
-> = ({
+export function WithdrawApplicationForm({
   open,
   jobTitle,
   onClose,
@@ -41,7 +39,7 @@ export const WithdrawApplicationForm: React.FC<
   submitLabel = "Retrage aplicația",
   title = "Retrage aplicația",
   description,
-}) => {
+}: WithdrawApplicationFormProps) {
   const {
     register,
     handleSubmit,

@@ -15,7 +15,7 @@ const yearRange = (item: ExperienceItem): string => {
   return `${item.start_year} — ${end}`;
 };
 
-export const ExperienceTimeline: React.FC<ExperienceTimelineProps> = ({ items }) => {
+export function ExperienceTimeline({ items }: ExperienceTimelineProps) {
   if (items.length === 0) return null;
 
   const sorted = [...items].sort(
