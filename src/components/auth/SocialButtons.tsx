@@ -14,7 +14,7 @@ const providers: { id: Provider; label: string; icon: React.ReactNode }[] = [
   { id: "twitter", label: "Continuă cu X", icon: <XIcon /> },
 ];
 
-export const SocialButtons: React.FC = () => {
+export function SocialButtons() {
   const { signInWithProvider } = useAuth();
 
   const handleSocial = async (provider: Provider) => {

@@ -44,7 +44,7 @@ const navLinks = [
   { label: "Vezi anunțuri", href: "/jobs" },
 ];
 
-export const Navbar: React.FC = () => {
+export function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [drawerOpen, setDrawerOpen] = useState(false);

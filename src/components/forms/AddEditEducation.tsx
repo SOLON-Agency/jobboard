@@ -48,11 +48,11 @@ export interface AddEditEducationProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const AddEditEducation: React.FC<AddEditEducationProps> = ({
+export function AddEditEducation({
   initialItems,
   loading = false,
   onReload,
-}) => {
+}: AddEditEducationProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
 

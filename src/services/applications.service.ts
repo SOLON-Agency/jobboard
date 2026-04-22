@@ -1,20 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables } from "@/types/database";
 
-export const submitApplication = async (
-  supabase: SupabaseClient<Database>,
-  application: Database["public"]["Tables"]["applications"]["Insert"]
-) => {
-  const { data, error } = await supabase
-    .from("applications")
-    .insert(application)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
 export type UserApplication = Tables<"applications"> & {
   job_listings:
     | (Tables<"job_listings"> & { companies: Tables<"companies"> | null })
@@ -107,7 +93,7 @@ export const getArchivedApplications = async (
   return (data ?? []) as UserApplication[];
 };
 
-export type JobApplicationCandidateProfile = Pick<
+type JobApplicationCandidateProfile = Pick<
   Tables<"profiles">,
   "id" | "full_name" | "avatar_url" | "headline"
 >;
@@ -162,4 +148,32 @@ export const updateApplicationStatus = async (
 
   if (error) throw error;
   return data;
+};
+
+/**
+ * Check whether a user has already applied to a specific job.
+ * Returns `true` if an application row exists, `false` otherwise.
+ *
+ * @pattern ServiceQuery
+ * @usedBy src/components/jobs/ApplyButton.tsx, src/app/api/jobs/apply-internal-form/route.ts
+ * @example
+ * ```ts
+ * const applied = await hasApplied(supabase, jobId, user.id);
+ * ```
+ *
+ * RLS: authenticated users can select their own applications (user_id = auth.uid()).
+ */
+export const hasApplied = async (
+  supabase: SupabaseClient<Database>,
+  jobId: string,
+  userId: string
+): Promise<boolean> => {
+  const { data } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("job_id", jobId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  return data !== null;
 };

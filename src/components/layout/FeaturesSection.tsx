@@ -3,7 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { Box, Button, Container, Paper, Stack, Typography } from "@mui/material";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
+import { fadeUp } from "@/lib/motion";
 import SearchIcon from "@mui/icons-material/Search";
 import BusinessIcon from "@mui/icons-material/Business";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
@@ -61,20 +62,10 @@ const steps = [
   { number: "02", title: "Aplică instant", body: `Găsește postul potrivit pentru tine și aplică instant direct din platforma ${appSettings.name}.` },
 ];
 
-// ── Framer variants ───────────────────────────────────────────────────────────
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: "easeOut", delay: i * 0.1 },
-  }),
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export const FeaturesSection: React.FC = () => (
+export function FeaturesSection() {
+  return (
   <Box component="section">
 
     {/* ── Features grid ──────────────────────────────────────────────────────── */}
@@ -331,4 +322,5 @@ export const FeaturesSection: React.FC = () => (
       </Container>
     </Box>
   </Box>
-);
+  );
+}

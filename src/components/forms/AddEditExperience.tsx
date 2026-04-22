@@ -48,11 +48,11 @@ export interface AddEditExperienceProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const AddEditExperience: React.FC<AddEditExperienceProps> = ({
+export function AddEditExperience({
   initialItems,
   loading = false,
   onReload,
-}) => {
+}: AddEditExperienceProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
 

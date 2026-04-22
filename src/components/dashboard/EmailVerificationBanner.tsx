@@ -5,7 +5,7 @@ import { Alert, Button, CircularProgress, Collapse } from "@mui/material";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import { useAuth } from "@/hooks/useAuth";
 
-export const EmailVerificationBanner: React.FC = () => {
+export function EmailVerificationBanner() {
   const { user, resendVerification } = useAuth();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);

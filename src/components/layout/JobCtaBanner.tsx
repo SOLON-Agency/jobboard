@@ -4,7 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { Box, Container, Typography, Button, Stack } from "@mui/material";
 
-export const JobCtaBanner: React.FC = () => (
+export function JobCtaBanner() {
+  return (
   <Box
     sx={{
       borderTop: "1px solid",
@@ -62,4 +63,5 @@ export const JobCtaBanner: React.FC = () => (
       </Stack>
     </Container>
   </Box>
-);
+  );
+}

@@ -73,6 +73,8 @@ const buildMailtoSubject = (companyName: string | undefined, jobTitle: string): 
   return contact ? `Candidatură + ${contact} | ${jobTitle}` : `Candidatură | ${jobTitle}`;
 };
 
+// TODO: The "job-application" Edge Function folder is missing from supabase/functions/
+// — ensure it is deployed separately before this invocation can succeed.
 const notifyApplication = (supabase: SupabaseClient, jobId: string) => {
   void supabase.functions
     .invoke("job-application", { body: { job_id: jobId } })
@@ -91,7 +93,7 @@ const isApplicationsDuplicateError = (err: unknown): boolean => {
 
 // ─── ApplyButton ──────────────────────────────────────────────────────────────
 
-export const ApplyButton: React.FC<ApplyButtonProps> = ({
+export function ApplyButton({
   job,
   company,
   label = "Aplică",
@@ -99,7 +101,7 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({
   fullWidth = false,
   variant = "contained",
   sx,
-}) => {
+}: ApplyButtonProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
 

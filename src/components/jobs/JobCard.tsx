@@ -29,11 +29,12 @@ interface JobCardProps {
   onToggleFavorite?: (jobId: string) => void;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({
+export function JobCard({
   job,
   isFavorite = false,
   onToggleFavorite,
-}) => (
+}: JobCardProps) {
+  return (
   <Card
     sx={{
       display: "flex",
@@ -230,3 +231,4 @@ export const JobCard: React.FC<JobCardProps> = ({
     )}
   </Card>
 );
+}

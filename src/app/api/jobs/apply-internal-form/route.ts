@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { apiSuccess, apiError } from "@/lib/api";
 
 interface ApplyBody {
   job_id?: string;
@@ -14,28 +14,25 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (authErr || !user?.id) {
-    return NextResponse.json({ error: "Trebuie să fii autentificat." }, { status: 401 });
+    return apiError("Trebuie să fii autentificat.", 401);
   }
 
   if (!user.email?.trim()) {
-    return NextResponse.json(
-      { error: "Contul tău nu are adresă de email. Adaugă un email pentru a aplica." },
-      { status: 400 },
-    );
+    return apiError("Contul tău nu are adresă de email. Adaugă un email pentru a aplica.", 400);
   }
 
   let body: ApplyBody;
   try {
     body = (await request.json()) as ApplyBody;
   } catch {
-    return NextResponse.json({ error: "Cerere invalidă." }, { status: 400 });
+    return apiError("Cerere invalidă.", 400);
   }
 
   const jobId = body.job_id;
   const fieldValues = body.field_values;
 
   if (!jobId || typeof fieldValues !== "object" || fieldValues === null) {
-    return NextResponse.json({ error: "Date lipsă sau invalide." }, { status: 400 });
+    return apiError("Date lipsă sau invalide.", 400);
   }
 
   const { data: job, error: jobErr } = await supabase
@@ -45,15 +42,15 @@ export async function POST(request: Request) {
     .single();
 
   if (jobErr || !job) {
-    return NextResponse.json({ error: "Anunț inexistent." }, { status: 404 });
+    return apiError("Anunț inexistent.", 404);
   }
 
   if (!job.application_form_id) {
-    return NextResponse.json({ error: "Acest anunț nu folosește un formular intern." }, { status: 400 });
+    return apiError("Acest anunț nu folosește un formular intern.", 400);
   }
 
   if (job.status !== "published" || job.is_archived) {
-    return NextResponse.json({ error: "Nu poți aplica la acest anunț." }, { status: 403 });
+    return apiError("Nu poți aplica la acest anunț.", 403);
   }
 
   const { data: formRow, error: formErr } = await supabase
@@ -63,7 +60,7 @@ export async function POST(request: Request) {
     .single();
 
   if (formErr || !formRow || formRow.is_archived || formRow.status !== "published") {
-    return NextResponse.json({ error: "Formularul de aplicare nu este disponibil." }, { status: 403 });
+    return apiError("Formularul de aplicare nu este disponibil.", 403);
   }
 
   const { data: fields, error: fieldsErr } = await supabase
@@ -74,10 +71,7 @@ export async function POST(request: Request) {
 
   if (fieldsErr) {
     console.error("apply-internal-form form_fields:", fieldsErr);
-    return NextResponse.json(
-      { error: "Nu s-au putut încărca câmpurile formularului." },
-      { status: 500 },
-    );
+    return apiError("Nu s-au putut încărca câmpurile formularului.", 500);
   }
 
   const fieldList = fields ?? [];
@@ -86,7 +80,7 @@ export async function POST(request: Request) {
     if (f.is_required) {
       const v = fieldValues[f.id]?.trim();
       if (!v) {
-        return NextResponse.json({ error: `Câmp obligatoriu: ${f.label}` }, { status: 400 });
+        return apiError(`Câmp obligatoriu: ${f.label}`, 400);
       }
     }
   }
@@ -99,7 +93,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (existingApp) {
-    return NextResponse.json({ error: "Ai aplicat deja la acest anunț.", code: "23505" }, { status: 409 });
+    return apiError("Ai aplicat deja la acest anunț.", 409, { code: "23505" });
   }
 
   const fullName =
@@ -121,12 +115,9 @@ export async function POST(request: Request) {
   if (respErr) {
     console.error("apply-internal-form form_responses:", respErr);
     if (respErr.code === "23505") {
-      return NextResponse.json({ error: "Ai aplicat deja la acest anunț.", code: "23505" }, { status: 409 });
+      return apiError("Ai aplicat deja la acest anunț.", 409, { code: "23505" });
     }
-    return NextResponse.json(
-      { error: respErr.message ?? "Nu s-a putut înregistra răspunsul." },
-      { status: 400 },
-    );
+    return apiError(respErr.message ?? "Nu s-a putut înregistra răspunsul.", 400);
   }
 
   if (fieldList.length > 0) {
@@ -139,10 +130,7 @@ export async function POST(request: Request) {
     const { error: valErr } = await supabase.from("form_response_values").insert(valueRows);
     if (valErr) {
       console.error("apply-internal-form form_response_values:", valErr);
-      return NextResponse.json(
-        { error: valErr.message ?? "Nu s-au putut salva răspunsurile." },
-        { status: 500 },
-      );
+      return apiError(valErr.message ?? "Nu s-au putut salva răspunsurile.", 500);
     }
   }
 
@@ -158,12 +146,9 @@ export async function POST(request: Request) {
   if (appErr) {
     console.error("apply-internal-form applications:", appErr);
     if (appErr.code === "23505") {
-      return NextResponse.json({ error: "Ai aplicat deja la acest anunț.", code: "23505" }, { status: 409 });
+      return apiError("Ai aplicat deja la acest anunț.", 409, { code: "23505" });
     }
-    return NextResponse.json(
-      { error: appErr.message ?? "Nu s-a putut înregistra candidatura." },
-      { status: 500 },
-    );
+    return apiError(appErr.message ?? "Nu s-a putut înregistra candidatura.", 500);
   }
 
   const {
@@ -178,9 +163,11 @@ export async function POST(request: Request) {
         }
       : { body: { job_id: job.id } };
 
+  // TODO: The "job-application" Edge Function folder is missing from supabase/functions/
+  // — ensure it is deployed separately before this invocation can succeed.
   void supabase.functions.invoke("job-application", invokeOpts).catch((err: unknown) =>
     console.warn("apply-internal-form: job-application:", err),
   );
 
-  return NextResponse.json({ ok: true as const });
+  return apiSuccess({ ok: true as const });
 }

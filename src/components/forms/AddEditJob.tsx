@@ -293,7 +293,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
     }, [watch, setValue]);
 
     return (
-      <Box component="form" onSubmit={(e) => e.preventDefault()}>
+      <Box component="form" onSubmit={(e) => e.preventDefault()} noValidate>
         <Stack spacing={2.5}>
           {!editingJob && companies.length > 1 && (
             <Controller

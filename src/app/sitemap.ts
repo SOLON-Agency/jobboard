@@ -1,4 +1,6 @@
 import { createStaticClient } from "@/lib/supabase/static";
+import { getAllJobSlugs } from "@/services/jobs.service";
+import { getAllCompanySlugs } from "@/services/companies.service";
 import type { MetadataRoute } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -15,14 +17,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let jobPages: MetadataRoute.Sitemap = [];
   try {
-    const { data: jobs } = await supabase
-      .from("job_listings")
-      .select("slug, updated_at")
-      .eq("status", "published");
-
-    jobPages = (jobs ?? []).map((job) => ({
-      url: `${BASE_URL}/jobs/${job.slug}`,
-      lastModified: new Date(job.updated_at),
+    const slugs = await getAllJobSlugs(supabase);
+    jobPages = slugs.map((slug) => ({
+      url: `${BASE_URL}/jobs/${slug}`,
+      lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.8,
     }));
@@ -30,13 +28,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let companyPages: MetadataRoute.Sitemap = [];
   try {
-    const { data: companies } = await supabase
-      .from("companies")
-      .select("slug, updated_at");
-
-    companyPages = (companies ?? []).map((company) => ({
-      url: `${BASE_URL}/companies/${company.slug}`,
-      lastModified: new Date(company.updated_at),
+    const slugs = await getAllCompanySlugs(supabase);
+    companyPages = slugs.map((slug) => ({
+      url: `${BASE_URL}/companies/${slug}`,
+      lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.6,
     }));

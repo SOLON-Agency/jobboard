@@ -59,7 +59,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
     };
 
     return (
-      <Box component="form" onSubmit={handleSubmit((data) => onSubmit(data, logoFile))}>
+      <Box component="form" onSubmit={handleSubmit((data) => onSubmit(data, logoFile))} noValidate>
         <Stack spacing={2.5}>
           {/* Logo upload */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

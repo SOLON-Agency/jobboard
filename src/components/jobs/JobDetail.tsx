@@ -65,23 +65,25 @@ function parseSections(html: string): Array<{ title: string; html: string }> {
     .filter((s) => s.html.length > 0);
 }
 
-const MetaItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <Box>
-    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.25 }}>
-      {label}
-    </Typography>
-    <Typography variant="body2" fontWeight={700}>
-      {value}
-    </Typography>
-  </Box>
-);
+function MetaItem({ label, value }: { label: string; value: string }) {
+  return (
+    <Box>
+      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.25 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={700}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
 
-export const JobDetail: React.FC<JobDetailProps> = ({
+export function JobDetail({
   job,
   benefits = [],
   isFavorite = false,
   onToggleFavorite,
-}) => {
+}: JobDetailProps) {
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMsg, setSnackMsg] = useState("");
 

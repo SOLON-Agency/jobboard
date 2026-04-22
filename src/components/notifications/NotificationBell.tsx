@@ -17,7 +17,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useNotifications } from "@/hooks/useNotifications";
 import { timeAgo } from "@/lib/utils";
 
-export const NotificationBell: React.FC = () => {
+export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotifications();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

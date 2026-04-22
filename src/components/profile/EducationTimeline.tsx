@@ -15,7 +15,7 @@ const yearRange = (item: EducationItem): string => {
   return `${item.start_year} — ${end}`;
 };
 
-export const EducationTimeline: React.FC<EducationTimelineProps> = ({ items }) => {
+export function EducationTimeline({ items }: EducationTimelineProps) {
   if (items.length === 0) return null;
 
   const sorted = [...items].sort(

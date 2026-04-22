@@ -1,20 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables } from "@/types/database";
 
-export const getCompanyBySlug = async (
-  supabase: SupabaseClient<Database>,
-  slug: string
-) => {
-  const { data, error } = await supabase
-    .from("companies")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
 export const getCompanyWithJobs = async (
   supabase: SupabaseClient<Database>,
   slug: string
@@ -191,19 +177,6 @@ export const getUserCompaniesWithJobCount = async (
   return companies.map((c) => ({ ...c, jobCount: countByCompany[c.id] ?? 0 }));
 };
 
-export const getCompanyMembers = async (
-  supabase: SupabaseClient<Database>,
-  companyId: string
-) => {
-  const { data, error } = await supabase
-    .from("company_users")
-    .select("*, profiles:user_id(id, full_name, avatar_url, slug)")
-    .eq("company_id", companyId);
-
-  if (error) throw error;
-  return data ?? [];
-};
-
 export const trackCompanyVisit = async (
   supabase: SupabaseClient<Database>,
   companyId: string
@@ -218,17 +191,3 @@ export const trackCompanyEngage = async (
   await supabase.rpc("increment_company_engages", { p_company_id: companyId });
 };
 
-export const inviteMember = async (
-  supabase: SupabaseClient<Database>,
-  companyId: string,
-  userId: string,
-  role: "admin" | "member" = "member"
-) => {
-  const { error } = await supabase.from("company_users").insert({
-    company_id: companyId,
-    user_id: userId,
-    role,
-  });
-
-  if (error) throw error;
-};

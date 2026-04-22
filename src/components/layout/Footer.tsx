@@ -12,7 +12,7 @@ const footerLinks = [
   { label: "Politică de confidențialitate", href: "/policy" },
 ];
 
-export const Footer: React.FC = () => {
+export function Footer() {
   const theme = useTheme();
   const brandGradient =
     theme.palette.mode === "dark"

@@ -37,7 +37,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { motion } from "framer-motion";
 import appSettings from "@/config/app.settings.json";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,7 +73,8 @@ interface StatCardProps {
   href?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, accentColor, href }) => (
+function StatCard({ label, value, icon, accentColor, href }: StatCardProps) {
+  return (
   <Paper
     component={href ? Link : "div"}
     href={href}
@@ -102,7 +102,8 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, accentColor, hr
       <Box sx={{ color: accentColor, opacity: 0.7 }}>{icon}</Box>
     </Stack>
   </Paper>
-);
+  );
+}
 
 interface ChartCardProps {
   title: string;
@@ -112,7 +113,8 @@ interface ChartCardProps {
   emptyLabel?: string;
 }
 
-const ChartCard: React.FC<ChartCardProps> = ({ title, subtitle, children, empty, emptyLabel }) => (
+function ChartCard({ title, subtitle, children, empty, emptyLabel }: ChartCardProps) {
+  return (
   <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.25 }}>
       {title}
@@ -126,14 +128,15 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, subtitle, children, empty,
     {empty ? (
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: 180 }}>
         <Typography variant="body2" color="text.disabled">
-          {emptyLabel ?? "Nu există date"}
+          {emptyLabel ?? "Nu existe date"}
         </Typography>
       </Box>
     ) : (
       children
     )}
   </Paper>
-);
+  );
+}
 
 const CHART_COLORS = {
   primary: "#03170C",
@@ -174,7 +177,7 @@ const PieTooltip = ({ active, payload }: { active?: boolean; payload?: { name: s
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export const DashboardContent: React.FC<DashboardStats> = ({
+export function DashboardContent({
   profileName,
   profileComplete,
   publishedJobs,
@@ -191,7 +194,7 @@ export const DashboardContent: React.FC<DashboardStats> = ({
   jobsByStatus,
   applicationsByStatus,
   formResponsesByMonth,
-}) => {
+}: DashboardStats) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 

@@ -41,11 +41,12 @@ const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary"
 
 type SectionKey = "location" | "jobType" | "experience" | "salary" | "remote" | "benefits";
 
-const SectionHeader: React.FC<{
+function SectionHeader({ label, open, onToggle }: {
   label: string;
   open: boolean;
   onToggle: () => void;
-}> = ({ label, open, onToggle }) => (
+}) {
+  return (
   <Box
     component="button"
     onClick={onToggle}
@@ -84,9 +85,10 @@ const SectionHeader: React.FC<{
       }
     </Box>
   </Box>
-);
+  );
+}
 
-export const JobFilters: React.FC = () => {
+export function JobFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

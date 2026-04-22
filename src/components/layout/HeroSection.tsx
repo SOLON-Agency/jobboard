@@ -3,7 +3,8 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
+import { heroContainer, heroItem, statsContainer } from "@/lib/motion";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -20,23 +21,6 @@ const WAVES = [
   { offset: Math.PI * 1.5, amplitude: 80, frequency: 0.0022, color: "rgba(15,64,36,0.9)",     opacity: 0.35 },
   { offset: Math.PI * 2,   amplitude: 55, frequency: 0.004,  color: "rgba(240,235,216,0.5)",  opacity: 0.25 },
 ];
-
-// ── Framer-motion variants ────────────────────────────────────────────────────
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.9, staggerChildren: 0.14 } },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: "easeOut" } },
-};
-
-const statsVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.96 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.65, ease: "easeOut", staggerChildren: 0.08 } },
-};
 
 // ── Stats helpers ─────────────────────────────────────────────────────────────
 
@@ -62,7 +46,7 @@ const pills = ["Acces gratuit", "Aplicare rapidă", "Alerte inteligente"] as con
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
+export function HeroSection({ counts }: { counts?: HeroCounts }) {
   const stats = [
     { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Anunțuri", value: counts ? formatCount(counts.jobs) : "100+" },
     { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme", value: counts ? formatCount(counts.companies) : "10+" },
@@ -127,7 +111,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
           Math.sin(x * wave.frequency * 0.4 + time * 0.003) * (wave.amplitude * 0.45) +
           mouseEffect;
 
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        if (x === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
       }
 
       ctx.lineWidth = 2.5;
@@ -213,10 +197,10 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
         maxWidth="lg"
         sx={{ position: "relative", zIndex: 10, pb: { xs: 4, md: 8 }, pt: { xs: 4, md: 0 }, textAlign: "center" }}
       >
-        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+        <motion.div variants={heroContainer} initial="hidden" animate="visible">
 
           {/* Badge */}
-          <motion.div variants={itemVariants}>
+          <motion.div variants={heroItem}>
             <Box
               sx={{
                 display: "inline-flex",
@@ -248,7 +232,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
           </motion.div>
 
           {/* Heading */}
-          <motion.div variants={itemVariants}>
+          <motion.div variants={heroItem}>
             <Typography
               component="h1"
               sx={{
@@ -277,7 +261,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
           </motion.div>
 
           {/* Subtitle */}
-          {/* <motion.div variants={itemVariants}>
+          {/* <motion.div variants={heroItem}>
             <Typography
               sx={{
                 fontSize: { xs: "1.05rem", md: "1.35rem" },
@@ -294,7 +278,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
           </motion.div> */}
 
           {/* CTAs */}
-          <motion.div variants={itemVariants}>
+          <motion.div variants={heroItem}>
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={2}
@@ -351,7 +335,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
           </motion.div>
 
           {/* Feature pills */}
-          <motion.div variants={itemVariants}>
+          <motion.div variants={heroItem}>
             <Stack
               direction="row"
               spacing={1.5}
@@ -383,7 +367,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
           </motion.div>
 
           {/* Stats bar */}
-          <motion.div variants={statsVariants}>
+          <motion.div variants={statsContainer}>
             <Box
               sx={{
                 display: "grid",
@@ -399,7 +383,7 @@ export const HeroSection: React.FC<{ counts?: HeroCounts }> = ({ counts }) => {
               }}
             >
               {stats.map((stat, i) => (
-                <motion.div key={stat.label} variants={itemVariants}>
+                <motion.div key={stat.label} variants={heroItem}>
                   <Box
                     sx={{
                       px: 3,

@@ -31,7 +31,7 @@ interface EditSideDrawerProps {
   };
 }
 
-export const EditSideDrawer: React.FC<EditSideDrawerProps> = ({
+export function EditSideDrawer({
   open,
   onClose,
   title,
@@ -40,7 +40,8 @@ export const EditSideDrawer: React.FC<EditSideDrawerProps> = ({
   onMessageClose,
   width = 480,
   slotProps,
-}) => (
+}: EditSideDrawerProps) {
+  return (
   <Drawer
     anchor="right"
     open={open}
@@ -85,3 +86,4 @@ export const EditSideDrawer: React.FC<EditSideDrawerProps> = ({
     </Box>
   </Drawer>
 );
+}

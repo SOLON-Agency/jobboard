@@ -101,7 +101,7 @@ interface JobListProps {
   onPreviewCandidates?: (job: JobWithCompany) => void;
 }
 
-export const JobList: React.FC<JobListProps> = ({
+export function JobList({
   jobs: controlledJobs,
   totalCount: controlledCount,
   showControls,
@@ -113,7 +113,7 @@ export const JobList: React.FC<JobListProps> = ({
   onStatusChange,
   onArchive,
   onPreviewCandidates,
-}) => {
+}: JobListProps) {
   const isControlled = controlledJobs !== undefined;
 
   const supabase    = useSupabase();
@@ -341,9 +341,9 @@ export const JobList: React.FC<JobListProps> = ({
     </Stack>
   );
 };
-const JobActionsRow: React.FC<JobActionsRowProps> = ({
+function JobActionsRow({
   job, onEdit, onDuplicate, onStatusChange, onArchive, onPreviewCandidates,
-}) => {
+}: JobActionsRowProps) {
   const theme = useTheme();
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
   const isSm = useMediaQuery(theme.breakpoints.up("sm"));

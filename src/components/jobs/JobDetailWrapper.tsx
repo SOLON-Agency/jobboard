@@ -17,7 +17,7 @@ interface JobDetailWrapperProps {
   benefits?: BenefitItem[];
 }
 
-export const JobDetailWrapper: React.FC<JobDetailWrapperProps> = ({ job, benefits = [] }) => {
+export function JobDetailWrapper({ job, benefits = [] }: JobDetailWrapperProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
   const [isFavorite, setIsFavorite] = useState(false);

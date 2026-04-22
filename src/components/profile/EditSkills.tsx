@@ -37,11 +37,11 @@ interface EditSkillsProps {
   onReload?: () => void;
 }
 
-export const EditSkills: React.FC<EditSkillsProps> = ({
+export function EditSkills({
   initialItems,
   loading = false,
   onReload,
-}) => {
+}: EditSkillsProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
 

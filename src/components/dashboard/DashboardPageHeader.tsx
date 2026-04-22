@@ -15,14 +15,15 @@ export interface DashboardPageHeaderProps {
   responsive?: boolean;
 }
 
-export const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
+export function DashboardPageHeader({
   title,
   subtitle,
   actions,
   alignTop = false,
   sx,
   responsive = true,
-}) => (
+}: DashboardPageHeaderProps) {
+  return (
   <Stack
     direction={responsive ? { xs: "column", md: "row" } : "row"}
     justifyContent="space-between"
@@ -56,3 +57,4 @@ export const DashboardPageHeader: React.FC<DashboardPageHeaderProps> = ({
     ) : null}
   </Stack>
 );
+}

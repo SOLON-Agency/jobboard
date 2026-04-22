@@ -1,5 +1,3 @@
-export type { Database, Tables, TablesInsert, TablesUpdate, Json } from "./database";
-
 export type JobType = "full-time" | "part-time" | "contract" | "internship" | "freelance";
 
 export type ExperienceLevel = "entry" | "mid" | "senior" | "lead" | "executive";
@@ -16,11 +14,6 @@ export interface JobSearchFilters {
   remote?: boolean;
   minBenefits?: number;
   sort?: JobSortOption;
-}
-
-export interface PaginationParams {
-  page: number;
-  limit: number;
 }
 
 export interface PaginatedResponse<T> {

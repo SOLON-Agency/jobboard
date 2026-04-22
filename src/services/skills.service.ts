@@ -9,7 +9,7 @@ export type ProfileSkillWithName = {
   skill: Skill;
 };
 
-/** Fetch all skills from the master catalogue (used for autocomplete). */
+/** Fetch all skills from the master catalogue (used for autocomplete in EditSkills). */
 export const getAllSkills = async (
   supabase: SupabaseClient<Database>
 ): Promise<Skill[]> => {

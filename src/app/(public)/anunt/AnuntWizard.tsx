@@ -35,7 +35,8 @@ import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined
 
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
-import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 import {
   AddEditJob,
   type AddEditJobHandle,
@@ -51,9 +52,10 @@ import { createJob } from "@/services/jobs.service";
 import { createCompany, updateCompany } from "@/services/companies.service";
 import { createBenefit } from "@/services/benefits.service";
 import { slugify, parseSupabaseError, jobTypeLabels, experienceLevelLabels, formatSalary, formatDate } from "@/lib/utils";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormData } from "@/components/forms/validations/login.schema";
+import { wizardRegisterSchema, type WizardRegisterFormData } from "@/components/forms/validations/wizard-register.schema";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -110,37 +112,19 @@ function clearDraft() {
   try { localStorage.removeItem(DRAFT_STORAGE_KEY); } catch { /* ignore */ }
 }
 
-// ─── Auth schemas ─────────────────────────────────────────────────────────────
-
-const loginSchema = z.object({
-  email: z.string().email("Email invalid"),
-  password: z.string().min(6, "Minim 6 caractere"),
-});
-type LoginData = z.infer<typeof loginSchema>;
-
-const registerSchema = z
-  .object({
-    email: z.string().email("Email invalid"),
-    password: z.string().min(6, "Minim 6 caractere"),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Parolele nu corespund",
-    path: ["confirmPassword"],
-  });
-type RegisterData = z.infer<typeof registerSchema>;
-
 // ─── LoginInline ──────────────────────────────────────────────────────────────
 
-const LoginInline: React.FC<{ onError: (msg: string | null) => void }> = ({ onError }) => {
-  const supabase = createClient();
+function LoginInline({ supabase, onError }: {
+  supabase: SupabaseClient<Database>;
+  onError: (msg: string | null) => void;
+}) {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginData>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = async (data: LoginData) => {
+  const onSubmit = async (data: LoginFormData) => {
     onError(null);
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
@@ -184,19 +168,19 @@ const LoginInline: React.FC<{ onError: (msg: string | null) => void }> = ({ onEr
 
 // ─── RegisterInline ───────────────────────────────────────────────────────────
 
-const RegisterInline: React.FC<{
+function RegisterInline({ supabase, emailRedirectTo, onError, onSuccess }: {
+  supabase: SupabaseClient<Database>;
   emailRedirectTo: string;
   onError: (msg: string | null) => void;
   onSuccess: (email: string) => void;
-}> = ({ emailRedirectTo, onError, onSuccess }) => {
-  const supabase = createClient();
+}) {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterData>({ resolver: zodResolver(registerSchema) });
+  } = useForm<WizardRegisterFormData>({ resolver: zodResolver(wizardRegisterSchema) });
 
-  const onSubmit = async (data: RegisterData) => {
+  const onSubmit = async (data: WizardRegisterFormData) => {
     onError(null);
     const { error } = await supabase.auth.signUp({
       email: data.email,
@@ -254,10 +238,11 @@ const RegisterInline: React.FC<{
 // ─── UpgradeAuthGate ──────────────────────────────────────────────────────────
 // Shown in the confirmation step when the user is anonymous or unauthenticated.
 
-const UpgradeAuthGate: React.FC<{
+function UpgradeAuthGate({ supabase, emailRedirectTo, onRegistered }: {
+  supabase: SupabaseClient<Database>;
   emailRedirectTo: string;
   onRegistered: (email: string) => void;
-}> = ({ emailRedirectTo, onRegistered }) => {
+}) {
   const [mode, setMode] = useState<"register" | "login">("register");
   const [error, setError] = useState<string | null>(null);
 
@@ -300,9 +285,10 @@ const UpgradeAuthGate: React.FC<{
       )}
 
       {mode === "login" ? (
-        <LoginInline onError={setError} />
+        <LoginInline supabase={supabase} onError={setError} />
       ) : (
         <RegisterInline
+          supabase={supabase}
           emailRedirectTo={emailRedirectTo}
           onError={setError}
           onSuccess={onRegistered}
@@ -323,14 +309,14 @@ interface ConfirmationProps {
   onEditCompany: () => void;
 }
 
-const ConfirmationStep: React.FC<ConfirmationProps> = ({
+function ConfirmationStep({
   jobData,
   jobBenefits,
   companyData,
   companyLogoUrl,
   onEditJob,
   onEditCompany,
-}) => {
+}: ConfirmationProps) {
   const descriptionText = jobData.description.replace(/<[^>]*>/g, "").trim();
   const salaryText = formatSalary(
     jobData.salary_min ? Number(jobData.salary_min) : null,
@@ -498,7 +484,8 @@ const ConfirmationStep: React.FC<ConfirmationProps> = ({
 
 // ─── Loading overlay ──────────────────────────────────────────────────────────
 
-const PublishingOverlay: React.FC<{ message: string }> = ({ message }) => (
+function PublishingOverlay({ message }: { message: string }) {
+  return (
   <Box
     sx={{
       position: "fixed",
@@ -538,11 +525,12 @@ const PublishingOverlay: React.FC<{ message: string }> = ({ message }) => (
       {message}
     </Typography>
   </Box>
-);
+  );
+}
 
 // ─── Main wizard ──────────────────────────────────────────────────────────────
 
-export const AnuntWizard: React.FC = () => {
+export function AnuntWizard() {
   const { user, loading: authLoading } = useAuth();
   const supabase = useSupabase();
   const router = useRouter();
@@ -1004,6 +992,7 @@ export const AnuntWizard: React.FC = () => {
                 <Box sx={{ mt: 3 }}>
                   {isAnonymous && !isPendingConfirmation && (
                     <UpgradeAuthGate
+                      supabase={supabase}
                       emailRedirectTo={emailRedirectTo}
                       onRegistered={handleRegistered}
                     />

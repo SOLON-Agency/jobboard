@@ -42,9 +42,11 @@ const createEmotionRegistry = (): EmotionRegistry => {
   return { cache, flush };
 };
 
-export const ThemeRegistry: React.FC<{ children: React.ReactNode }> = ({
+export function ThemeRegistry({
   children,
-}) => {
+}: {
+  children: React.ReactNode;
+}) {
   const [{ cache, flush }] = React.useState(createEmotionRegistry);
 
   useServerInsertedHTML(() => {
