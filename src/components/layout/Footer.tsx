@@ -38,7 +38,7 @@ export function Footer() {
           spacing={3}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <WorkOutlineIcon sx={{ color: "primary.main", fontSize: 24 }} />
+            <WorkOutlineIcon aria-hidden="true" sx={{ color: "primary.main", fontSize: 24 }} />
             <Typography
               variant="body1"
               sx={{
@@ -52,23 +52,25 @@ export function Footer() {
             </Typography>
           </Box>
 
-          <Stack direction="row" spacing={3}>
-            {footerLinks.map((link) => (
-              <Typography
-                key={link.href}
-                component={Link}
-                href={link.href}
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  textDecoration: "none",
-                  "&:hover": { color: "primary.main" },
-                }}
-              >
-                {link.label}
-              </Typography>
-            ))}
-          </Stack>
+          <Box component="nav" aria-label="Linkuri utile">
+            <Stack direction="row" spacing={3}>
+              {footerLinks.map((link) => (
+                <Typography
+                  key={link.href}
+                  component={Link}
+                  href={link.href}
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    textDecoration: "none",
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  {link.label}
+                </Typography>
+              ))}
+            </Stack>
+          </Box>
         </Stack>
 
       </Container>

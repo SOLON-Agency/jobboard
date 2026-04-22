@@ -360,7 +360,7 @@ export function ApplicationsClient() {
       setApplications((prev) => prev.filter((a) => a.id !== archiveTarget.id));
       setFeedback({
         severity: "success",
-        text: "Aplicația a fost ștearsă din lista ta.",
+        text: "Aplicația a fost ștearsă din lista ta de aplicații active.",
       });
       setArchiveTarget(null);
     } catch (err) {
@@ -489,11 +489,13 @@ export function ApplicationsClient() {
                             href={`/jobs/${job.slug}`}
                             variant="subtitle2"
                             fontWeight={700}
-                            noWrap
                             sx={{
                               textDecoration: "none",
                               color: "text.primary",
                               "&:hover": { color: "primary.main" },
+                              maxWidth: "100%",
+                              whiteSpace: "normal",
+                              wordBreak: "break-word",
                             }}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -702,14 +704,14 @@ export function ApplicationsClient() {
         maxWidth="xs"
       >
         <DialogTitle id="archive-dialog-title" sx={{ fontWeight: 700, pb: 1 }}>
-          Ștergi aplicația?
+          Arhivezi aplicația?
         </DialogTitle>
         <DialogContent>
           <DialogContentText
             id="archive-dialog-description"
             sx={{ color: "text.primary" }}
           >
-            Această acțiune va șterge aplicația ta
+            Această acțiune va arhiva aplicația ta
             {archiveTarget?.job_listings?.title ? (
               <>
                 {" "}pentru{" "}
@@ -718,7 +720,7 @@ export function ApplicationsClient() {
                 </Typography>
               </>
             ) : null}
-            . Dacă aplicația este încă activă, va fi și retrasă, iar angajatorul
+            . Dacă aplicația este încă activă, va fi și retrasă, iar angajatorul {archiveTarget?.job_listings?.companies?.name ?? ""}
             va fi notificat. Ești sigur?
           </DialogContentText>
         </DialogContent>
@@ -735,7 +737,7 @@ export function ApplicationsClient() {
             color="error"
             disabled={archiveBusy}
           >
-            {archiveBusy ? "Se șterge…" : "Da, șterge"}
+            {archiveBusy ? "Se arhivează..." : "Da, arhivează"}
           </Button>
         </DialogActions>
       </Dialog>

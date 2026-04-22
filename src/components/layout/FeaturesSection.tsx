@@ -145,7 +145,7 @@ export function FeaturesSection() {
                 >
                   {f.icon}
                 </Box>
-                <Typography variant="h5" sx={{ mb: 1, color: "text.primary" }}>
+                <Typography variant="h5" component="h3" sx={{ mb: 1, color: "text.primary" }}>
                   {f.title}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
@@ -230,7 +230,7 @@ export function FeaturesSection() {
                   {step.number}
                 </Typography>
                 <Box sx={{ width: 40, height: 2, bgcolor: "rgba(195,174,97,0.3)", borderRadius: 1 }} />
-                <Typography variant="h4" sx={{ color: "#F0EBD8" }}>
+                <Typography variant="h4" component="h3" sx={{ color: "#F0EBD8" }}>
                   {step.title}
                 </Typography>
                 <Typography sx={{ color: "rgba(240,235,216,0.55)", lineHeight: 1.7 }}>
@@ -273,7 +273,7 @@ export function FeaturesSection() {
                   Înregistrare gratuită
                 </Typography>
               </Stack>
-              <Typography variant="h3" sx={{ color: "#F0EBD8", mb: 0.5 }}>
+              <Typography variant="h3" component="h2" sx={{ color: "#F0EBD8", mb: 0.5 }}>
                 Gata să îți lansezi cariera?
               </Typography>
               <Typography sx={{ color: "rgba(240,235,216,0.5)" }}>

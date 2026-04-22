@@ -28,7 +28,7 @@ import {
   getCompanyWithJobs,
   getAllCompanySlugs,
 } from "@/services/companies.service";
-import { generateOrganizationJsonLd } from "@/lib/seo";
+import { generateOrganizationJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import { CompanyDescription } from "@/components/companies/CompanyDescription";
 import { CompanyPageTracker } from "@/components/companies/CompanyPageTracker";
@@ -94,16 +94,30 @@ export async function generateStaticParams() {
   }
 }
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();
   try {
     const { company } = await getCompanyWithJobs(supabase, slug);
+    const title = company.name;
+    const description =
+      company.description?.slice(0, 160) ??
+      `${company.name} — profilul companiei și anunțuri de angajare.`;
+    const url = `${SITE_URL}/companies/${slug}`;
     return {
-      title: company.name,
-      description:
-        company.description?.slice(0, 160) ??
-        `${company.name} — profilul companiei și anunțuri de angajare.`,
+      title,
+      description,
+      alternates: { canonical: `/companies/${slug}` },
+      openGraph: { title, description, url, type: "website" },
+      twitter: { card: "summary_large_image", title, description },
+      robots: {
+        index: true,
+        follow: true,
+        "max-snippet": -1,
+        "max-image-preview": "large",
+      },
     };
   } catch {
     return { title: "Companie negăsită" };
@@ -125,6 +139,11 @@ export default async function CompanyPage({ params }: Props) {
   }
 
   const jsonLd = generateOrganizationJsonLd(company);
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Acasă", url: SITE_URL },
+    { name: "Companii", url: `${SITE_URL}/companies` },
+    { name: company.name, url: `${SITE_URL}/companies/${company.slug}` },
+  ]);
   const jobChips = deriveJobChips(jobs);
 
   return (
@@ -133,6 +152,10 @@ export default async function CompanyPage({ params }: Props) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>

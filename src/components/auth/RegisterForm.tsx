@@ -68,7 +68,7 @@ export function RegisterForm() {
           borderRadius: 3,
         }}
       >
-        <Typography variant="h3" sx={{ mb: 3, textAlign: "center" }}>
+        <Typography variant="h3" component="h1" sx={{ mb: 3, textAlign: "center" }}>
           Creează cont {appSettings.name}
         </Typography>
 
@@ -85,8 +85,10 @@ export function RegisterForm() {
             {...register("fullName")}
             label="Nume complet"
             fullWidth
+            required
             error={!!errors.fullName}
             helperText={errors.fullName?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -94,8 +96,10 @@ export function RegisterForm() {
             label="E-mail"
             type="email"
             fullWidth
+            required
             error={!!errors.email}
             helperText={errors.email?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -103,8 +107,10 @@ export function RegisterForm() {
             label="Parolă"
             type="password"
             fullWidth
+            required
             error={!!errors.password}
             helperText={errors.password?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -112,8 +118,10 @@ export function RegisterForm() {
             label="Confirmă parola"
             type="password"
             fullWidth
+            required
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 3 }}
           />
           <Button

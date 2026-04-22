@@ -67,7 +67,7 @@ export function LoginForm() {
           borderRadius: 3,
         }}
       >
-        <Typography variant="h3" sx={{ mb: 1, textAlign: "center" }}>
+        <Typography variant="h3" component="h1" sx={{ mb: 1, textAlign: "center" }}>
           Bine ai revenit
         </Typography>
         <Typography
@@ -92,8 +92,10 @@ export function LoginForm() {
             label="E-mail"
             type="email"
             fullWidth
+            required
             error={!!errors.email}
             helperText={errors.email?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -101,8 +103,10 @@ export function LoginForm() {
             label="Parolă"
             type="password"
             fullWidth
+            required
             error={!!errors.password}
             helperText={errors.password?.message}
+            inputProps={{ "aria-required": "true" }}
             sx={{ mb: 3 }}
           />
           <Button

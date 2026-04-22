@@ -230,7 +230,7 @@ export function JobList({
           gap={1}
           sx={{ mb: 2 }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" role="status" aria-live="polite">
             {loading ? (
               <Skeleton variant="text" width={120} />
             ) : (
@@ -244,6 +244,7 @@ export function JobList({
                 value={sort}
                 onChange={(e) => setParam("sort", e.target.value)}
                 displayEmpty
+                inputProps={{ "aria-label": "Sortează anunțurile" }}
                 sx={{ fontSize: "0.8rem" }}
               >
                 {SORT_OPTIONS.map((o) => (
@@ -258,6 +259,7 @@ export function JobList({
               <Tooltip title="Vizualizare listă">
                 <IconButton
                   size="small"
+                  aria-label="Vizualizare listă"
                   onClick={() => setParam("view", "list")}
                   sx={{
                     borderRadius: 0,
@@ -271,6 +273,7 @@ export function JobList({
               <Tooltip title="Vizualizare grilă">
                 <IconButton
                   size="small"
+                  aria-label="Vizualizare grilă"
                   onClick={() => setParam("view", "grid")}
                   sx={{
                     borderRadius: 0,
@@ -376,7 +379,7 @@ function JobActionsRow({
       onClick: () => { onStatusChange(job.id, "draft"); },
     } : null,
     onArchive && appSettings.features.archiveJobs && job.status !== "archived" ? {
-      key: "archive", label: "Arhivează", color: "warning" as ActionColor,
+      key: "archive", label: "Arhivează", color: "error" as ActionColor,
       icon: <ArchiveIcon fontSize="small" />,
       onClick: () => onArchive(job),
     } : null,
@@ -400,6 +403,7 @@ function JobActionsRow({
             variant="contained"
             color={primary.color}
             onClick={primary.onClick}
+            aria-label={!isSm ? primary.label : undefined}
             startIcon={isSm ? primary.icon : undefined}
             sx={{
               minWidth: 0,
@@ -436,6 +440,7 @@ function JobActionsRow({
           <Tooltip title="Mai multe acțiuni">
             <IconButton
               size="small"
+              aria-label="Mai multe acțiuni"
               onClick={(e) => setMenuAnchor(e.currentTarget)}
               sx={{ color: "text.secondary" }}
             >

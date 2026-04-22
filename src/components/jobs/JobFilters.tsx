@@ -41,15 +41,19 @@ const jobTypeColors: Record<string, "success" | "warning" | "info" | "secondary"
 
 type SectionKey = "location" | "jobType" | "experience" | "salary" | "remote" | "benefits";
 
-function SectionHeader({ label, open, onToggle }: {
+function SectionHeader({ label, open, onToggle, controlsId }: {
   label: string;
   open: boolean;
   onToggle: () => void;
+  controlsId?: string;
 }) {
   return (
   <Box
     component="button"
+    type="button"
     onClick={onToggle}
+    aria-expanded={open}
+    aria-controls={controlsId}
     sx={{
       width: "100%",
       display: "flex",
@@ -67,6 +71,7 @@ function SectionHeader({ label, open, onToggle }: {
       {label}
     </Typography>
     <Box
+      aria-hidden="true"
       sx={{
         width: 22,
         height: 22,
@@ -153,17 +158,18 @@ export function JobFilters() {
     <Stack divider={<Divider />}>
       {/* Location */}
       <Box>
-        <Typography variant="h5" fontWeight={700} mb={-1}>
+        <Typography variant="h5" component="h2" fontWeight={700} mb={-1}>
           Filtrează după
         </Typography>
-        <SectionHeader label="Locație" open={open.location} onToggle={() => toggle("location")} />
-        <Collapse in={open.location}>
+        <SectionHeader label="Locație" open={open.location} onToggle={() => toggle("location")} controlsId="filter-location" />
+        <Collapse id="filter-location" in={open.location}>
           <Box sx={{ pb: 2 }}>
             <TextField
               placeholder="Oraș, țară..."
               size="small"
               fullWidth
               defaultValue={searchParams.get("location") ?? ""}
+              inputProps={{ "aria-label": "Locație" }}
               onKeyDown={(e) => {
                 if (e.key === "Enter")
                   updateParam("location", (e.target as HTMLInputElement).value);
@@ -184,8 +190,8 @@ export function JobFilters() {
 
       {/* Job Type */}
       <Box>
-        <SectionHeader label="Tip de contract" open={open.jobType} onToggle={() => toggle("jobType")} />
-        <Collapse in={open.jobType}>
+        <SectionHeader label="Tip de contract" open={open.jobType} onToggle={() => toggle("jobType")} controlsId="filter-job-type" />
+        <Collapse id="filter-job-type" in={open.jobType}>
           <Stack direction="row" flexWrap="wrap" gap={1} sx={{ pb: 2 }}>
             {Object.entries(jobTypeLabels).map(([value, label]) => (
               <Chip
@@ -204,8 +210,8 @@ export function JobFilters() {
 
       {/* Experience */}
       <Box>
-        <SectionHeader label="Experiență" open={open.experience} onToggle={() => toggle("experience")} />
-        <Collapse in={open.experience}>
+        <SectionHeader label="Experiență" open={open.experience} onToggle={() => toggle("experience")} controlsId="filter-experience" />
+        <Collapse id="filter-experience" in={open.experience}>
           <Stack direction="row" flexWrap="wrap" gap={1} sx={{ pb: 2 }}>
             {Object.entries(experienceLevelLabels).map(([value, label]) => (
               <Chip
@@ -224,8 +230,8 @@ export function JobFilters() {
 
       {/* Salary */}
       <Box>
-        <SectionHeader label="Salariu" open={open.salary} onToggle={() => toggle("salary")} />
-        <Collapse in={open.salary}>
+        <SectionHeader label="Salariu" open={open.salary} onToggle={() => toggle("salary")} controlsId="filter-salary" />
+        <Collapse id="filter-salary" in={open.salary}>
           <Box sx={{ pb: 2, px: 1 }}>
             <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
               <Typography variant="caption" color="text.secondary">{fmt(salaryRange[0])}</Typography>
@@ -236,6 +242,8 @@ export function JobFilters() {
               min={0}
               max={SALARY_MAX}
               step={SALARY_STEP}
+              aria-label="Interval salariu"
+              getAriaValueText={(v) => fmt(v)}
               onChange={(_, v) => setSalaryRange(v as [number, number])}
               onChangeCommitted={(_, v) => {
                 const [min, max] = v as [number, number];
@@ -254,8 +262,8 @@ export function JobFilters() {
 
       {/* Remote */}
       <Box>
-        <SectionHeader label="Remote" open={open.remote} onToggle={() => toggle("remote")} />
-        <Collapse in={open.remote}>
+        <SectionHeader label="Remote" open={open.remote} onToggle={() => toggle("remote")} controlsId="filter-remote" />
+        <Collapse id="filter-remote" in={open.remote}>
           <Box sx={{ pb: 2 }}>
             <FormControlLabel
               control={
@@ -291,8 +299,9 @@ export function JobFilters() {
           label="Număr minim de beneficii"
           open={open.benefits}
           onToggle={() => toggle("benefits")}
+          controlsId="filter-benefits"
         />
-        <Collapse in={open.benefits}>
+        <Collapse id="filter-benefits" in={open.benefits}>
           <Box sx={{ pb: 2, px: 1 }}>
             <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
               <Typography variant="caption" color="text.secondary">Minim</Typography>
@@ -306,6 +315,8 @@ export function JobFilters() {
               max={10}
               step={1}
               marks
+              aria-label="Număr minim de beneficii"
+              getAriaValueText={(v) => v === 0 ? "Orice" : `${v}+`}
               onChange={(_, v) => setMinBenefits(v as number)}
               onChangeCommitted={(_, v) => {
                 const val = v as number;
@@ -331,6 +342,7 @@ export function JobFilters() {
         size="small"
         fullWidth
         defaultValue={searchParams.get("q") ?? ""}
+        inputProps={{ "aria-label": "Caută anunțuri" }}
         onKeyDown={(e) => {
           if (e.key === "Enter")
             updateParam("q", (e.target as HTMLInputElement).value);
@@ -416,18 +428,29 @@ export function JobFilters() {
         >
           {searchBar}
         </Box>
-        <Box component="button" sx={{minWidth: isTablet ? 130 : 20, textAlign: "right", ml: 2}} onClick={() => setMobileOpen((p) => !p)}        >
+        <Box
+          component="button"
+          type="button"
+          aria-label={`Filtre${activeFilterCount > 0 ? ` (${activeFilterCount} active)` : ""}`}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-filters-panel"
+          sx={{minWidth: isTablet ? 130 : 20, textAlign: "right", ml: 2, border: "none", bgcolor: "transparent", cursor: "pointer"}}
+          onClick={() => setMobileOpen((p) => !p)}
+        >
           <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0, ml: { xs: 0, md: 2 } }}>
-            <FilterListIcon fontSize="small" sx={{ color: "text.secondary" }} />
+            <FilterListIcon aria-hidden="true" fontSize="small" sx={{ color: "text.secondary" }} />
             {isTablet && <Typography variant="body2" fontWeight={600}>Filtrează după</Typography>}
             {activeFilterCount > 0 && (
               <Chip label={activeFilterCount} size="small" color="primary" sx={{ height: 20, fontSize: 11 }} />
             )}
           </Stack>
         </Box>
-        {mobileOpen ? <ExpandLessIcon sx={{ marginLeft: activeFilterCount > 0 ? 2 : 0, color: "text.secondary" }} fontSize="small" /> : <ExpandMoreIcon sx={{ marginLeft: activeFilterCount > 0 ? 2 : 0, color: "text.secondary" }} fontSize="small" />}
+        {mobileOpen
+          ? <ExpandLessIcon aria-hidden="true" sx={{ marginLeft: activeFilterCount > 0 ? 2 : 0, color: "text.secondary" }} fontSize="small" />
+          : <ExpandMoreIcon aria-hidden="true" sx={{ marginLeft: activeFilterCount > 0 ? 2 : 0, color: "text.secondary" }} fontSize="small" />
+        }
       </Box>
-      <Collapse in={mobileOpen}>
+      <Collapse id="mobile-filters-panel" in={mobileOpen}>
         <Box sx={{ px: 2, pb: 2 }}>
           {filtersBody}
           {activeFilterCount > 0 && (

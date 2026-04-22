@@ -362,7 +362,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                     {step.icon}
                   </Box>
 
-                  <Typography variant="h5" sx={{ mb: 1 }}>{step.title}</Typography>
+                  <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{step.title}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                     {step.body}
                   </Typography>
@@ -446,7 +446,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   }}>
                     {step.icon}
                   </Box>
-                  <Typography variant="h4" sx={{ color: CREAM }}>{step.title}</Typography>
+                  <Typography variant="h4" component="h3" sx={{ color: CREAM }}>{step.title}</Typography>
                   <Typography sx={{ color: CREAM_55, lineHeight: 1.75 }}>{step.body}</Typography>
                 </Stack>
               </motion.div>
@@ -513,7 +513,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   }}>
                     {b.icon}
                   </Box>
-                  <Typography variant="h5" sx={{ mb: 1 }}>{b.title}</Typography>
+                  <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{b.title}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                     {b.body}
                   </Typography>

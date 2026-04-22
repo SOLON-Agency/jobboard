@@ -65,6 +65,7 @@ export function JobCard({
       >
         <Avatar
           src={job.companies?.logo_url ?? undefined}
+          alt={job.companies?.name ?? ""}
           sx={{
             width: 44,
             height: 44,
@@ -214,6 +215,8 @@ export function JobCard({
         {onToggleFavorite && (
           <IconButton
             size="small"
+            aria-label={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}
+            aria-pressed={isFavorite}
             onClick={(e) => {
               e.preventDefault();
               onToggleFavorite(job.id);

@@ -22,9 +22,12 @@ import { experienceLevelLabels } from "@/lib/utils";
 import { getPublicEducationItems } from "@/services/education.service";
 import { getPublicExperienceItems } from "@/services/experience.service";
 import { getProfileSkills, type ProfileSkillWithName } from "@/services/skills.service";
+import { generatePersonJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { EducationTimeline } from "@/components/profile/EducationTimeline";
 import { ExperienceTimeline } from "@/components/profile/ExperienceTimeline";
 import type { Metadata } from "next";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const revalidate = 60;
 
@@ -62,11 +65,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("slug", slug)
     .single();
 
-  if (!data?.is_public) return { title: "Profil privat" };
+  if (!data?.is_public) {
+    return {
+      title: "Profil privat",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = data.full_name ?? "Profil utilizator";
+  const description = data.headline ?? undefined;
+  const url = `${SITE_URL}/users/${slug}`;
 
   return {
-    title: data.full_name ?? "Profil utilizator",
-    description: data.headline ?? undefined,
+    title,
+    description,
+    alternates: { canonical: `/users/${slug}` },
+    openGraph: { title, description, url, type: "profile" },
+    twitter: { card: "summary", title, description },
+    robots: {
+      index: true,
+      follow: true,
+      "max-snippet": -1,
+      "max-image-preview": "large",
+    },
   };
 }
 
@@ -111,7 +132,30 @@ export default async function PublicProfilePage({ params }: Props) {
 
   const hasMetaGrid = !!(profile.location || experienceLabel);
 
+  const personJsonLd = generatePersonJsonLd(
+    {
+      slug: profile.slug,
+      full_name: profile.full_name,
+      headline: profile.headline,
+      avatar_url: profile.avatar_url,
+    },
+    skills.map((s) => ({ name: s.skill.name }))
+  );
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Acasă", url: SITE_URL },
+    { name: profile.full_name ?? "Profil", url: `${SITE_URL}/users/${profile.slug}` },
+  ]);
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
 
       {/* ── Stats bar ─────────────────────────────────────────────────────── */}
@@ -176,7 +220,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 {profile.full_name ?? "Utilizator"}
               </Typography>
               {profile.headline && (
-                <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ mt: 0.5 }}>
+                <Typography variant="h6" component="p" color="text.secondary" fontWeight={400} sx={{ mt: 0.5 }}>
                   {profile.headline}
                 </Typography>
               )}
@@ -305,6 +349,7 @@ export default async function PublicProfilePage({ params }: Props) {
             >
               <Avatar
                 src={profile.avatar_url ?? undefined}
+                alt={profile.full_name ?? ""}
                 sx={{
                   width: 80,
                   height: 80,
@@ -380,5 +425,6 @@ export default async function PublicProfilePage({ params }: Props) {
         </Box>
       </Box>
     </Container>
+    </>
   );
 }

@@ -60,7 +60,7 @@ function CompanyActions({ company, onEdit, onArchive }: CompanyActionsProps) {
   const archiveAction = appSettings.features.archiveJobs ? {
     label: company.is_archived ? "Dezarhivează" : "Arhivează",
     icon: company.is_archived ? <UnarchiveIcon fontSize="small" /> : <ArchiveIcon fontSize="small" />,
-    color: "warning" as const,
+    color: "error" as const,
     onClick: () => onArchive(company),
   } : null;
 
@@ -121,7 +121,7 @@ function CompanyActions({ company, onEdit, onArchive }: CompanyActionsProps) {
               onClick={() => { archiveAction.onClick(); setMenuAnchor(null); }}
               sx={{ gap: 1.5, py: 1 }}
             >
-              <ListItemIcon sx={{ minWidth: 0, color: "warning.main" }}>
+              <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
                 {archiveAction.icon}
               </ListItemIcon>
               <ListItemText

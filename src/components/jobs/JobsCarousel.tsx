@@ -190,6 +190,8 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
 
   return (
     <Box
+      component="section"
+      aria-label={title ?? subtitle ?? "Anunțuri recomandate"}
       sx={{ py: { xs: 3, md: 2 } }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -249,6 +251,8 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
 
       <Box
         ref={viewportRef}
+        aria-live="polite"
+        aria-atomic="false"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
         sx={{
@@ -296,6 +300,7 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
                 <Stack direction="row" justifyContent="flex-start" alignItems="flex-start">
                   <Avatar
                     src={job.companies?.logo_url ?? undefined}
+                    alt={job.companies?.name ?? ""}
                     sx={{
                       width: 44,
                       height: 44,
