@@ -73,8 +73,8 @@ const C = {
   primary: "#03170C",
   secondary: "#3E5C76",
   secondaryLight: "#748CAB",
-  // Gold darkened to #9a7f2e so it passes AA (4.5:1) on white backgrounds
-  gold: "#9a7f2e",
+  // #7a6420 on white = ~5.2:1 — passes WCAG AA for normal text and icons
+  gold: "#7a6420",
   // Gold on dark hero background — lighter variant so it reads on #03170C
   goldOnDark: "#e0c96a",
   soft: "#F0EBD8",
@@ -83,10 +83,10 @@ const C = {
   bg: "#f6f8f5",
 };
 
-// Pie chart colours are used as swatch fills + caption legend text.
-// C.gold (#9a7f2e) on white paper passes 3:1 for large/bold text (WCAG AA large).
-const PIE_JOB = [C.primary, C.gold, C.secondaryLight];
-const PIE_APP = [C.secondaryLight, C.secondary, C.gold, C.primary, C.danger];
+// Pie chart colours — used only as decorative swatch fills (min 3:1 for non-text).
+// Legend caption text always renders in text.primary, so fill contrast rules are relaxed.
+const PIE_JOB = [C.primary, C.gold, "#5a7a96"];
+const PIE_APP = ["#5a7a96", C.secondary, C.gold, C.primary, C.danger];
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────
 
@@ -186,7 +186,7 @@ function StatCard({ label, value, icon, accentColor, href, sublabel }: StatCardP
           {label}
         </Typography>
         {sublabel && (
-          <Typography variant="caption" color="text.disabled">
+          <Typography variant="caption" color="text.secondary">
             {sublabel}
           </Typography>
         )}
@@ -619,7 +619,7 @@ export function DashboardContent({
               <Chip
                 size="small"
                 label="Trimise"
-                sx={{ bgcolor: C.gold, color: C.primary, fontWeight: 600 }}
+                sx={{ bgcolor: C.gold, color: "#ffffff", fontWeight: 600 }}
               />
               {hasCompanies && (
                 <Chip
@@ -880,7 +880,7 @@ export function DashboardContent({
               "&:hover": { boxShadow: 3 },
             }}
           >
-            <Avatar sx={{ bgcolor: `${C.gold}18`, color: C.gold, width: 36, height: 36 }}>
+            <Avatar sx={{ bgcolor: `${C.gold}20`, color: C.gold, width: 36, height: 36 }}>
               <SendIcon fontSize="small" />
             </Avatar>
             <Box>
@@ -1007,7 +1007,7 @@ export function DashboardContent({
                 "&:hover": { boxShadow: 3 },
               }}
             >
-              <Avatar sx={{ bgcolor: `${C.secondaryLight}22`, color: C.secondaryLight, width: 36, height: 36 }}>
+              <Avatar sx={{ bgcolor: `${C.secondary}18`, color: C.secondary, width: 36, height: 36 }}>
                 <ArticleOutlinedIcon fontSize="small" />
               </Avatar>
               <Box>
