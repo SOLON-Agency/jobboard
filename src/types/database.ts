@@ -82,33 +82,45 @@ export type Database = {
       applications: {
         Row: {
           applied_at: string
+          archived_at: string | null
           cv_url: string | null
           form_data: Json | null
           id: string
+          is_archived: boolean
           job_id: string
           status: Database["public"]["Enums"]["application_status"]
           updated_at: string
           user_id: string
+          withdraw_reason: string | null
+          withdrawn_at: string | null
         }
         Insert: {
           applied_at?: string
+          archived_at?: string | null
           cv_url?: string | null
           form_data?: Json | null
           id?: string
+          is_archived?: boolean
           job_id: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id: string
+          withdraw_reason?: string | null
+          withdrawn_at?: string | null
         }
         Update: {
           applied_at?: string
+          archived_at?: string | null
           cv_url?: string | null
           form_data?: Json | null
           id?: string
+          is_archived?: boolean
           job_id?: string
           status?: Database["public"]["Enums"]["application_status"]
           updated_at?: string
           user_id?: string
+          withdraw_reason?: string | null
+          withdrawn_at?: string | null
         }
         Relationships: [
           {
@@ -867,7 +879,12 @@ export type Database = {
     }
     Enums: {
       alert_frequency: "daily" | "weekly"
-      application_status: "pending" | "reviewed" | "shortlisted" | "rejected"
+      application_status:
+        | "pending"
+        | "reviewed"
+        | "shortlisted"
+        | "rejected"
+        | "withdrawn"
       company_role: "owner" | "admin" | "member"
       entity_type: "user" | "company"
       job_status: "draft" | "published" | "archived"
@@ -999,7 +1016,13 @@ export const Constants = {
   public: {
     Enums: {
       alert_frequency: ["daily", "weekly"],
-      application_status: ["pending", "reviewed", "shortlisted", "rejected"],
+      application_status: [
+        "pending",
+        "reviewed",
+        "shortlisted",
+        "rejected",
+        "withdrawn",
+      ],
       company_role: ["owner", "admin", "member"],
       entity_type: ["user", "company"],
       job_status: ["draft", "published", "archived"],

@@ -1,0 +1,98 @@
+#!/bin/sh
+#
+# Shared pre-commit hook (tracked in git).
+#
+# Activated automatically by the `prepare` npm script, which runs:
+#   git config core.hooksPath .githooks
+#
+# Steps:
+#   1. `next build` — fail fast on TypeScript / build errors.
+#   2. Deploy Supabase Edge Functions that changed under `supabase/functions/`.
+#      If `_shared/` changed, redeploy everything.
+#   3. Push Supabase migrations when any `supabase/migrations/*.sql` is staged.
+#
+# Opt-outs (set to 1 to skip individual steps):
+#   SKIP_BUILD=1        bypass the Next.js build
+#   SKIP_DEPLOY=1       bypass edge-function deployment
+#   SKIP_MIGRATIONS=1   bypass `supabase db push`
+#
+# Bypass everything for a WIP commit:
+#   git commit --no-verify -m "wip"
+
+set -e
+
+FUNCTIONS_DIR="supabase/functions"
+MIGRATIONS_DIR="supabase/migrations"
+DEPLOY_SCRIPT="scripts/deploy-edge-functions.js"
+MIGRATE_SCRIPT="scripts/push-migrations.js"
+
+# ── 1. Next.js build check ──────────────────────────────────────────────────
+
+if [ "${SKIP_BUILD:-0}" = "1" ]; then
+  echo "⚠️  SKIP_BUILD=1 — skipping build check."
+else
+  echo ""
+  echo "🏗️  Running Next.js build check..."
+  echo ""
+
+  if npm run build; then
+    echo ""
+    echo "✅ Build passed — proceeding with commit."
+    echo ""
+  else
+    echo ""
+    echo "❌ Build failed. Fix the errors above before committing."
+    echo "   (To bypass this check run: SKIP_BUILD=1 git commit ...)"
+    echo ""
+    exit 1
+  fi
+fi
+
+# ── 2. Supabase Edge Functions deployment ───────────────────────────────────
+
+if [ "${SKIP_DEPLOY:-0}" = "1" ]; then
+  echo "⚠️  SKIP_DEPLOY=1 — skipping edge-function deployment."
+else
+  staged_fns=$(git diff --cached --name-only --diff-filter=ACMR | grep "^${FUNCTIONS_DIR}/" || true)
+
+  if [ -n "$staged_fns" ]; then
+    echo ""
+    echo "🔧 Supabase Edge Functions changed — deploying before commit..."
+    echo ""
+
+    shared_changed=$(echo "$staged_fns" | grep "^${FUNCTIONS_DIR}/_shared/" || true)
+
+    if [ -n "$shared_changed" ]; then
+      echo "   _shared/ modified — deploying all functions."
+      node "$DEPLOY_SCRIPT"
+    else
+      changed_slugs=$(echo "$staged_fns" \
+        | grep -v "^${FUNCTIONS_DIR}/_" \
+        | sed "s|${FUNCTIONS_DIR}/\([^/]*\)/.*|\1|" \
+        | sort -u \
+        | tr '\n' ' ')
+
+      if [ -n "$changed_slugs" ]; then
+        # shellcheck disable=SC2086
+        node "$DEPLOY_SCRIPT" $changed_slugs
+      fi
+    fi
+  fi
+fi
+
+# ── 3. Supabase migrations push ─────────────────────────────────────────────
+
+if [ "${SKIP_MIGRATIONS:-0}" = "1" ]; then
+  echo "⚠️  SKIP_MIGRATIONS=1 — skipping migration push."
+else
+  staged_migrations=$(git diff --cached --name-only --diff-filter=ACMR | grep "^${MIGRATIONS_DIR}/.*\.sql$" || true)
+
+  if [ -n "$staged_migrations" ]; then
+    echo ""
+    echo "🗄️  Supabase migrations changed — pushing to the linked project..."
+    echo ""
+    node "$MIGRATE_SCRIPT"
+  fi
+fi
+
+exit 0

@@ -379,6 +379,10 @@ verify_jwt = false
 # Applicant JWT is validated inside the function.
 verify_jwt = false
 
+[functions.application-withdrawn]
+# Applicant JWT is validated inside the function.
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

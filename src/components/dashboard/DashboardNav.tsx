@@ -43,7 +43,7 @@ const navItems = [
   ...(appSettings.features.alerts ? [{ label: "Alerte", href: "/dashboard/alerts", icon: <NotificationsIcon /> }] : []),
   ...(appSettings.features.favouriteJobs ? [{ label: "Favorite", href: "/dashboard/favourite-jobs", icon: <BookmarkIcon /> }] : []),
   ...(appSettings.features.archiveJobs ? [{ label: "Arhivă", href: "/dashboard/archive", icon: <ArchiveIcon /> }] : []),
-  { label: "Test funcții Edge", href: "/dashboard/edge-functions", icon: <CloudQueueIcon /> },
+  ...(appSettings.features.edgeFunctions ? [{ label: "Test funcții Edge", href: "/dashboard/edge-functions", icon: <CloudQueueIcon /> }] : []),
 ];
 
 // ── Shared nav list rendered in both sidebar and mobile drawer ────────────────

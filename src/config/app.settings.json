@@ -14,7 +14,8 @@
     "allowEmailNotificationOptOut": false,
     "favouriteJobs": false,
     "favouriteCompanies": false,
-    "archiveJobs": true
+    "archiveJobs": true,
+    "edgeFunctions": true
   },
   "brand": {
     "primary": "#03170C",

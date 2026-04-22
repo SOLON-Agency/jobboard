@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Typography,
   Button,
@@ -30,6 +31,7 @@ import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@
 export default function JobsPage() {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const router = useRouter();
 
   const [jobs, setJobs] = useState<JobWithCompany[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
@@ -226,6 +228,10 @@ export default function JobsPage() {
     await loadJobs();
   };
 
+  const handlePreviewCandidates = (job: JobWithCompany) => {
+    router.push(`/dashboard/jobs/${job.id}/candidates`);
+  };
+
   const filteredJobs =
     selectedCompanyId === "all"
       ? jobs
@@ -297,6 +303,7 @@ export default function JobsPage() {
           onDuplicate={handleDuplicate}
           onStatusChange={handleStatusChange}
           onArchive={handleArchive}
+          onPreviewCandidates={handlePreviewCandidates}
         />
       )}
 

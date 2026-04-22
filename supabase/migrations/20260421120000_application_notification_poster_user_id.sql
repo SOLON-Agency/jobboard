@@ -1,5 +1,12 @@
 -- Extend application_notification_recipient so Edge Functions can resolve the poster's
 -- auth user id for per-user notification preferences (profiles.notifications_email).
+--
+-- The function was originally created with a 2-column return type in
+-- 20260409120000_secure_applicant_reads_and_notify_rpc.sql. Postgres does not
+-- allow CREATE OR REPLACE FUNCTION to change the return signature, so we drop
+-- the old definition first.
+
+DROP FUNCTION IF EXISTS public.application_notification_recipient(uuid);
 
 CREATE OR REPLACE FUNCTION public.application_notification_recipient(p_job_id uuid)
 RETURNS TABLE (

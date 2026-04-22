@@ -11,9 +11,11 @@
     "test:watch": "vitest",
     "supabase:deploy": "node scripts/deploy-edge-functions.js",
     "supabase:deploy:all": "node scripts/deploy-edge-functions.js",
+    "supabase:migrate": "node scripts/push-migrations.js",
     "e2e:smoke": "node e2e/smoke.js",
     "e2e:full": "node e2e/full.js",
-    "e2e": "node e2e/smoke.js && node e2e/full.js"
+    "e2e": "node e2e/smoke.js && node e2e/full.js",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

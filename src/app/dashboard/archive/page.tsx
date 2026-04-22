@@ -15,6 +15,7 @@ import {
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,8 +27,13 @@ import {
 } from "@/services/companies.service";
 import { getArchivedJobs, archiveJob } from "@/services/jobs.service";
 import { getArchivedForms, archiveForm } from "@/services/forms.service";
+import {
+  getArchivedApplications,
+  restoreApplication,
+  type UserApplication,
+} from "@/services/applications.service";
 import { formatDate } from "@/lib/utils";
-import type { Tables } from "@/types/database";
+import type { Database, Tables } from "@/types/database";
 import appSettings from "@/config/app.settings.json";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { JobTags } from "@/components/jobs/JobTags";
@@ -35,6 +41,26 @@ import { JobTags } from "@/components/jobs/JobTags";
 type ArchivedJob = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
 type ArchivedForm = Tables<"forms">;
 type ArchivedCompany = Tables<"companies"> & { role: string };
+type ApplicationStatus = Database["public"]["Enums"]["application_status"];
+
+const applicationStatusLabel: Record<ApplicationStatus, string> = {
+  pending: "În așteptare",
+  reviewed: "Evaluată",
+  shortlisted: "Preselectată",
+  rejected: "Respinsă",
+  withdrawn: "Închisă",
+};
+
+const applicationStatusColor: Record<
+  ApplicationStatus,
+  "default" | "warning" | "info" | "success" | "error"
+> = {
+  pending: "warning",
+  reviewed: "info",
+  shortlisted: "success",
+  rejected: "error",
+  withdrawn: "default",
+};
 
 const jobStatusLabels: Record<string, string> = {
   draft: "Ciornă",
@@ -102,18 +128,21 @@ function ArchiveContent() {
   const [companies, setCompanies] = useState<ArchivedCompany[]>([]);
   const [jobs, setJobs] = useState<ArchivedJob[]>([]);
   const [forms, setForms] = useState<ArchivedForm[]>([]);
+  const [applications, setApplications] = useState<UserApplication[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const [c, j, f] = await Promise.all([
+    const [c, j, f, a] = await Promise.all([
       getArchivedCompanies(supabase, user.id),
       getArchivedJobs(supabase, user.id),
       getArchivedForms(supabase, user.id),
+      getArchivedApplications(supabase, user.id),
     ]);
     setCompanies(c as ArchivedCompany[]);
     setJobs(j);
     setForms(f);
+    setApplications(a);
     setLoading(false);
   }, [user, supabase]);
 
@@ -131,6 +160,11 @@ function ArchiveContent() {
 
   const restoreForm = async (id: string) => {
     await archiveForm(supabase, id, false);
+    await load();
+  };
+
+  const restoreApplicationRow = async (id: string) => {
+    await restoreApplication(supabase, id);
     await load();
   };
 
@@ -174,6 +208,17 @@ function ArchiveContent() {
               <span>Formulare</span>
               {forms.length > 0 && (
                 <Chip label={forms.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+              )}
+            </Stack>
+          }
+        />
+        <Tab
+          label={
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              <SendOutlinedIcon fontSize="small" />
+              <span>Aplicații</span>
+              {applications.length > 0 && (
+                <Chip label={applications.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
               )}
             </Stack>
           }
@@ -265,6 +310,74 @@ function ArchiveContent() {
                 </Button>
               </Paper>
             ))}
+          </Stack>
+        )
+      )}
+
+      {/* ── Applications tab ───────────────────────────────────────────────── */}
+      {tab === 3 && (
+        loading ? <RowSkeleton /> :
+        applications.length === 0 ? (
+          <EmptyArchive
+            title="Nicio aplicație arhivată"
+            description="Aplicațiile pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici."
+          />
+        ) : (
+          <Stack spacing={1.5}>
+            {applications.map((app) => {
+              const job = app.job_listings;
+              return (
+                <Paper
+                  key={app.id}
+                  sx={{
+                    display: "flex",
+                    alignItems: { xs: "flex-start", sm: "center" },
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1.5, sm: 2 },
+                    px: { xs: 2, sm: 3 },
+                    py: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 2,
+                  }}
+                >
+                  <SendOutlinedIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
+                  <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1}
+                      sx={{ mb: 0.25 }}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
+                      <Typography variant="subtitle2" fontWeight={700} noWrap>
+                        {job?.title ?? "Loc de muncă șters"}
+                      </Typography>
+                      <Chip
+                        label={applicationStatusLabel[app.status]}
+                        size="small"
+                        color={applicationStatusColor[app.status]}
+                        sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600 }}
+                      />
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      {job?.companies?.name ?? "—"} • Aplicat {formatDate(app.applied_at)} • Arhivat{" "}
+                      {app.archived_at ? formatDate(app.archived_at) : "—"}
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<UnarchiveIcon />}
+                    onClick={() => restoreApplicationRow(app.id)}
+                    sx={{ flexShrink: 0, alignSelf: { xs: "flex-end", sm: "center" } }}
+                  >
+                    Restaurează
+                  </Button>
+                </Paper>
+              );
+            })}
           </Stack>
         )
       )}

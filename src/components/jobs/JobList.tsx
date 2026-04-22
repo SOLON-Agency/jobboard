@@ -30,6 +30,7 @@ import PublishIcon from "@mui/icons-material/Publish";
 import UnpublishedIcon from "@mui/icons-material/Unpublished";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import appSettings from "@/config/app.settings.json";
 import { JobCard } from "./JobCard";
 import { JobRow } from "./JobRow";
@@ -66,6 +67,7 @@ interface JobActionsRowProps {
   onDuplicate?: (job: JobWithCompany) => void;
   onStatusChange?: (jobId: string, status: "published" | "archived" | "draft") => void;
   onArchive?: (job: JobWithCompany) => void;
+  onPreviewCandidates?: (job: JobWithCompany) => void;
 }
 
 const ACTION_COLORS: Record<ActionColor, { bg: string; hover: string }> = {
@@ -95,6 +97,8 @@ interface JobListProps {
   onDuplicate?: (job: JobWithCompany) => void;
   onStatusChange?: (jobId: string, status: "published" | "archived" | "draft") => void;
   onArchive?: (job: JobWithCompany) => void;
+  /** Navigate to the candidate-management view for this job */
+  onPreviewCandidates?: (job: JobWithCompany) => void;
 }
 
 export const JobList: React.FC<JobListProps> = ({
@@ -108,6 +112,7 @@ export const JobList: React.FC<JobListProps> = ({
   onDuplicate,
   onStatusChange,
   onArchive,
+  onPreviewCandidates,
 }) => {
   const isControlled = controlledJobs !== undefined;
 
@@ -129,7 +134,7 @@ export const JobList: React.FC<JobListProps> = ({
   const shouldShowControls   = showControls   ?? !isControlled;
   const shouldShowPagination = showPagination ?? !isControlled;
   const shouldShowFavorites  = showFavorites  ?? !isControlled;
-  const hasActions = !!(onEdit || onDuplicate || onStatusChange || onArchive);
+  const hasActions = !!(onEdit || onDuplicate || onStatusChange || onArchive || onPreviewCandidates);
 
   const page  = Number(searchParams.get("page") ?? "1");
   const sort  = (searchParams.get("sort") ?? "newest") as JobSortOption;
@@ -207,6 +212,7 @@ export const JobList: React.FC<JobListProps> = ({
       onDuplicate={onDuplicate}
       onStatusChange={onStatusChange}
       onArchive={onArchive}
+      onPreviewCandidates={onPreviewCandidates}
     />
   );
 
@@ -336,7 +342,7 @@ export const JobList: React.FC<JobListProps> = ({
   );
 };
 const JobActionsRow: React.FC<JobActionsRowProps> = ({
-  job, onEdit, onDuplicate, onStatusChange, onArchive,
+  job, onEdit, onDuplicate, onStatusChange, onArchive, onPreviewCandidates,
 }) => {
   const theme = useTheme();
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
@@ -348,6 +354,11 @@ const JobActionsRow: React.FC<JobActionsRowProps> = ({
       key: "publish", label: "Publică", color: "success" as ActionColor,
       icon: <PublishIcon fontSize="small" />,
       onClick: () => { onStatusChange(job.id, "published"); },
+    } : null,
+    onPreviewCandidates ? {
+      key: "candidates", label: "Candidați", color: "primary" as ActionColor,
+      icon: <PeopleAltOutlinedIcon fontSize="small" />,
+      onClick: () => onPreviewCandidates(job),
     } : null,
     onEdit ? {
       key: "edit", label: "Editează", color: "primary" as ActionColor,
