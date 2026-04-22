@@ -105,7 +105,8 @@ function ApplicationActions({
 
   const job = application.job_listings;
   const company = job?.companies ?? null;
-  const canWithdraw = application.status !== "withdrawn";
+  const canWithdraw =
+    application.status !== "withdrawn" && application.status !== "rejected";
 
   const actions: ActionDef[] = [
     job?.slug

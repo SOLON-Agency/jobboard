@@ -672,12 +672,14 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
               label="Unde se va aplica?"
               sx={{ mt: 0 }}
               fullWidth
+              required
               placeholder="https://... sau recrutare@companie.ro"
               error={!!errors.application_url}
               helperText={
                 errors.application_url?.message ??
                 "Introduceți un URL (https://...) sau o adresă de email — candidații vor aplica direct aici"
               }
+              inputProps={{ "aria-required": "true" }}
             />
           )}
 

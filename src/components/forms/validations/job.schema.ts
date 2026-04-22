@@ -19,16 +19,29 @@ export const jobSchema = z.object({
   application_method: z.enum(["none", "url", "form"]),
   application_url: z
     .string()
-    .refine(
-      (v) =>
-        !v ||
-        z.string().url().safeParse(v).success ||
-        z.string().email().safeParse(v).success,
-      "Introdu un URL valid (https://...) sau o adresă de email",
-    )
     .optional()
     .or(z.literal("")),
   form_id: z.string().optional().or(z.literal("")),
+}).superRefine((data, ctx) => {
+  if (data.application_method === "url") {
+    const val = data.application_url ?? "";
+    if (!val.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["application_url"],
+        message: "URL-ul sau adresa de email este obligatorie",
+      });
+    } else if (
+      !z.string().url().safeParse(val).success &&
+      !z.string().email().safeParse(val).success
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["application_url"],
+        message: "Introdu un URL valid (https://...) sau o adresă de email",
+      });
+    }
+  }
 });
 
 export type JobFormData = z.infer<typeof jobSchema>;

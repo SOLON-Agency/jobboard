@@ -156,6 +156,16 @@ export function CandidatesClient() {
     );
     try {
       await updateApplicationStatus(supabase, id, status);
+
+      if (status === "rejected") {
+        void supabase.functions
+          .invoke("application-rejected", {
+            body: { application_id: id },
+          })
+          .catch((err: unknown) =>
+            console.warn("application-rejected notification:", err)
+          );
+      }
     } catch (err) {
       setApplications(previous);
       setError(parseSupabaseError(err));
