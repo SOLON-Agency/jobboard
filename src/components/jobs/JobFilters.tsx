@@ -26,6 +26,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { jobTypeLabels, experienceLevelLabels } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
+import { SaveSearchAsAlertCta } from "@/components/alerts/SaveSearchAsAlertCta";
 
 const SALARY_MAX = appSettings.config.salaryMax ?? 30000;
 const SALARY_MIN = appSettings.config.salaryMin ?? 5000;
@@ -386,6 +387,9 @@ export function JobFilters() {
           >
             Resetează filtrele{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </Button>
+          <Box sx={{ mt: 1.5 }}>
+            <SaveSearchAsAlertCta variant="inline" />
+          </Box>
         </Box>}
       </Box>
     );
@@ -461,6 +465,11 @@ export function JobFilters() {
             >
               Resetează filtrele ({activeFilterCount})
             </Button>
+          )}
+          {activeFilterCount > 0 && (
+            <Box sx={{ mt: 1.5 }}>
+              <SaveSearchAsAlertCta variant="inline" />
+            </Box>
           )}
         </Box>
       </Collapse>

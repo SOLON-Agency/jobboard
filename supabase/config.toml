@@ -383,6 +383,18 @@ verify_jwt = false
 # Applicant JWT is validated inside the function.
 verify_jwt = false
 
+[functions.application-rejected]
+# Recruiter JWT is validated inside the function.
+verify_jwt = false
+
+[functions.company-followers-notify]
+# Recruiter JWT is validated inside the function via supabase.auth.getUser().
+verify_jwt = false
+
+[functions.alerts-job-match]
+# Recruiter JWT is validated inside the function via supabase.auth.getUser().
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

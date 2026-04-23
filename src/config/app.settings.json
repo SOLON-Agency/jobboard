@@ -8,7 +8,7 @@
   },
   "features": {
     "forms": true,
-    "alerts": false,
+    "alerts": true,
     "messages": false,
     "notifications": false,
     "allowEmailNotificationOptOut": false,

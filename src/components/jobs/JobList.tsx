@@ -32,6 +32,7 @@ import ArchiveIcon from "@mui/icons-material/Archive";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import appSettings from "@/config/app.settings.json";
+import { SaveSearchAsAlertCta } from "@/components/alerts/SaveSearchAsAlertCta";
 import { JobCard } from "./JobCard";
 import { JobRow } from "./JobRow";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -304,6 +305,9 @@ export function JobList({
             <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
             <Typography variant="h5" sx={{ mb: 0.5 }}>Nu au fost găsite locuri de muncă</Typography>
             <Typography color="text.secondary">Încearcă să ajustezi filtrele de căutare.</Typography>
+            {appSettings.features.alerts && FILTER_KEYS.some((k) => !!searchParams.get(k)) && (
+              <SaveSearchAsAlertCta />
+            )}
           </Box>
         )
       ) : activeView === "list" ? (

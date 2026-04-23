@@ -44,17 +44,22 @@ export const getProfileSkills = async (
 ): Promise<ProfileSkillWithName[]> => {
   const { data, error } = await supabase
     .from("profile_skills")
-    .select("id, sort_order, skills!skill_id(id, name)")
+    .select("id, sort_order, skills!skill_id(id, name, is_approved)")
     .eq("user_id", userId)
+    .eq("skills.is_approved", true)
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    sort_order: row.sort_order,
-    skill: row.skills as Skill,
-  }));
+  // PostgREST embedded filters set the joined object to null (rather than
+  // omitting the row) when the condition doesn't match, so skip those rows.
+  return (data ?? [])
+    .filter((row) => row.skills !== null)
+    .map((row) => ({
+      id: row.id,
+      sort_order: row.sort_order,
+      skill: row.skills as Skill,
+    }));
 };
 
 /**

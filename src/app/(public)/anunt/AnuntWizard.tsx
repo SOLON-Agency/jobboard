@@ -702,6 +702,10 @@ export function AnuntWizard() {
         })
         .catch((e: unknown) => console.warn("notify-created failed:", e));
 
+      void supabase.functions
+        .invoke("alerts-job-match", { body: { job_id: job.id } })
+        .catch((e: unknown) => console.warn("alerts-job-match:", e));
+
       router.push(`/jobs/${job.slug}`);
     } catch (err) {
       setPublishError(parseSupabaseError(err));

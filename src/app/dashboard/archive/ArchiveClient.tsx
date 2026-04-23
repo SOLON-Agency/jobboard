@@ -17,6 +17,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";
+import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import UnarchiveIcon from "@mui/icons-material/Unarchive";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -32,6 +33,8 @@ import {
   restoreApplication,
   type UserApplication,
 } from "@/services/applications.service";
+import { getUserAlerts, archiveAlert, parseFilters } from "@/services/alerts.service";
+import { AlertFilterSummary } from "@/components/alerts/AlertFilterSummary";
 import { formatDate } from "@/lib/utils";
 import type { Database, Tables } from "@/types/database";
 import appSettings from "@/config/app.settings.json";
@@ -41,6 +44,7 @@ import { JobTags } from "@/components/jobs/JobTags";
 type ArchivedJob = Tables<"job_listings"> & { companies: Tables<"companies"> | null };
 type ArchivedForm = Tables<"forms">;
 type ArchivedCompany = Tables<"companies"> & { role: string };
+type ArchivedAlert = Tables<"alerts">;
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 
 const applicationStatusLabel: Record<ApplicationStatus, string> = {
@@ -128,20 +132,26 @@ function ArchiveContent() {
   const [jobs, setJobs] = useState<ArchivedJob[]>([]);
   const [forms, setForms] = useState<ArchivedForm[]>([]);
   const [applications, setApplications] = useState<UserApplication[]>([]);
+  const [archivedAlerts, setArchivedAlerts] = useState<ArchivedAlert[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const [c, j, f, a] = await Promise.all([
+    const promises: Promise<unknown>[] = [
       getArchivedCompanies(supabase, user.id),
       getArchivedJobs(supabase, user.id),
       getArchivedForms(supabase, user.id),
       getArchivedApplications(supabase, user.id),
-    ]);
+    ];
+    if (appSettings.features.alerts) {
+      promises.push(getUserAlerts(supabase, user.id, { archived: true }));
+    }
+    const [c, j, f, a, al] = await Promise.all(promises);
     setCompanies(c as ArchivedCompany[]);
-    setJobs(j);
-    setForms(f);
-    setApplications(a);
+    setJobs(j as ArchivedJob[]);
+    setForms(f as ArchivedForm[]);
+    setApplications(a as UserApplication[]);
+    if (appSettings.features.alerts) setArchivedAlerts((al ?? []) as ArchivedAlert[]);
     setLoading(false);
   }, [user, supabase]);
 
@@ -164,6 +174,11 @@ function ArchiveContent() {
 
   const restoreApplicationRow = async (id: string) => {
     await restoreApplication(supabase, id);
+    await load();
+  };
+
+  const restoreAlertRow = async (id: string) => {
+    await archiveAlert(supabase, id, false);
     await load();
   };
 
@@ -222,6 +237,19 @@ function ArchiveContent() {
             </Stack>
           }
         />
+        {appSettings.features.alerts && (
+          <Tab
+            label={
+              <Stack direction="row" alignItems="center" spacing={0.75}>
+                <NotificationsOffIcon fontSize="small" />
+                <span>Alerte</span>
+                {archivedAlerts.length > 0 && (
+                  <Chip label={archivedAlerts.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+                )}
+              </Stack>
+            }
+          />
+        )}
       </Tabs>
 
       {/* ── Companies tab ──────────────────────────────────────────────────── */}
@@ -413,6 +441,55 @@ function ArchiveContent() {
                   startIcon={<UnarchiveIcon />}
                   onClick={() => restoreForm(form.id)}
                   sx={{ flexShrink: 0 }}
+                >
+                  Restaurează
+                </Button>
+              </Paper>
+            ))}
+          </Stack>
+        )
+      )}
+
+      {/* ── Archived alerts tab ────────────────────────────────────────────── */}
+      {appSettings.features.alerts && tab === 4 && (
+        loading ? <RowSkeleton /> :
+        archivedAlerts.length === 0 ? (
+          <EmptyArchive
+            title="Nicio alertă arhivată"
+            description="Alertele pe care le arhivezi vor apărea aici. Alertele arhivate nu mai trimit emailuri."
+          />
+        ) : (
+          <Stack spacing={1.5}>
+            {archivedAlerts.map((alert) => (
+              <Paper
+                key={alert.id}
+                sx={{
+                  display: "flex",
+                  alignItems: { xs: "flex-start", sm: "center" },
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1.5, sm: 2 },
+                  px: { xs: 2, sm: 3 },
+                  py: 2,
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
+                  borderRadius: 2,
+                }}
+              >
+                <NotificationsOffIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
+                <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+                    {alert.name}
+                  </Typography>
+                  <AlertFilterSummary filters={parseFilters(alert.filters)} />
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                    Arhivat {alert.archived_at ? formatDate(alert.archived_at) : "—"}
+                  </Typography>
+                </Box>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<UnarchiveIcon />}
+                  onClick={() => restoreAlertRow(alert.id)}
+                  sx={{ flexShrink: 0, alignSelf: { xs: "flex-end", sm: "center" } }}
                 >
                   Restaurează
                 </Button>

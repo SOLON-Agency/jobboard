@@ -204,6 +204,9 @@ export function JobsClient() {
                 },
               })
               .catch((e: unknown) => console.warn("company-followers-notify:", e));
+            void supabase.functions
+              .invoke("alerts-job-match", { body: { job_id: job.id } })
+              .catch((e: unknown) => console.warn("alerts-job-match:", e));
           }
           setMessage({
             type: "success",
@@ -243,6 +246,9 @@ export function JobsClient() {
             },
           })
           .catch((e: unknown) => console.warn("company-followers-notify:", e));
+        void supabase.functions
+          .invoke("alerts-job-match", { body: { job_id: job.id } })
+          .catch((e: unknown) => console.warn("alerts-job-match:", e));
       }
     }
     await loadJobs();

@@ -16,31 +16,37 @@ export type Database = {
     Tables: {
       alerts: {
         Row: {
+          archived_at: string | null
           created_at: string
           filters: Json
           frequency: Database["public"]["Enums"]["alert_frequency"]
           id: string
           is_active: boolean
+          is_archived: boolean
           last_sent_at: string | null
           name: string
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           created_at?: string
           filters?: Json
           frequency?: Database["public"]["Enums"]["alert_frequency"]
           id?: string
           is_active?: boolean
+          is_archived?: boolean
           last_sent_at?: string | null
           name: string
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           created_at?: string
           filters?: Json
           frequency?: Database["public"]["Enums"]["alert_frequency"]
           id?: string
           is_active?: boolean
+          is_archived?: boolean
           last_sent_at?: string | null
           name?: string
           user_id?: string
@@ -927,9 +933,24 @@ export type Database = {
           avatar_url: string | null
         }[]
       }
+      alerts_matching_job: {
+        Args: { _job_id: string }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          filters: Json
+          frequency: Database["public"]["Enums"]["alert_frequency"]
+          id: string
+          is_active: boolean
+          is_archived: boolean
+          last_sent_at: string | null
+          name: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
-      alert_frequency: "daily" | "weekly"
+      alert_frequency: "instant" | "daily" | "weekly"
       application_status:
         | "pending"
         | "reviewed"
