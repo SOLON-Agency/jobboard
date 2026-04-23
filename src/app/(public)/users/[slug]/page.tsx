@@ -12,7 +12,7 @@ import {
 import PersonIcon from "@mui/icons-material/Person";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import { createClient } from "@/lib/supabase/server";
 import { experienceLevelLabels } from "@/lib/utils";
 import { getPublicEducationItems } from "@/services/education.service";
@@ -178,7 +178,7 @@ export default async function PublicProfilePage({ params }: Props) {
         )}
         {experienceLabel && (
           <Stack direction="row" alignItems="center" spacing={0.5}>
-            <LabelOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
               {experienceLabel}
             </Typography>
@@ -186,7 +186,7 @@ export default async function PublicProfilePage({ params }: Props) {
         )}
         {skills.length > 0 && (
           <Stack direction="row" alignItems="center" spacing={0.5}>
-            <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <PsychologyOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary" fontWeight={500}>
               {skills.length} {skills.length === 1 ? "competență" : "competențe"}
             </Typography>
@@ -310,7 +310,7 @@ export default async function PublicProfilePage({ params }: Props) {
                     <MetaCell label="Locație" value={profile.location} icon={<LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />} />
                   )}
                   {experienceLabel && (
-                    <MetaCell label="Experiență" value={experienceLabel} icon={<LabelOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />} />
+                    <MetaCell label="Experiență" value={experienceLabel} icon={<WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />} />
                   )}
                 </Box>
               </>
@@ -322,7 +322,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 <Divider />
                 <Box sx={{ p: 2.5 }}>
                   <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
-                    <WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                    <PsychologyOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
                     <Typography
                       variant="caption"
                       color="text.disabled"

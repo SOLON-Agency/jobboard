@@ -24,6 +24,9 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined";
+import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
+import WifiOutlinedIcon from "@mui/icons-material/WifiOutlined";
 import type { Tables } from "@/types/database";
 import type { BenefitItem } from "@/services/benefits.service";
 import {
@@ -65,12 +68,15 @@ function parseSections(html: string): Array<{ title: string; html: string }> {
     .filter((s) => s.html.length > 0);
 }
 
-function MetaItem({ label, value }: { label: string; value: string }) {
+function MetaItem({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.25 }}>
-        {label}
-      </Typography>
+      <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.25 }}>
+        {icon}
+        <Typography variant="caption" color="text.secondary">
+          {label}
+        </Typography>
+      </Stack>
       <Typography variant="body2" fontWeight={700}>
         {value}
       </Typography>
@@ -433,7 +439,8 @@ export function JobDetail({
             >
               <MetaItem
                 label="Salariu"
-                value={(job.salary_min || job.salary_max) ? formatSalary(job.salary_min, job.salary_max) : " - "}
+                value={(job.salary_min || job.salary_max) ? formatSalary(job.salary_min, job.salary_max) : "—"}
+                icon={<AttachMoneyOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />}
               />
               <MetaItem
                 label="Experiență"
@@ -442,10 +449,12 @@ export function JobDetail({
                     ? job.experience_level.map((lvl) => experienceLevelLabels[lvl] ?? lvl).join(", ")
                     : "—"
                 }
+                icon={<WorkOutlineIcon sx={{ fontSize: 14, color: "text.secondary" }} />}
               />
               <MetaItem
                 label="Locație"
                 value={job.location ?? "—"}
+                icon={<LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />}
               />
               <MetaItem
                 label="Tip de contract"
@@ -454,14 +463,17 @@ export function JobDetail({
                     ? (jobTypeLabels[job.job_type] ?? job.job_type)
                     : "—"
                 }
+                icon={<BusinessCenterOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />}
               />
               <MetaItem
                 label="Publicat"
                 value={job.published_at ? formatDate(job.published_at) : "Ciornă"}
+                icon={<CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />}
               />
               <MetaItem
                 label="Remote"
                 value={job.is_remote ? "Da" : "Nu"}
+                icon={<WifiOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />}
               />
             </Box>
 

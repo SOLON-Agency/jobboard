@@ -1,3 +1,4 @@
+import React from "react";
 import { notFound } from "next/navigation";
 import {
   Container,
@@ -22,6 +23,7 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import { createClient } from "@/lib/supabase/server";
 import { createStaticClient } from "@/lib/supabase/static";
 import {
@@ -45,15 +47,18 @@ interface Props {
 
 // ── Small helper: two-line meta cell ────────────────────────────────────────
 
-const MetaCell = ({ label, value }: { label: string; value: string }) => (
+const MetaCell = ({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) => (
   <Box>
-    <Typography
-      variant="caption"
-      color="text.disabled"
-      sx={{ fontWeight: 600, letterSpacing: 0.4, display: "block", mb: 0.25 }}
-    >
-      {label}
-    </Typography>
+    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.25 }}>
+      {icon}
+      <Typography
+        variant="caption"
+        color="text.disabled"
+        sx={{ fontWeight: 600, letterSpacing: 0.4 }}
+      >
+        {label}
+      </Typography>
+    </Stack>
     <Typography variant="body2" fontWeight={700} color="text.primary">
       {value}
     </Typography>
@@ -358,16 +363,32 @@ export default async function CompanyPage({ params }: Props) {
                       }}
                     >
                       {company.location && (
-                        <MetaCell label="Locație" value={company.location} />
+                        <MetaCell
+                          label="Locație"
+                          value={company.location}
+                          icon={<LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.disabled" }} />}
+                        />
                       )}
                       {company.industry && (
-                        <MetaCell label="Industrie" value={company.industry} />
+                        <MetaCell
+                          label="Industrie"
+                          value={company.industry}
+                          icon={<CategoryOutlinedIcon sx={{ fontSize: 14, color: "text.disabled" }} />}
+                        />
                       )}
                       {company.size && (
-                        <MetaCell label="Dimensiune" value={company.size} />
+                        <MetaCell
+                          label="Dimensiune"
+                          value={company.size}
+                          icon={<PeopleOutlineIcon sx={{ fontSize: 14, color: "text.disabled" }} />}
+                        />
                       )}
                       {company.founded_year && (
-                        <MetaCell label="Fondată în" value={String(company.founded_year)} />
+                        <MetaCell
+                          label="Fondată în"
+                          value={String(company.founded_year)}
+                          icon={<CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.disabled" }} />}
+                        />
                       )}
                     </Box>
                   </>

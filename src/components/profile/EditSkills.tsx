@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import HourglassEmptyOutlinedIcon from "@mui/icons-material/HourglassEmptyOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth } from "@/hooks/useAuth";
@@ -156,7 +156,7 @@ export function EditSkills({
   return (
     <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider" }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-        <LabelOutlinedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+        <PsychologyOutlinedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
         <Typography variant="subtitle1" fontWeight={700}>
           Competențe
         </Typography>

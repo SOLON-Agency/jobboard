@@ -36,7 +36,7 @@ import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database, Tables } from "@/types/database";
 import {
   AddEditJob,
   type AddEditJobHandle,
@@ -56,6 +56,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "@/components/forms/validations/login.schema";
 import { wizardRegisterSchema, type WizardRegisterFormData } from "@/components/forms/validations/wizard-register.schema";
+import { JobTags } from "@/components/jobs/JobTags";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -84,6 +85,11 @@ const LOADING_MESSAGES = [
 ];
 
 // ─── Draft persistence helpers ────────────────────────────────────────────────
+
+type JobTagsJob = Pick<
+  Tables<"job_listings">,
+  "job_type" | "experience_level" | "is_remote" | "location"
+>;
 
 interface WizardDraft {
   jobData: JobFormData;
@@ -385,26 +391,7 @@ function ConfirmationStep({
         </Stack>
 
         <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
-          {jobData.job_type && (
-            <Chip label={jobTypeLabels[jobData.job_type] ?? jobData.job_type} size="small" variant="outlined" />
-          )}
-          {jobData.experience_level.length > 0 && (
-            <Chip
-              label={jobData.experience_level.map((l) => experienceLevelLabels[l] ?? l).join(" – ")}
-              size="small"
-              variant="outlined"
-            />
-          )}
-          {jobData.is_remote && (
-            <Chip label="Remote" size="small" color="info" variant="outlined" />
-          )}
-        </Stack>
-
-        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mb: 2 }}>
-            <CalendarTodayOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-            <Typography variant="caption" color="text.secondary">
-              {jobData.created_at ? formatDate(jobData.created_at) : "Ciornă"}
-            </Typography>
+            <JobTags job={jobData as JobTagsJob} hideLocation={true} />
             {jobData.location && (
               <Stack direction="row" alignItems="center" spacing={0.5}>
                 <LocationOnOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
