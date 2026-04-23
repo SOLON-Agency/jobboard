@@ -64,11 +64,10 @@ export const components: Components<Theme> = {
         borderRadius: 16,
         border: "1px solid rgba(3, 23, 12, 0.1)",
         backgroundImage: "none",
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
         "&:hover": {
-          borderColor: "rgba(62, 92, 118, 0.35)",
+          border: "1px solid #3E5C76",
           boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)",
-          transform: "translateY(-2px)",
         },
       },
     },

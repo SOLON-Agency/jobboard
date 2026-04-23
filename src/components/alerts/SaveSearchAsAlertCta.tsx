@@ -37,12 +37,13 @@ export function SaveSearchAsAlertCta({ variant = "button" }: SaveSearchAsAlertCt
       <Button
         size="small"
         variant="outlined"
+        fullWidth
         startIcon={<NotificationsActiveIcon />}
         onClick={handleClick}
         sx={{ minHeight: 44 }}
         aria-label="Creează alertă cu această căutare"
       >
-        Creează alertă cu această căutare
+        Creează alertă
       </Button>
     );
   }
@@ -56,7 +57,7 @@ export function SaveSearchAsAlertCta({ variant = "button" }: SaveSearchAsAlertCt
         sx={{ mt: 2, minHeight: 44 }}
         aria-label="Creează alertă cu această căutare"
       >
-        Creează alertă cu această căutare
+        Creează alertă
       </Button>
     </Tooltip>
   );
