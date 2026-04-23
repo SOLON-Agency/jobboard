@@ -12,6 +12,7 @@ import {
   Avatar,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -58,14 +59,13 @@ export function JobRow({
         gap: { xs: 1.5, sm: 2 },
         px: { xs: 2, sm: 3 },
         py: 2,
-        border: "1px solid",
-        borderColor: "divider",
+        border: "1px solid rgba(3, 23, 12, 0.1)",
         borderRadius: 2,
-        transition: "border-color 0.2s, box-shadow 0.2s",
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
         "&:hover": {
-          borderColor: "primary.main",
+          borderColor: "rgba(62, 92, 118, 0.35)",
+          boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)",
           transform: "translateY(-2px)",
-          transition: "all 0.2s ease",
         },
       }}
     >
@@ -213,22 +213,35 @@ export function JobRow({
           spacing={0.5}
           sx={{ flexShrink: 0 }}
         >
-          {appSettings.features.favouriteJobs && onToggleFavorite && (
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.preventDefault();
-                onToggleFavorite(job.id);
-              }}
-              sx={{ color: isFavorite ? "primary.main" : "text.secondary" }}
-              title={isFavorite ? "Elimină din favorite" : "Salvează"}
-            >
-              {isFavorite ? (
-                <BookmarkIcon fontSize="small" />
-              ) : (
-                <BookmarkBorderIcon fontSize="small" />
-              )}
-            </IconButton>
+          {appSettings.features.favourites && onToggleFavorite && (
+            <Tooltip title={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}>
+              <IconButton
+                size="small"
+                aria-label={
+                  isFavorite
+                    ? `Elimină „${job.title}" din favorite`
+                    : `Salvează „${job.title}" la favorite`
+                }
+                aria-pressed={isFavorite}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onToggleFavorite(job.id);
+                }}
+                sx={{
+                  color: isFavorite ? "error.main" : "text.secondary",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 5,
+                  "&:hover": { borderColor: "primary.main" },
+                }}
+              >
+                {isFavorite ? (
+                  <BookmarkIcon fontSize="small" />
+                ) : (
+                  <BookmarkBorderIcon fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
           )}
           <ApplyButton
             job={job}

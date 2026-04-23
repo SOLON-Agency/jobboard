@@ -10,10 +10,9 @@
     "forms": true,
     "alerts": false,
     "messages": false,
-    "notifications": true,
+    "notifications": false,
     "allowEmailNotificationOptOut": false,
-    "favouriteJobs": false,
-    "favouriteCompanies": false,
+    "favourites": false,
     "archiveJobs": true,
     "edgeFunctions": true
   },

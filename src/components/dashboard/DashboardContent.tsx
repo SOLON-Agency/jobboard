@@ -27,6 +27,11 @@ import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
+import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
+import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
+import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
+import { useRole } from "@/hooks/useRole";
 import {
   AreaChart,
   Area,
@@ -49,6 +54,13 @@ export interface DashboardStats {
   profileName: string | null;
   profileComplete: boolean;
 
+  // Profile completeness breakdown (for progress steps)
+  profileHasAvatar: boolean;
+  profileHasBio: boolean;
+  profileHasExperience: boolean;
+  profileHasEducation: boolean;
+  profileHasSkills: boolean;
+
   publishedJobs: number;
   draftJobs: number;
   applicationsReceived: number;
@@ -60,6 +72,12 @@ export interface DashboardStats {
   hasCompanies: boolean;
   companyVisits?: number;
   companyEngages?: number;
+
+  // Milestone flags
+  hasAlerts: boolean;
+  hasRejectedCandidate: boolean;
+  hasShortlistedCandidate: boolean;
+  hasArchived: boolean;
 
   activityByMonth: { month: string; sent: number; received: number }[];
   jobsByStatus: { name: string; value: number }[];
@@ -101,7 +119,7 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <Paper sx={{ px: 1.5, py: 1, border: "1px solid", borderColor: "divider", boxShadow: 3, minWidth: 120 }}>
+    <Paper sx={{ px: 1.5, py: 1, border: "1px solid rgba(3, 23, 12, 0.1)", boxShadow: 3, minWidth: 120 }}>
       {label && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
           {label}
@@ -128,7 +146,7 @@ const PieTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <Paper sx={{ px: 1.5, py: 1, border: "1px solid", borderColor: "divider", boxShadow: 3 }}>
+    <Paper sx={{ px: 1.5, py: 1, border: "1px solid rgba(3, 23, 12, 0.1)", boxShadow: 3 }}>
       <Typography variant="caption">
         {payload[0].name}: <strong>{payload[0].value}</strong>
       </Typography>
@@ -154,17 +172,18 @@ function StatCard({ label, value, icon, accentColor, href, sublabel }: StatCardP
       href={href}
       sx={{
         p: 2.5,
-        borderRadius: 2.5,
-        border: "1px solid",
-        borderColor: "divider",
+        borderRadius: 2,
+        border: "1px solid rgba(3, 23, 12, 0.1)",
         borderLeft: `4px solid ${accentColor}`,
         textDecoration: "none",
-        transition: "box-shadow 0.2s, transform 0.15s",
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
         cursor: href ? "pointer" : "default",
         display: "flex",
         alignItems: "center",
         gap: 2,
-        "&:hover": href ? { boxShadow: 4, transform: "translateY(-1px)" } : {},
+        "&:hover": href
+          ? { borderColor: "rgba(62, 92, 118, 0.35)", boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)", transform: "translateY(-1px)" }
+          : {},
       }}
     >
       <Avatar
@@ -238,7 +257,7 @@ function ChartCard({
   emptyLabel?: string;
 }) {
   return (
-    <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider", borderRadius: 2.5 }}>
+    <Paper sx={{ p: 3, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
       <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.25 }}>
         {title}
       </Typography>
@@ -263,46 +282,122 @@ function ChartCard({
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
 
-// ProfileProgress is always rendered inside the dark hero banner.
-// All colors here are explicitly chosen for contrast on dark (#03170C→#3E5C76).
-function ProfileProgress({ complete }: { complete: boolean }) {
-  const steps = [
-    { label: "Cont creat", done: true },
-    { label: "Profil completat", done: complete },
-  ];
-  const pct = steps.filter((s) => s.done).length / steps.length;
+// All colors are chosen for WCAG AA contrast on the dark hero (#03170C→#3E5C76).
+interface ProfileProgressProps {
+  profileHasAvatar: boolean;
+  profileHasBio: boolean;
+  profileHasExperience: boolean;
+  profileHasEducation: boolean;
+  profileHasSkills: boolean;
+  hasAlerts: boolean;
+  applicationsSent: number;
+  hasCompanies: boolean;
+  formsTotal: number;
+  publishedJobs: number;
+  draftJobs: number;
+  applicationsReceived: number;
+  hasRejectedCandidate: boolean;
+  hasShortlistedCandidate: boolean;
+  hasArchived: boolean;
+  /** Role flags forwarded from useRole() in the parent. */
+  isAtLeastEmployer: boolean;
+  isAdmin: boolean;
+}
 
-  // On dark background: use light-on-dark tokens that pass WCAG AA
-  // complete → bright green (#6fcf97 on dark ≈ 6.5:1), incomplete → gold tint
-  const pctColor = complete ? "#6fcf97" : C.goldOnDark;
-  const barColor = complete ? "#6fcf97" : C.goldOnDark;
+function ProfileProgress({
+  profileHasAvatar,
+  profileHasBio,
+  profileHasExperience,
+  profileHasEducation,
+  profileHasSkills,
+  hasAlerts,
+  applicationsSent,
+  hasCompanies,
+  formsTotal,
+  publishedJobs,
+  draftJobs,
+  applicationsReceived,
+  hasRejectedCandidate,
+  hasShortlistedCandidate,
+  hasArchived,
+  isAtLeastEmployer,
+  isAdmin,
+}: ProfileProgressProps) {
+  type Step = { visibleLabel: string; visible: boolean; label: string; weight: number; done: boolean };
+
+  // ── User role steps (weights sum to 40 → normalised to 100%) ──────────────
+  const userSteps: Step[] = [
+    { visibleLabel: "Cont creat",            visible: true,  label: "Cont creat",             weight: 5,  done: true },
+    { visibleLabel: "Profil",                visible: true,  label: "Profil, bio & experiență", weight: 10, done: profileHasAvatar && profileHasBio && profileHasExperience },
+    { visibleLabel: "Profil — educație",     visible: false, label: "Profil — educație",       weight: 5,  done: profileHasEducation },
+    { visibleLabel: "Profil — experiență",   visible: false, label: "Profil — experiență",     weight: 5,  done: profileHasExperience },
+    { visibleLabel: "Profil — competențe",   visible: false, label: "Profil — competențe",     weight: 5,  done: profileHasSkills },
+    { visibleLabel: "Alertă",               visible: true,  label: "Prima alertă",            weight: 5,  done: hasAlerts },
+    { visibleLabel: "Aplicat la un anunț",  visible: true,  label: "Aplicat la un anunț",     weight: 5,  done: applicationsSent > 0 },
+  ];
+
+  // ── Employer / premium_employer / admin steps (weights sum to 60 → normalised to 100%) ──
+  const employerSteps: Step[] = [
+    { visibleLabel: "Companie",                  visible: true,  label: "Companie creată",          weight: 5,  done: hasCompanies },
+    { visibleLabel: "Formular",                  visible: true,  label: "Formular creat",            weight: 10, done: formsTotal > 0 },
+    { visibleLabel: "Anunțuri",                  visible: true,  label: "Anunț creat",               weight: 10, done: publishedJobs + draftJobs > 0 },
+    { visibleLabel: "Primul candidat aplicat",   visible: false, label: "Primul candidat aplicat",   weight: 10, done: applicationsReceived > 0 },
+    { visibleLabel: "Primul candidat respins",   visible: false, label: "Primul candidat respins",   weight: 10, done: hasRejectedCandidate },
+    { visibleLabel: "Candidați",                 visible: true,  label: "Candidat acceptat",         weight: 10, done: hasShortlistedCandidate },
+    { visibleLabel: "Arhivare",                  visible: true,  label: "Arhivare",                  weight: 5,  done: hasArchived },
+  ];
+
+  // Admins share the employer progress track
+  const steps = isAtLeastEmployer || isAdmin ? employerSteps : userSteps;
+
+  // Percentage normalises automatically: earnedWeight / totalWeight * 100
+  // so each group independently reaches 100% regardless of raw weight totals.
+  const totalWeight = steps.reduce((s, x) => s + x.weight, 0);
+  const earnedWeight = steps.filter((x) => x.done).reduce((s, x) => s + x.weight, 0);
+  const pct = Math.round((earnedWeight / totalWeight) * 100);
+
+  const complete = pct === 100;
+  // const barColor = complete ? "#6fcf97" : C.goldOnDark;
+  const barColor = "#6fcf97";
+  const pctColor = barColor;
+
+  const pendingSteps = steps.filter((s) => !s.done);
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+      {/* Bar + label row */}
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
         <Typography variant="caption" sx={{ color: `${C.soft}aa` }}>
           Progres cont
         </Typography>
         <Typography variant="caption" fontWeight={700} sx={{ color: pctColor }}>
-          {Math.round(pct * 100)}%
+          {pct}%
         </Typography>
       </Stack>
+
       <LinearProgress
         variant="determinate"
-        value={pct * 100}
+        value={pct}
+        aria-label={`Progres cont: ${pct}%`}
         sx={{
           height: 6,
           borderRadius: 4,
           bgcolor: `${C.soft}22`,
-          "& .MuiLinearProgress-bar": {
-            bgcolor: barColor,
-            borderRadius: 4,
-          },
+          "& .MuiLinearProgress-bar": { bgcolor: barColor, borderRadius: 4 },
         }}
       />
-      <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-        {steps.map((s) => (
-          <Stack key={s.label} direction="row" alignItems="center" spacing={0.5}>
+
+      {/* Step dots — all 14 in two wrapped rows */}
+      <Box
+        sx={{
+          mt: 1.25,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "6px 16px",
+        }}
+      >
+        {steps.filter((s) => s.visible).map((s) => (
+          <Stack key={s.label} direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
             <Box
               sx={{
                 width: 7,
@@ -311,14 +406,94 @@ function ProfileProgress({ complete }: { complete: boolean }) {
                 bgcolor: s.done ? barColor : `${C.soft}33`,
                 flexShrink: 0,
               }}
+              aria-hidden="true"
             />
-            <Typography variant="caption" sx={{ color: s.done ? C.soft : `${C.soft}66` }}>
-              {s.label}
+            <Typography
+              variant="caption"
+              sx={{
+                color: s.done ? C.soft : `${C.soft}55`,
+                fontSize: "0.65rem",
+                lineHeight: 1.2,
+                textDecoration: s.done ? "none" : "none",
+              }}
+            >
+              {s.visibleLabel}
             </Typography>
           </Stack>
         ))}
-      </Stack>
+      </Box>
+
+      {/* Next step hint */}
+      {/* {pendingSteps.length > 0 && !complete && (
+        <Typography
+          variant="caption"
+          sx={{ color: `${C.soft}77`, display: "block", mt: 1, fontSize: "0.68rem" }}
+        >
+          Urmează: {pendingSteps.slice(0, 2).map((s) => s.label).join(", ")}
+          {pendingSteps.length > 2 ? ` și ${pendingSteps.length - 2} altele` : ""}
+        </Typography>
+      )} */}
     </Box>
+  );
+}
+
+// ─── Quick action card ────────────────────────────────────────────────────────
+
+interface QuickActionProps {
+  href: string;
+  icon: React.ReactNode;
+  color: string;
+  label: string;
+  sublabel: string;
+  /** Render with a dashed warning border (e.g. incomplete profile). */
+  warn?: boolean;
+}
+
+function QuickAction({ href, icon, color, label, sublabel, warn = false }: QuickActionProps) {
+  return (
+    <Paper
+      component={Link}
+      href={href}
+      sx={{
+        p: 2,
+        border: warn ? "1px dashed #a0882a" : "1px solid rgba(3, 23, 12, 0.1)",
+        bgcolor: warn ? "#fdf6e3" : "background.paper",
+        borderRadius: 2,
+        textDecoration: "none",
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+        "&:hover": warn
+          ? { boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)" }
+          : { borderColor: "rgba(62, 92, 118, 0.35)", boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)" },
+      }}
+    >
+      <Avatar
+        sx={{
+          bgcolor: warn ? "#f5e6a3" : `${color}18`,
+          color: warn ? "#6b560a" : color,
+          width: 36,
+          height: 36,
+          flexShrink: 0,
+        }}
+      >
+        {icon}
+      </Avatar>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          variant="body2"
+          fontWeight={600}
+          sx={{ color: warn ? "#6b560a" : "text.primary" }}
+          noWrap
+        >
+          {label}
+        </Typography>
+        <Typography variant="caption" color={warn ? "text.secondary" : "text.secondary"} noWrap>
+          {sublabel}
+        </Typography>
+      </Box>
+    </Paper>
   );
 }
 
@@ -327,6 +502,11 @@ function ProfileProgress({ complete }: { complete: boolean }) {
 export function DashboardContent({
   profileName,
   profileComplete,
+  profileHasAvatar,
+  profileHasBio,
+  profileHasExperience,
+  profileHasEducation,
+  profileHasSkills,
   publishedJobs,
   draftJobs,
   applicationsReceived,
@@ -337,6 +517,10 @@ export function DashboardContent({
   hasCompanies,
   companyVisits,
   companyEngages,
+  hasAlerts,
+  hasRejectedCandidate,
+  hasShortlistedCandidate,
+  hasArchived,
   activityByMonth,
   jobsByStatus,
   applicationsByStatus,
@@ -347,8 +531,16 @@ export function DashboardContent({
     setMounted(true);
   }, []);
 
+  const { isAtLeastEmployer, isAdmin } = useRole();
+
   const formsEnabled = appSettings.features.forms;
-  const favEnabled = appSettings.features.favouriteCompanies;
+  const favEnabled = appSettings.features.favourites;
+
+  // Role-based widget visibility
+  // showCandidateWidgets: user role + admin (admin sees everything)
+  // showEmployerWidgets:  employer / premium_employer / admin (isAtLeastEmployer already includes admin)
+  const showCandidateWidgets = !isAtLeastEmployer || isAdmin;
+  const showEmployerWidgets = isAtLeastEmployer;
 
   const hasActivity = activityByMonth.some((m) => m.sent > 0 || m.received > 0);
   const hasJobStatus = jobsByStatus.some((s) => s.value > 0);
@@ -367,8 +559,7 @@ export function DashboardContent({
         sx={{
           p: { xs: 2.5, sm: 3.5 },
           borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid rgba(3, 23, 12, 0.1)",
           background: `linear-gradient(135deg, ${C.primary} 0%, ${C.secondary} 100%)`,
           color: C.soft,
           position: "relative",
@@ -415,7 +606,7 @@ export function DashboardContent({
                 variant="contained"
                 size="small"
                 startIcon={<AddIcon />}
-                sx={{ bgcolor: C.goldOnDark, color: C.primary, fontWeight: 700, "&:hover": { bgcolor: "#c9b24e" } }}
+                sx={{ bgcolor: C.goldOnDark, color: C.soft, fontWeight: 700, "&:hover": { bgcolor: "#c9b24e" } }}
               >
                 Anunț nou
               </Button>
@@ -445,7 +636,25 @@ export function DashboardContent({
 
         {/* Profile progress bar inside hero */}
         <Box sx={{ mt: 2.5, pt: 2.5, borderTop: `1px solid ${C.soft}22` }}>
-          <ProfileProgress complete={profileComplete} />
+          <ProfileProgress
+            profileHasAvatar={profileHasAvatar}
+            profileHasBio={profileHasBio}
+            profileHasExperience={profileHasExperience}
+            profileHasEducation={profileHasEducation}
+            profileHasSkills={profileHasSkills}
+            hasAlerts={hasAlerts}
+            applicationsSent={applicationsSent}
+            hasCompanies={hasCompanies}
+            formsTotal={formsTotal}
+            publishedJobs={publishedJobs}
+            draftJobs={draftJobs}
+            applicationsReceived={applicationsReceived}
+            hasRejectedCandidate={hasRejectedCandidate}
+            hasShortlistedCandidate={hasShortlistedCandidate}
+            hasArchived={hasArchived}
+            isAtLeastEmployer={isAtLeastEmployer}
+            isAdmin={isAdmin}
+          />
           {!profileComplete && (
             <Button
               component={Link}
@@ -460,8 +669,8 @@ export function DashboardContent({
         </Box>
       </Paper>
 
-      {/* ── Job-seeker stats ──────────────────────────────────────────────── */}
-      <Box>
+      {/* ── Job-seeker stats — user + admin ──────────────────────────────── */}
+      {showCandidateWidgets && <Box>
         <SectionHeader
           title="Activitatea ta ca și candidat"
           icon={<SendIcon fontSize="small" />}
@@ -481,28 +690,28 @@ export function DashboardContent({
             href="/dashboard/applications"
             sublabel="Total candidaturi"
           />
+          <StatCard
+            label="Aplicatii active"
+            value={applicationsByStatus.find((s) => s.name === "În așteptare")?.value ?? applicationsSent}
+            icon={<TrendingUpIcon fontSize="small" />}
+            accentColor={C.gold}
+            href="/dashboard/applications"
+            sublabel="Urmărește progresul"
+          />
           {favEnabled && (
             <StatCard
               label="Companii salvate"
               value={savedCompanies}
               icon={<BookmarkOutlinedIcon fontSize="small" />}
-              accentColor={C.gold}
+              accentColor={C.secondary}
               sublabel="În lista ta de urmărire"
             />
           )}
-          <StatCard
-            label="Statut aplicații"
-            value={applicationsByStatus.find((s) => s.name === "În așteptare")?.value ?? applicationsSent}
-            icon={<TrendingUpIcon fontSize="small" />}
-            accentColor={C.secondary}
-            href="/dashboard/applications"
-            sublabel="Urmărește progresul"
-          />
         </Box>
-      </Box>
+      </Box>}
 
-      {/* ── Employer stats (only if user has companies) ───────────────────── */}
-      {hasCompanies && (
+      {/* ── Employer stats — employer / premium_employer / admin ──────────── */}
+      {showEmployerWidgets && (
         <Box>
           <SectionHeader
             title="Activitatea ta ca și angajator"
@@ -522,7 +731,7 @@ export function DashboardContent({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" },
+              gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(3, 1fr)" },
               gap: 2,
             }}
           >
@@ -532,10 +741,10 @@ export function DashboardContent({
               icon={<WorkOutlineIcon fontSize="small" />}
               accentColor={C.primary}
               href="/dashboard/jobs"
-              sublabel="Vizibile candidaților"
+              sublabel="Vizibile"
             />
             <StatCard
-              label="Ciornă"
+              label="Anunțuri ciornă"
               value={draftJobs}
               icon={<EditNoteIcon fontSize="small" />}
               accentColor={C.gold}
@@ -548,17 +757,8 @@ export function DashboardContent({
               icon={<InboxOutlinedIcon fontSize="small" />}
               accentColor={C.secondary}
               href="/dashboard/jobs"
-              sublabel="De la candidați"
+              sublabel="Candidați"
             />
-            {typeof companyVisits === "number" && (
-              <StatCard
-                label="Vizite companie"
-                value={companyVisits}
-                icon={<VisibilityOutlinedIcon fontSize="small" />}
-                accentColor={C.secondary}
-                sublabel="Profilul tău vizitat"
-              />
-            )}
           </Box>
 
           {/* Company engagement secondary row */}
@@ -566,18 +766,27 @@ export function DashboardContent({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(3, 1fr)" },
+                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(4, 1fr)" },
                 gap: 2,
                 mt: 2,
               }}
             >
               {typeof companyEngages === "number" && (
                 <StatCard
+                  label="Vizite"
+                  value={companyVisits ?? 0}
+                  icon={<VisibilityOutlinedIcon fontSize="small" />}
+                  accentColor={C.gold}
+                  sublabel="Pe profilul companiei"
+                />
+              )}
+              {typeof companyEngages === "number" && (
+                <StatCard
                   label="Interacțiuni"
                   value={companyEngages}
                   icon={<TouchAppOutlinedIcon fontSize="small" />}
                   accentColor={C.gold}
-                  sublabel="Click-uri pe profilul companiei"
+                  sublabel="Totale ale companiei"
                 />
               )}
               {formsEnabled && (
@@ -587,17 +796,17 @@ export function DashboardContent({
                   icon={<ArticleOutlinedIcon fontSize="small" />}
                   accentColor={C.secondary}
                   href="/dashboard/forms"
-                  sublabel="Formulare create"
+                  sublabel="Total create"
                 />
               )}
               {formsEnabled && (
                 <StatCard
-                  label="Răspunsuri primite"
+                  label="Răspunsuri"
                   value={formResponsesTotal}
                   icon={<InboxOutlinedIcon fontSize="small" />}
                   accentColor={C.primary}
                   href="/dashboard/forms"
-                  sublabel="La formularele tale"
+                  sublabel="La formulare"
                 />
               )}
             </Box>
@@ -616,12 +825,14 @@ export function DashboardContent({
             emptyLabel="Nicio activitate în ultimele 6 luni"
           >
             <Stack direction="row" spacing={2} sx={{ mb: 1.5 }}>
-              <Chip
-                size="small"
-                label="Trimise"
-                sx={{ bgcolor: C.gold, color: "#ffffff", fontWeight: 600 }}
-              />
-              {hasCompanies && (
+              {showCandidateWidgets && (
+                <Chip
+                  size="small"
+                  label="Trimise"
+                  sx={{ bgcolor: C.gold, color: "#ffffff", fontWeight: 600 }}
+                />
+              )}
+              {showEmployerWidgets && (
                 <Chip
                   size="small"
                   label="Primite"
@@ -646,16 +857,18 @@ export function DashboardContent({
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="sent"
-                    name="Trimise"
-                    stroke={C.gold}
-                    strokeWidth={2}
-                    fill="url(#gradSent)"
-                    dot={{ r: 3 }}
-                  />
-                  {hasCompanies && (
+                  {showCandidateWidgets && (
+                    <Area
+                      type="monotone"
+                      dataKey="sent"
+                      name="Trimise"
+                      stroke={C.gold}
+                      strokeWidth={2}
+                      fill="url(#gradSent)"
+                      dot={{ r: 3 }}
+                    />
+                  )}
+                  {showEmployerWidgets && (
                     <Area
                       type="monotone"
                       dataKey="received"
@@ -677,11 +890,15 @@ export function DashboardContent({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: hasCompanies ? "1fr 1fr" : "1fr" },
+              gridTemplateColumns: {
+                xs: "1fr",
+                // two columns only when both employer and candidate pies are visible (admin)
+                sm: showEmployerWidgets && showCandidateWidgets ? "1fr 1fr" : "1fr",
+              },
               gap: 2,
             }}
           >
-            {hasCompanies && (
+            {showEmployerWidgets && (
               <ChartCard
                 title="Anunțuri după status"
                 subtitle="Distribuția posturilor tale"
@@ -736,7 +953,7 @@ export function DashboardContent({
               </ChartCard>
             )}
 
-            <ChartCard
+            {showCandidateWidgets && <ChartCard
               title="Aplicații trimise după status"
               subtitle="Statusul candidaturilor tale"
               empty={!hasAppStatus}
@@ -787,11 +1004,11 @@ export function DashboardContent({
               ) : (
                 <Skeleton variant="rounded" height={150} />
               )}
-            </ChartCard>
+            </ChartCard>}
           </Box>
 
           {/* Form responses bar chart */}
-          {formsEnabled && hasCompanies && (
+          {formsEnabled && showEmployerWidgets && (
             <ChartCard
               title="Răspunsuri formulare"
               subtitle="Numărul de răspunsuri primite lunar"
@@ -835,190 +1052,130 @@ export function DashboardContent({
             gap: 1.5,
           }}
         >
-          <Paper
-            component={Link}
+          {/* ── Always visible ── */}
+          <QuickAction
             href="/jobs"
-            sx={{
-              p: 2,
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 2,
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              transition: "box-shadow 0.2s",
-              "&:hover": { boxShadow: 3 },
-            }}
-          >
-            <Avatar sx={{ bgcolor: `${C.secondary}18`, color: C.secondary, width: 36, height: 36 }}>
-              <SearchIcon fontSize="small" />
-            </Avatar>
-            <Box>
-              <Typography variant="body2" fontWeight={600}>
-                Caută joburi
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Explorează ofertele disponibile
-              </Typography>
-            </Box>
-          </Paper>
+            icon={<SearchIcon fontSize="small" />}
+            color={C.secondary}
+            label="Caută joburi"
+            sublabel="Explorează ofertele disponibile"
+          />
 
-          <Paper
-            component={Link}
+          <QuickAction
+            href="/dashboard/profile"
+            icon={<PersonOutlineIcon fontSize="small" />}
+            color={C.secondary}
+            label="Profilul meu"
+            sublabel={profileComplete ? "Profil complet" : "Completează profilul"}
+            warn={!profileComplete}
+          />
+
+          <QuickAction
             href="/dashboard/applications"
-            sx={{
-              p: 2,
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 2,
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              transition: "box-shadow 0.2s",
-              "&:hover": { boxShadow: 3 },
-            }}
-          >
-            <Avatar sx={{ bgcolor: `${C.gold}20`, color: C.gold, width: 36, height: 36 }}>
-              <SendIcon fontSize="small" />
-            </Avatar>
-            <Box>
-              <Typography variant="body2" fontWeight={600}>
-                Aplicațiile mele
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {applicationsSent} {applicationsSent === 1 ? "candidatură" : "candidaturi"} trimise
-              </Typography>
-            </Box>
-          </Paper>
+            icon={<SendIcon fontSize="small" />}
+            color={C.gold}
+            label="Aplicațiile mele"
+            sublabel={`${applicationsSent} ${applicationsSent === 1 ? "candidatură" : "candidaturi"} trimise`}
+          />
 
-          {!profileComplete && (
-            <Paper
-              component={Link}
-              href="/dashboard/profile"
-              sx={{
-                p: 2,
-                border: "1px dashed",
-                // warning.main = #a0882a — use a slightly warmer tint for the bg
-                borderColor: "#a0882a",
-                borderRadius: 2,
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                // very light amber tint — explicitly defined so MUI token fallback can't break it
-                bgcolor: "#fdf6e3",
-                transition: "box-shadow 0.2s",
-                "&:hover": { boxShadow: 3 },
-              }}
-            >
-              <Avatar sx={{ bgcolor: "#f5e6a3", color: "#6b560a", width: 36, height: 36 }}>
-                <PersonOutlineIcon fontSize="small" />
-              </Avatar>
-              <Box>
-                {/* #6b560a on #fdf6e3 ≈ 7.5:1 — passes WCAG AA & AAA */}
-                <Typography variant="body2" fontWeight={600} sx={{ color: "#6b560a" }}>
-                  Completează profilul
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Crește vizibilitatea ta
-                </Typography>
-              </Box>
-            </Paper>
+          {/* ── Favourites ── */}
+          {favEnabled && (
+            <QuickAction
+              href="/dashboard/favourites"
+              icon={<BookmarkOutlinedIcon fontSize="small" />}
+              color={C.gold}
+              label="Favorite"
+              sublabel="Joburi și companii salvate"
+            />
           )}
 
-          {hasCompanies && (
-            <Paper
-              component={Link}
-              href="/dashboard/jobs/new"
-              sx={{
-                p: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                transition: "box-shadow 0.2s",
-                "&:hover": { boxShadow: 3 },
-              }}
-            >
-              <Avatar sx={{ bgcolor: `${C.primary}18`, color: C.primary, width: 36, height: 36 }}>
-                <AddIcon fontSize="small" />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  Adaugă anunț
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Publică un loc de muncă nou
-                </Typography>
-              </Box>
-            </Paper>
+          {/* ── Archive (visible once user has archived something) ── */}
+          {hasArchived && (
+            <QuickAction
+              href="/dashboard/archive"
+              icon={<InventoryOutlinedIcon fontSize="small" />}
+              color={C.secondaryLight}
+              label="Arhivă"
+              sublabel="Elemente arhivate"
+            />
           )}
 
-          {!hasCompanies && (
-            <Paper
-              component={Link}
+          {/* ── Employer: add new job listing ── */}
+          {isAtLeastEmployer && hasCompanies && (
+            <QuickAction
+              href="/dashboard/jobs"
+              icon={<AddIcon fontSize="small" />}
+              color={C.primary}
+              label="Anunț nou"
+              sublabel="Publică un loc de muncă"
+            />
+          )}
+
+          {/* ── Employer: no company yet — prompt to create one ── */}
+          {isAtLeastEmployer && !hasCompanies && (
+            <QuickAction
               href="/dashboard/company"
-              sx={{
-                p: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                transition: "box-shadow 0.2s",
-                "&:hover": { boxShadow: 3 },
-              }}
-            >
-              <Avatar sx={{ bgcolor: `${C.primary}18`, color: C.primary, width: 36, height: 36 }}>
-                <BusinessCenterOutlinedIcon fontSize="small" />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  Adaugă companie
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Începe să recrutezi
-                </Typography>
-              </Box>
-            </Paper>
+              icon={<BusinessCenterOutlinedIcon fontSize="small" />}
+              color={C.primary}
+              label="Adaugă companie"
+              sublabel="Începe să recrutezi"
+              warn
+            />
           )}
 
-          {formsEnabled && hasCompanies && (
-            <Paper
-              component={Link}
+          {/* ── Employer: my job listings ── */}
+          {isAtLeastEmployer && hasCompanies && (
+            <QuickAction
+              href="/dashboard/jobs"
+              icon={<WorkOutlineIcon fontSize="small" />}
+              color={C.primary}
+              label="Anunțurile mele"
+              sublabel={`${publishedJobs} active${draftJobs > 0 ? `, ${draftJobs} ciorne` : ""}`}
+            />
+          )}
+
+          {/* ── Employer: candidates overview ── */}
+          {isAtLeastEmployer && hasCompanies && (
+            <QuickAction
+              href="/dashboard/candidates"
+              icon={<GroupOutlinedIcon fontSize="small" />}
+              color={C.secondary}
+              label="Candidații mei"
+              sublabel={`${applicationsReceived} ${applicationsReceived === 1 ? "aplicant" : "aplicanți"}`}
+            />
+          )}
+
+          {/* ── Employer: forms ── */}
+          {formsEnabled && isAtLeastEmployer && hasCompanies && (
+            <QuickAction
               href="/dashboard/forms"
-              sx={{
-                p: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                transition: "box-shadow 0.2s",
-                "&:hover": { boxShadow: 3 },
-              }}
-            >
-              <Avatar sx={{ bgcolor: `${C.secondary}18`, color: C.secondary, width: 36, height: 36 }}>
-                <ArticleOutlinedIcon fontSize="small" />
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  Formulare
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Gestionează formularele tale
-                </Typography>
-              </Box>
-            </Paper>
+              icon={<ArticleOutlinedIcon fontSize="small" />}
+              color={C.secondary}
+              label="Formulare"
+              sublabel={`${formsTotal} ${formsTotal === 1 ? "formular" : "formulare"}`}
+            />
+          )}
+
+          {/* ── Admin: user management ── */}
+          {isAdmin && (
+            <QuickAction
+              href="/dashboard/admin/users"
+              icon={<ManageAccountsOutlinedIcon fontSize="small" />}
+              color={C.danger}
+              label="Utilizatori"
+              sublabel="Gestionează roluri și conturi"
+            />
+          )}
+
+          {/* ── Admin: skill approval ── */}
+          {isAdmin && (
+            <QuickAction
+              href="/dashboard/admin/skills"
+              icon={<PsychologyOutlinedIcon fontSize="small" />}
+              color={C.secondary}
+              label="Competențe"
+              sublabel="Aprobă competențe noi"
+            />
           )}
         </Box>
       </Box>

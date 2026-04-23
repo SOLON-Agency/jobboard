@@ -32,6 +32,7 @@ import { generateOrganizationJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo"
 import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import { CompanyDescription } from "@/components/companies/CompanyDescription";
 import { CompanyPageTracker } from "@/components/companies/CompanyPageTracker";
+import { CompanyFavouriteButton } from "@/components/companies/CompanyFavouriteButton";
 import { jobTypeLabels, jobTypeChipSx, experienceLevelLabels } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import type { Metadata } from "next";
@@ -213,6 +214,12 @@ export default async function CompanyPage({ params }: Props) {
               </Typography>
 
               <Stack direction="row" spacing={1} sx={{ flexShrink: 0, pt: 0.5 }}>
+                {/* Favourite */}
+                <CompanyFavouriteButton
+                  companyId={company.id}
+                  companyName={company.name}
+                />
+
                 {/* Share — always visible */}
                 <Button
                   variant="outlined"
@@ -293,8 +300,7 @@ export default async function CompanyPage({ params }: Props) {
             {/* Description card */}
             {company.description && (
               <Paper
-                variant="outlined"
-                sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2 }}
+                sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, border: "1px solid rgba(3, 23, 12, 0.1)" }}
               >
                 <CompanyDescription
                   description={company.description}
@@ -307,8 +313,7 @@ export default async function CompanyPage({ params }: Props) {
           {/* ── RIGHT: sticky sidebar ─────────────────────────────────────── */}
           <Box sx={{ position: { sm: "sticky" }, top: { sm: 88 } }}>
             <Paper
-              variant="outlined"
-              sx={{ borderRadius: 3, overflow: "hidden" }}
+              sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid rgba(3, 23, 12, 0.1)" }}
             >
               {/* Logo + name hero */}
               <Box
@@ -413,8 +418,7 @@ export default async function CompanyPage({ params }: Props) {
               mt: 4,
               py: 6,
               textAlign: "center",
-              border: "1px dashed",
-              borderColor: "divider",
+              border: "1px dashed rgba(3, 23, 12, 0.1)",
               borderRadius: 2,
             }}
           >

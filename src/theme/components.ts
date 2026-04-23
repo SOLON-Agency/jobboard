@@ -64,10 +64,11 @@ export const components: Components<Theme> = {
         borderRadius: 16,
         border: "1px solid rgba(3, 23, 12, 0.1)",
         backgroundImage: "none",
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
         "&:hover": {
-          borderColor: "rgba(62, 92, 118, 0.4)",
+          borderColor: "rgba(62, 92, 118, 0.35)",
           boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)",
+          transform: "translateY(-2px)",
         },
       },
     },
@@ -109,9 +110,8 @@ export const components: Components<Theme> = {
       },
       // `variant="outlined"` → shared bordered card appearance used throughout dashboard
       outlined: {
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 8,
+        border: "1px solid rgba(3, 23, 12, 0.1)",
+        borderRadius: 16,
       },
     },
   },

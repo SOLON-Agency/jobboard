@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { JobDetail } from "./JobDetail";
 import { useAuth } from "@/hooks/useAuth";
-import { useSupabase } from "@/hooks/useSupabase";
-import { toggleFavorite, getUserFavorites } from "@/services/jobs.service";
+import { useFavourites } from "@/hooks/useFavourites";
 import type { Tables } from "@/types/database";
 import type { BenefitItem } from "@/services/benefits.service";
 
@@ -19,29 +18,14 @@ interface JobDetailWrapperProps {
 
 export function JobDetailWrapper({ job, benefits = [] }: JobDetailWrapperProps) {
   const { user } = useAuth();
-  const supabase = useSupabase();
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      getUserFavorites(supabase, user.id).then((favs) => {
-        setIsFavorite(favs.has(job.id));
-      }).catch(() => {});
-    }
-  }, [supabase, user, job.id]);
-
-  const handleToggleFavorite = useCallback(async () => {
-    if (!user) return;
-    const result = await toggleFavorite(supabase, user.id, job.id);
-    setIsFavorite(result);
-  }, [supabase, user, job.id]);
+  const { isJobFavourite, toggleJob } = useFavourites();
 
   return (
     <JobDetail
       job={job}
       benefits={benefits}
-      isFavorite={isFavorite}
-      onToggleFavorite={user ? handleToggleFavorite : undefined}
+      isFavorite={isJobFavourite(job.id)}
+      onToggleFavorite={user ? () => toggleJob(job.id) : undefined}
     />
   );
-};
+}

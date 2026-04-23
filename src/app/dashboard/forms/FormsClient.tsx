@@ -35,6 +35,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import appSettings from "@/config/app.settings.json";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useToast } from "@/contexts/ToastContext";
 import { getUserCompanies } from "@/services/companies.service";
 import {
   getUserForms,
@@ -184,6 +185,7 @@ function FormActionsRow({ form, onEdit, onArchive, onDelete }: FormActionsRowPro
 export function FormsClient() {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [forms, setForms] = useState<FormWithCount[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
@@ -244,6 +246,7 @@ export function FormsClient() {
         if (editingForm) {
           await updateForm(supabase, editingForm.id, { name: data.name, description: data.description || null, status }, dbFields);
           setMessage({ type: "success", text: "Formularul a fost actualizat." });
+          showToast("Formular actualizat cu succes.");
         } else {
           await createForm(
             supabase,
@@ -251,6 +254,7 @@ export function FormsClient() {
             dbFields
           );
           setMessage({ type: "success", text: status === "published" ? "Formularul a fost publicat." : "Formularul a fost salvat ca ciornă." });
+          showToast(status === "published" ? "Formular publicat cu succes." : "Formular salvat ca ciornă.");
         }
         await load();
         setTimeout(closeDrawer, 800);
@@ -265,6 +269,7 @@ export function FormsClient() {
     if (!confirm(`Ștergi formularul „${form.name}"? Toate răspunsurile vor fi pierdute.`)) return;
     try {
       await deleteForm(supabase, form.id);
+      showToast(`Formularul „${form.name}" a fost șters.`, "info");
       await load();
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });
@@ -274,6 +279,7 @@ export function FormsClient() {
   const handleArchiveForm = async (form: FormWithCount) => {
     try {
       await archiveForm(supabase, form.id, true);
+      showToast(`Formularul „${form.name}" a fost arhivat.`, "info");
       await load();
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });
@@ -321,7 +327,7 @@ export function FormsClient() {
 
       {/* ── No companies warning ────────────────────────────────────────────── */}
       {!loading && companies.length === 0 && (
-        <Paper sx={{ p: 4, textAlign: "center", border: "1px solid", borderColor: "divider" }}>
+        <Paper sx={{ p: 4, textAlign: "center", border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
           <ArticleOutlinedIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
           <Typography variant="h6" sx={{ mb: 0.5 }}>Nicio companie</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -344,7 +350,7 @@ export function FormsClient() {
 
       {/* ── Empty state ─────────────────────────────────────────────────────── */}
       {!loading && companies.length > 0 && filteredForms.length === 0 && (
-        <Paper sx={{ p: 6, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
+        <Paper sx={{ p: 6, textAlign: "center", border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
           <ArticleOutlinedIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
           <Typography variant="h6" sx={{ mb: 0.5 }}>
             {selectedCompanyId === "all" ? "Niciun formular creat" : "Niciun formular pentru această companie"}
@@ -372,11 +378,10 @@ export function FormsClient() {
                 gap: 2,
                 px: 3,
                 py: 2,
-                border: "1px solid",
-                borderColor: "divider",
+                border: "1px solid rgba(3, 23, 12, 0.1)",
                 borderRadius: 2,
-                transition: "border-color 0.2s",
-                "&:hover": { borderColor: "primary.main" },
+                transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                "&:hover": { borderColor: "rgba(62, 92, 118, 0.35)", boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)" },
               }}
             >
               <ArticleOutlinedIcon sx={{ color: "text.secondary", flexShrink: 0 }} />

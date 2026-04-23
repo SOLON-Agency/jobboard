@@ -34,10 +34,11 @@ Controlled in `src/config/app.settings.json`:
 | Application forms (custom form builder) | ✅ Enabled |
 | Job archive | ✅ Enabled |
 | Public wizard (`/anunt`) for new employers | ✅ Enabled |
+| Favourite jobs / companies | ✅ Enabled |
+| User roles (user / employer / premium_employer / admin) | ✅ Enabled |
 | Job alerts | ⛔ Disabled |
 | Real-time messaging | ⛔ Disabled |
-| In-app notifications | ⛔ Disabled |
-| Favourite jobs / companies | ⛔ Disabled |
+| In-app notifications (DB feed) | ⛔ Disabled |
 
 ---
 
@@ -146,10 +147,14 @@ src/
 │   └── profile/        # EditEducation, EditExperience, EditSkills,
 │                        # EducationTimeline, ExperienceTimeline, SkillsDisplay
 ├── hooks/
-│   ├── useAuth.ts          # Session, signIn, signUp, signOut, resendVerification
-│   ├── useSupabase.ts      # Browser Supabase client singleton
+│   ├── useAuth.ts            # Session, signIn, signUp, signOut, resendVerification
+│   ├── useSupabase.ts        # Browser Supabase client singleton
+│   ├── useFavourites.ts      # Job + company favourite state (requires ToastProvider)
+│   ├── useRole.ts            # User role + derived flags (isAtLeastEmployer, isAdmin…)
 │   ├── useMessages.ts
-│   └── useNotifications.ts
+│   └── useNotifications.ts   # Persisted DB notification feed (bell icon)
+├── contexts/
+│   └── ToastContext.tsx      # ToastProvider + useToast — global ephemeral toasts
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts       # Browser client ("use client" only)
@@ -259,6 +264,55 @@ A four-step client-side wizard at `/anunt` for new employers who don't yet have 
 | 4 — Confirmare | Preview with inline edit jump-backs, then publish |
 
 On publish: company → logo upload → job → benefits → email notification → redirect to the live job page. A full-screen loading overlay with rotating legal-humour messages plays during creation.
+
+---
+
+## UI notifications
+
+There are **two distinct notification mechanisms**. Use the right one for the job.
+
+### 1 — `useToast` — ephemeral feedback toasts (always use this)
+
+`ToastProvider` is mounted once in the root layout (`src/app/layout.tsx`). It renders a single global `<Snackbar>`. Any component or custom hook anywhere in the tree can trigger a toast without rendering its own `<Snackbar>`.
+
+```tsx
+import { useToast } from "@/contexts/ToastContext";
+
+export function MyComponent() {
+  const { showToast } = useToast();
+
+  const handleSave = async () => {
+    await save();
+    showToast("Salvat cu succes.");                    // success, 3500 ms
+    showToast("Anunț arhivat.", "info");               // info, 3500 ms
+    showToast("A apărut o eroare.", "error", 5000);    // error, 5 s
+  };
+}
+```
+
+**Signature:** `showToast(message: string, severity?: "success" | "error" | "warning" | "info", duration?: number)`
+
+**Rules:**
+- Default severity is `"success"`, default duration is `3500 ms`.
+- Use `"info"` for neutral state-change feedback (archive, favourite toggle, filter applied).
+- Use `"error"` with a longer duration (5000 ms) so the user has time to read it.
+- Do **not** create component-local `useState` + `<Snackbar>` for transient feedback. The `EditSideDrawer` `message` prop is still valid for persistent in-drawer errors (e.g. validation failures that must stay visible while the form is open).
+
+### 2 — `useNotifications` — persisted DB notification feed
+
+`useNotifications` reads and subscribes to the `notifications` table in real time. It powers the `NotificationBell` in the dashboard navbar. It is **not** for transient UI feedback.
+
+```tsx
+import { useNotifications } from "@/hooks/useNotifications";
+
+const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+```
+
+Only use this hook inside `NotificationBell` or a dedicated notification-feed component.
+
+### What was removed
+
+`src/hooks/useNotification.ts` (singular) was a local-state alternative to `useToast` that was created during the initial cleanup pass but was never wired to any component. It has been **deleted** to eliminate the ambiguity. `useToast` is the single source of truth for ephemeral UI feedback.
 
 ---
 

@@ -12,6 +12,7 @@ import {
   Avatar,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -42,11 +43,6 @@ export function JobCard({
       height: "100%",
       position: "relative",
       cursor: "pointer",
-      "&:hover": {
-        borderColor: "primary.main",
-        transform: "translateY(-2px)",
-        transition: "all 0.2s ease",
-      },
     }}
   >
     {/* Full-card overlay link — the only <a> that wraps the card area */}
@@ -202,7 +198,7 @@ export function JobCard({
       </Stack>
     </CardContent>
 
-    {appSettings.features.favouriteJobs && (
+    {appSettings.features.favourites && (
       <Box
         sx={{
           px: 3,
@@ -213,22 +209,34 @@ export function JobCard({
         }}
       >
         {onToggleFavorite && (
-          <IconButton
-            size="small"
-            aria-label={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}
-            aria-pressed={isFavorite}
-            onClick={(e) => {
-              e.preventDefault();
-              onToggleFavorite(job.id);
-            }}
-            sx={{ color: isFavorite ? "error.main" : "text.secondary" }}
-          >
-            {isFavorite ? (
-              <BookmarkIcon fontSize="small" />
-            ) : (
-              <BookmarkBorderIcon fontSize="small" />
-            )}
-          </IconButton>
+          <Tooltip title={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}>
+            <IconButton
+              size="small"
+              aria-label={
+                isFavorite
+                  ? `Elimină „${job.title}" din favorite`
+                  : `Salvează „${job.title}" la favorite`
+              }
+              aria-pressed={isFavorite}
+              onClick={(e) => {
+                e.preventDefault();
+                onToggleFavorite(job.id);
+              }}
+              sx={{
+                color: isFavorite ? "error.main" : "text.secondary",
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 5,
+                "&:hover": { borderColor: "primary.main" },
+              }}
+            >
+              {isFavorite ? (
+                <BookmarkIcon fontSize="small" />
+              ) : (
+                <BookmarkBorderIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
     )}

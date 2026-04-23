@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Box,
@@ -36,7 +36,9 @@ import { JobCard } from "./JobCard";
 import { JobRow } from "./JobRow";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
-import { getPublishedJobs, getUserFavorites, toggleFavorite } from "@/services/jobs.service";
+import { useToast } from "@/contexts/ToastContext";
+import { getPublishedJobs } from "@/services/jobs.service";
+import { useFavourites } from "@/hooks/useFavourites";
 import type { Tables } from "@/types/database";
 import type { JobSearchFilters, JobSortOption } from "@/types";
 
@@ -118,6 +120,7 @@ export function JobList({
 
   const supabase    = useSupabase();
   const { user }    = useAuth();
+  const { showToast } = useToast();
   const router      = useRouter();
   const pathname    = usePathname();
   const searchParams = useSearchParams();
@@ -126,7 +129,13 @@ export function JobList({
   const [count, setCount]               = useState(0);
   const [totalPages, setTotalPages]     = useState(0);
   const [loading, setLoading]           = useState(!isControlled);
-  const [favorites, setFavorites]       = useState<Set<string>>(new Set());
+
+  // Track the active filter signature so we can toast only when filters change
+  const FILTER_KEYS = ["q", "location", "type", "experience", "salaryMin", "salaryMax", "remote", "minBenefits"];
+  const filterSignature = FILTER_KEYS.map((k) => searchParams.get(k) ?? "").join("|");
+  const prevFilterRef = useRef<string | null>(null);
+
+  const { jobFavourites, toggleJob } = useFavourites();
 
   const jobs = isControlled ? controlledJobs : fetchedJobs;
   const displayCount = controlledCount ?? count;
@@ -162,31 +171,28 @@ export function JobList({
       sort,
       page,
     };
+    const currentSig = FILTER_KEYS.map((k) => searchParams.get(k) ?? "").join("|");
+    const hasActiveFilters = FILTER_KEYS.some((k) => !!searchParams.get(k));
+    const filterChanged = prevFilterRef.current !== null && prevFilterRef.current !== currentSig;
+    prevFilterRef.current = currentSig;
     try {
       const result = await getPublishedJobs(supabase, filters);
       setFetchedJobs(result.data);
       setCount(result.count);
       setTotalPages(result.totalPages);
+      if (filterChanged && hasActiveFilters) {
+        const label = result.count === 1 ? "1 anunț găsit" : `${result.count} anunțuri găsite`;
+        showToast(`Filtru aplicat — ${label}.`, "info", 3000);
+      }
     } catch { /* query error */ }
     finally { setLoading(false); }
-  }, [isControlled, supabase, searchParams, page, sort]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isControlled, supabase, searchParams, page, sort, showToast]);
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  useEffect(() => {
-    if (shouldShowFavorites && user) {
-      getUserFavorites(supabase, user.id).then(setFavorites).catch(() => {});
-    }
-  }, [shouldShowFavorites, supabase, user]);
-
   const handleToggleFavorite = async (jobId: string) => {
-    if (!user) return;
-    const isFav = await toggleFavorite(supabase, user.id, jobId);
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      if (isFav) next.add(jobId); else next.delete(jobId);
-      return next;
-    });
+    await toggleJob(jobId);
   };
 
   const ListSkeleton = () => (
@@ -306,7 +312,7 @@ export function JobList({
             <JobRow
               key={job.id}
               job={job}
-              isFavorite={favorites.has(job.id)}
+              isFavorite={jobFavourites.has(job.id)}
               onToggleFavorite={shouldShowFavorites && user ? handleToggleFavorite : undefined}
               showStatus={hasActions}
               actions={hasActions ? renderJobActions(job) : undefined}
@@ -319,7 +325,7 @@ export function JobList({
             <JobCard
               key={job.id}
               job={job}
-              isFavorite={favorites.has(job.id)}
+              isFavorite={jobFavourites.has(job.id)}
               onToggleFavorite={shouldShowFavorites && user ? handleToggleFavorite : undefined}
             />
           ))}

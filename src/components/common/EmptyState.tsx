@@ -32,9 +32,6 @@ export function EmptyState({ title, description, action, icon }: EmptyStateProps
       sx={{
         p: 6,
         textAlign: "center",
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 2,
       }}
     >
       <Stack alignItems="center" spacing={2}>

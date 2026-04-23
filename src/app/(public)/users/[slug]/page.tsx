@@ -302,7 +302,7 @@ export default async function PublicProfilePage({ params }: Props) {
           </Stack>
 
           {/* Bio / overview card */}
-          <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mb: 3 }}>
+          <Paper sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mb: 3, border: "1px solid rgba(3, 23, 12, 0.1)" }}>
 
             {profile.bio ? (
               <Typography
@@ -332,7 +332,7 @@ export default async function PublicProfilePage({ params }: Props) {
 
         {/* ── RIGHT: sticky sidebar ─────────────────────────────────────────── */}
         <Box sx={{ position: { sm: "sticky" }, top: { sm: 88 } }}>
-          <Paper variant="outlined" sx={{ borderRadius: 3, overflow: "hidden" }}>
+          <Paper sx={{ borderRadius: 3, overflow: "hidden", border: "1px solid rgba(3, 23, 12, 0.1)" }}>
 
             {/* Avatar + name hero */}
             <Box
@@ -354,8 +354,7 @@ export default async function PublicProfilePage({ params }: Props) {
                   width: 80,
                   height: 80,
                   bgcolor: "background.default",
-                  border: "2px solid",
-                  borderColor: "divider",
+                  border: "2px solid rgba(3, 23, 12, 0.1)",
                 }}
               >
                 <PersonIcon sx={{ fontSize: 40 }} />

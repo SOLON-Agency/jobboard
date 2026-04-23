@@ -174,17 +174,22 @@ export function JobDetail({
 
           <Stack direction="row" spacing={1} sx={{ flexShrink: 0, pt: 0.5 }}>
             {/* Bookmark */}
-            {appSettings.features.favouriteJobs && onToggleFavorite && (
-              <Tooltip title={isFavorite ? "Eliminați din salvate" : "Salvează"}>
+            {appSettings.features.favourites && onToggleFavorite && (
+              <Tooltip title={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}>
                 <IconButton
                   onClick={onToggleFavorite}
                   size="small"
-                  aria-label={isFavorite ? "Elimină din salvate" : "Salvează anunțul"}
+                  aria-label={
+                    isFavorite
+                      ? `Elimină „${job.title}" din favorite`
+                      : `Salvează „${job.title}" la favorite`
+                  }
                   aria-pressed={isFavorite}
                   sx={{
-                    border: "1px solid",
-                    borderColor: "divider",
-                    color: isFavorite ? "primary.main" : "text.secondary",
+                    border: "1px solid rgba(3, 23, 12, 0.1)",
+                    borderRadius: 5,
+                    color: isFavorite ? "error.main" : "text.secondary",
+                    "&:hover": { borderColor: "primary.main" },
                   }}
                 >
                   {isFavorite ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
@@ -225,8 +230,7 @@ export function JobDetail({
             sections.map((section, idx) => (
               <Paper
                 key={section.title}
-                variant="outlined"
-                sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2 }}
+                sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, border: "1px solid rgba(3, 23, 12, 0.1)" }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                   {/* <Box
@@ -271,7 +275,7 @@ export function JobDetail({
               </Paper>
             ))
           ) : (
-            <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2 }}>
+            <Paper sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, border: "1px solid rgba(3, 23, 12, 0.1)" }}>
               <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                 <Box
                   sx={{
@@ -310,8 +314,7 @@ export function JobDetail({
         {/* Benefits section */}
         {benefits.length > 0 && (
           <Paper
-            variant="outlined"
-            sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mt: 2 }}
+            sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, mt: 2, border: "1px solid rgba(3, 23, 12, 0.1)" }}
           >
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
               {/* <CardGiftcardOutlinedIcon sx={{ color: "success.main", fontSize: 22 }} /> */}
@@ -351,10 +354,10 @@ export function JobDetail({
       {/* ── RIGHT: sticky company sidebar ── */}
       <Box sx={{ position: { sm: "sticky" }, top: { sm: 88 } }}>
         <Paper
-          variant="outlined"
           sx={{
             borderRadius: 3,
             overflow: "hidden",
+            border: "1px solid rgba(3, 23, 12, 0.1)",
           }}
         >
           {/* Company hero */}

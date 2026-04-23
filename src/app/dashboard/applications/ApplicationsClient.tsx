@@ -404,8 +404,7 @@ export function ApplicationsClient() {
           sx={{
             p: 6,
             textAlign: "center",
-            border: "1px solid",
-            borderColor: "divider",
+            border: "1px solid rgba(3, 23, 12, 0.1)",
             borderRadius: 2,
           }}
         >
@@ -447,12 +446,11 @@ export function ApplicationsClient() {
               <Paper
                 key={app.id}
                 sx={{
-                  border: "1px solid",
-                  borderColor: "divider",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
                   borderRadius: 2,
                   overflow: "hidden",
-                  transition: "border-color 0.2s",
-                  "&:hover": { borderColor: "primary.main" },
+                  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                  "&:hover": { borderColor: "rgba(62, 92, 118, 0.35)", boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)" },
                 }}
               >
                 <Stack
@@ -584,8 +582,7 @@ export function ApplicationsClient() {
                         px: 3,
                         pb: 2.5,
                         pt: 0.5,
-                        borderTop: "1px solid",
-                        borderColor: "divider",
+                        borderTop: "1px solid rgba(3, 23, 12, 0.1)",
                         bgcolor: "action.hover",
                       }}
                     >

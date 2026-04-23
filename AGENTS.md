@@ -214,6 +214,67 @@ Every form — new **and** existing — must follow this pattern without excepti
 
 ---
 
+## UI notification patterns (mandatory)
+
+There are **two distinct notification mechanisms** in this codebase. Using the wrong one — or inventing a third — is a bug. The now-deleted `useNotification` (singular, local-state hook) was the transitional pattern; it has been removed.
+
+### `useToast` — ephemeral feedback (always use this for transient UI messages)
+
+`ToastProvider` is mounted once in `src/app/layout.tsx`. It owns the single global `<Snackbar>`. Any Client Component **or** custom hook can call `showToast` without rendering its own `<Snackbar>`.
+
+```tsx
+import { useToast } from "@/contexts/ToastContext";
+
+const { showToast } = useToast();
+
+showToast("Salvat cu succes.");                  // severity="success", duration=3500 ms
+showToast("Anunț arhivat.", "info");             // info toast
+showToast("A apărut o eroare.", "error", 5000); // error, longer duration
+```
+
+**When to use:**
+- Entity created, updated, archived, deleted
+- Favourite added / removed
+- Application submitted
+- Filter applied (with result count)
+- Any one-shot "action confirmed" message
+
+**Severity guide:**
+
+| Severity | When |
+|----------|------|
+| `"success"` | Default — positive action completed |
+| `"info"` | Neutral state change (archive, filter, favourite toggle) |
+| `"warning"` | Recoverable problem the user should know about |
+| `"error"` | Action failed; use `duration: 5000` so the message is readable |
+
+**Do NOT:**
+- Create component-local `useState<{ type; text } | null>` + `<Snackbar>` for transient feedback.
+- Pass `message` prop to `EditSideDrawer` for transient success messages — that prop is reserved for **persistent in-drawer errors** (e.g. validation failure that must stay visible while the form is open).
+
+### `useNotifications` — persisted DB notification feed
+
+`useNotifications` (`src/hooks/useNotifications.ts`) reads and subscribes in real time to the `notifications` **database table**. It is the data source for `NotificationBell` in the dashboard navbar. It is **not** for transient UI feedback.
+
+```tsx
+import { useNotifications } from "@/hooks/useNotifications";
+const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+```
+
+Only use inside `NotificationBell` or a dedicated notification-feed component.
+
+### Decision table
+
+| Situation | Use |
+|-----------|-----|
+| User saves / creates / deletes something | `useToast` |
+| User toggles a favourite | `useToast` (already wired in `useFavourites`) |
+| Action fails inside a still-open drawer/form | `EditSideDrawer` `message` prop |
+| Displaying persisted in-app notifications | `useNotifications` |
+| Sending a transactional email | Supabase Edge Function (`send-email` / `notifications`) |
+
+---
+
 ## Accessibility — WCAG 2.2 Level AAA
 
 **Every new page and component must meet WCAG 2.2 Level AAA.** The checklist below is non-negotiable; do not merge code that violates it.

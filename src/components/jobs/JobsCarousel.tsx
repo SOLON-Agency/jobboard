@@ -49,12 +49,12 @@ interface Props {
 export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = false }: Props) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
-  const isLgUp = useMediaQuery(theme.breakpoints.up("lg"));
   const isXlUp = useMediaQuery(theme.breakpoints.up("xl"));
   const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
   const isBelowLg = useMediaQuery(theme.breakpoints.down("lg"));
 
-  const perView = isXlUp ? 4 : isLgUp ? 3 : 2;
+  const perView = isXlUp ? 4 : isMdUp ? 3 : isSmUp ? 2 : 1;
 
   const [start, setStart] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -86,14 +86,14 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
       gap: theme.spacing(2.5),
       gridTemplateColumns: isXlUp
         ? "repeat(4, minmax(0, 1fr))"
-        : isLgUp
+        : isMdUp
           ? "repeat(3, minmax(0, 1fr))"
-          : isMdUp
+          : isSmUp
             ? "repeat(2, minmax(0, 1fr))"
             : "minmax(0, 1fr)",
       width: "100%" as const,
     }),
-    [theme, isLgUp, isXlUp, isMdUp]
+    [theme, isXlUp, isMdUp, isSmUp]
   );
 
   /** Keep viewport tall enough for overlapping absolute tracks (sync mode). */
@@ -218,8 +218,7 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
               size="small"
               aria-label="Anterior"
               sx={{
-                border: "1px solid",
-                borderColor: "divider",
+                border: "1px solid rgba(3, 23, 12, 0.1)",
                 borderRadius: 1,
                 color: canPrev ? "text.primary" : "text.disabled",
               }}
@@ -232,8 +231,7 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
               size="small"
               aria-label="Următor"
               sx={{
-                border: "1px solid",
-                borderColor: "divider",
+                border: "1px solid rgba(3, 23, 12, 0.1)",
                 borderRadius: 1,
                 color: canNext ? "text.primary" : "text.disabled",
               }}
@@ -282,7 +280,6 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
                 key={job.id}
                 component={Link}
                 href={`/jobs/${job.slug}`}
-                variant="outlined"
                 sx={{
                   p: 2.5,
                   borderRadius: 3,
@@ -290,10 +287,12 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
                   flexDirection: "column",
                   gap: 1,
                   minWidth: 0,
-                  transition: "border-color 0.2s, box-shadow 0.2s",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
+                  transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease",
                   "&:hover": {
-                    borderColor: "primary.main",
-                    boxShadow: (t) => `0 4px 16px ${t.palette.primary.main}18`,
+                    borderColor: "rgba(62, 92, 118, 0.35)",
+                    boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)",
+                    transform: "translateY(-2px)",
                   },
                 }}
               >

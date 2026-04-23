@@ -367,8 +367,7 @@ export function JobFilters() {
           position: "sticky",
           top: 16,
           borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid rgba(3, 23, 12, 0.1)",
           bgcolor: "background.paper",
           overflow: "hidden",
         }}

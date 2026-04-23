@@ -304,8 +304,7 @@ export function CandidatesClient() {
       <Paper
         sx={{
           p: 2,
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid rgba(3, 23, 12, 0.1)",
           borderRadius: 2,
         }}
       >
@@ -399,8 +398,7 @@ export function CandidatesClient() {
           sx={{
             p: 6,
             textAlign: "center",
-            border: "1px solid",
-            borderColor: "divider",
+            border: "1px solid rgba(3, 23, 12, 0.1)",
             borderRadius: 2,
           }}
         >
@@ -422,8 +420,7 @@ export function CandidatesClient() {
         <TableContainer
           component={Paper}
           sx={{
-            border: "1px solid",
-            borderColor: "divider",
+            border: "1px solid rgba(3, 23, 12, 0.1)",
             borderRadius: 2,
             overflowX: "auto",
           }}

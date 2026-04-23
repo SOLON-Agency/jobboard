@@ -9,13 +9,28 @@ export type ProfileSkillWithName = {
   skill: Skill;
 };
 
-/** Fetch all skills from the master catalogue (used for autocomplete in EditSkills). */
+/** Fetch approved skills from the master catalogue (used for autocomplete in EditSkills). */
 export const getAllSkills = async (
   supabase: SupabaseClient<Database>
 ): Promise<Skill[]> => {
   const { data, error } = await supabase
     .from("skills")
     .select("*")
+    .eq("is_approved", true)
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+};
+
+/** Fetch all skills regardless of approval status (admin use only). */
+export const getAllSkillsAdmin = async (
+  supabase: SupabaseClient<Database>
+): Promise<Skill[]> => {
+  const { data, error } = await supabase
+    .from("skills")
+    .select("*")
+    .order("is_approved", { ascending: true })
     .order("name", { ascending: true });
 
   if (error) throw error;
@@ -66,9 +81,11 @@ export const addProfileSkill = async (
   if (existing) {
     skill = existing;
   } else {
+    // New user-submitted skills start unapproved; an admin must approve them
+    // before they appear in the autocomplete list for other users.
     const { data: created, error: createErr } = await supabase
       .from("skills")
-      .insert({ name: trimmed })
+      .insert({ name: trimmed, is_approved: false })
       .select()
       .single();
     if (createErr) throw createErr;

@@ -33,6 +33,8 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import appSettings from "@/config/app.settings.json";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useRole } from "@/hooks/useRole";
+import { MAX_ACTIVE_COMPANIES } from "@/lib/roles";
 import {
   getUserCompaniesWithJobCount,
   updateCompany,
@@ -41,8 +43,10 @@ import {
 } from "@/services/companies.service";
 import { slugify, parseSupabaseError, truncate } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
+import { ConfirmDialog } from "@/components/layout/ConfirmDialog";
 import { AddEditCompany } from "@/components/forms/AddEditCompany";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { useToast } from "@/contexts/ToastContext";
 import type { CompanyFormData } from "@/components/forms/AddEditCompany";
 
 interface CompanyActionsProps {
@@ -139,6 +143,8 @@ function CompanyActions({ company, onEdit, onArchive }: CompanyActionsProps) {
 export function CompanyClient() {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { role } = useRole();
+  const { showToast } = useToast();
 
   const [companies, setCompanies] = useState<CompanyWithJobCount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,6 +155,10 @@ export function CompanyClient() {
   const [formDefaults, setFormDefaults] = useState<CompanyFormData | null>(null);
   const [initialLogoUrl, setInitialLogoUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // ── Confirm dialog state ────────────────────────────────────────────────────
+  const [archiveTarget, setArchiveTarget] = useState<CompanyWithJobCount | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -192,20 +202,30 @@ export function CompanyClient() {
     setFormDefaults(null);
   };
 
-  const handleArchive = useCallback(
-    async (company: CompanyWithJobCount) => {
-      const next = !company.is_archived;
-      const label = next ? "arhivezi" : "dezarhivezi";
-      if (!confirm(`Ești sigur că vrei să ${label} compania „${company.name}"?`)) return;
-      try {
-        await archiveCompany(supabase, company.id, next);
-        await load();
-      } catch (err) {
-        setMessage({ type: "error", text: String(err) });
-      }
-    },
-    [supabase, load]
-  );
+  // Opens the confirm dialog; actual archiving happens in handleArchiveConfirm.
+  const handleArchive = useCallback((company: CompanyWithJobCount) => {
+    setArchiveTarget(company);
+  }, []);
+
+  const handleArchiveConfirm = useCallback(async () => {
+    if (!archiveTarget) return;
+    const next = !archiveTarget.is_archived;
+    setArchiving(true);
+    try {
+      await archiveCompany(supabase, archiveTarget.id, next);
+      showToast(next ? "Companie arhivată." : "Companie dezarhivată.", "info");
+      await load();
+    } catch (err) {
+      setMessage({ type: "error", text: String(err) });
+    } finally {
+      setArchiving(false);
+      setArchiveTarget(null);
+    }
+  }, [archiveTarget, supabase, showToast, load]);
+
+  const handleArchiveCancel = useCallback(() => {
+    setArchiveTarget(null);
+  }, []);
 
   const uploadLogo = useCallback(
     async (companyId: string, file: File): Promise<string | null> => {
@@ -225,6 +245,18 @@ export function CompanyClient() {
     async (data: CompanyFormData, logoFile: File | null) => {
       if (!user) return;
       setMessage(null);
+
+      const activeCompanyCount = companies.filter((c) => !c.is_archived).length;
+      const maxCompanies = MAX_ACTIVE_COMPANIES[role];
+
+      if (!editing && maxCompanies !== null && activeCompanyCount >= maxCompanies) {
+        setMessage({
+          type: "error",
+          text: `Ai atins limita de ${maxCompanies} companie activă. Arhivează compania existentă sau treci la un plan superior.`,
+        });
+        return;
+      }
+
       try {
         if (editing) {
           const logoUrl = logoFile ? await uploadLogo(editing.id, logoFile) : null;
@@ -240,6 +272,12 @@ export function CompanyClient() {
             ...(logoUrl ? { logo_url: logoUrl } : {}),
           });
           setMessage({ type: "success", text: "Companie actualizată." });
+          showToast("Companie actualizată cu succes.");
+          void supabase.functions
+            .invoke("company-followers-notify", {
+              body: { company_id: editing.id, event: "company_updated" },
+            })
+            .catch((e: unknown) => console.warn("company-followers-notify:", e));
         } else {
           const slug = slugify(data.name);
           const { data: newCompany } = await supabase
@@ -275,6 +313,7 @@ export function CompanyClient() {
           }
 
           setMessage({ type: "success", text: "Companie creată." });
+          showToast("Companie creată cu succes.");
           void supabase.functions
             .invoke("send-email", {
               body: { event: "company_created", company_id: newCompany.id },
@@ -304,19 +343,38 @@ export function CompanyClient() {
     );
   }
 
+  const activeCompanyCount = companies.filter((c) => !c.is_archived).length;
+  const maxCompanies = MAX_ACTIVE_COMPANIES[role];
+  const atCompanyLimit = maxCompanies !== null && activeCompanyCount >= maxCompanies;
+
   return (
     <>
       <DashboardPageHeader
         title={<Typography variant="h3">Companii</Typography>}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Companie nouă
-          </Button>
+          <Tooltip
+            title={
+              atCompanyLimit
+                ? `Ai atins limita de ${maxCompanies} companie activă. Arhivează compania existentă sau treci la un plan superior.`
+                : ""
+            }
+          >
+            <span>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={openCreate}
+                disabled={atCompanyLimit}
+              >
+                Companie nouă
+              </Button>
+            </span>
+          </Tooltip>
         }
       />
 
       {companies.length === 0 ? (
-        <Paper sx={{ p: 5, textAlign: "center", border: "1px solid", borderColor: "divider" }}>
+        <Paper sx={{ p: 5, textAlign: "center", border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
           <BusinessIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
           <Typography variant="h5" sx={{ mb: 1 }}>
             Nicio companie
@@ -335,13 +393,13 @@ export function CompanyClient() {
               key={company.id}
               sx={{
                 p: 2.5,
-                border: "1px solid",
-                borderColor: "divider",
+                border: "1px solid rgba(3, 23, 12, 0.1)",
+                borderRadius: 2,
                 display: "flex",
                 alignItems: "center",
                 gap: 2,
-                transition: "border-color 0.2s",
-                "&:hover": { borderColor: "primary.main" },
+                transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                "&:hover": { borderColor: "rgba(62, 92, 118, 0.35)", boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)" },
               }}
             >
               <Avatar
@@ -350,8 +408,7 @@ export function CompanyClient() {
                   width: 52,
                   height: 52,
                   bgcolor: "background.default",
-                  border: "1px solid",
-                  borderColor: "divider",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
                   flexShrink: 0,
                 }}
               >
@@ -434,12 +491,11 @@ export function CompanyClient() {
                   px: 1.5,
                   py: 1,
                   borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
                   bgcolor: "background.default",
                   cursor: "pointer",
-                  transition: "border-color 0.2s",
-                  "&:hover": { borderColor: "primary.main" },
+                  transition: "border-color 0.2s ease",
+                  "&:hover": { borderColor: "rgba(62, 92, 118, 0.35)" },
                 }}
               >
      
@@ -476,6 +532,21 @@ export function CompanyClient() {
           />
         )}
       </EditSideDrawer>
+
+      <ConfirmDialog
+        open={Boolean(archiveTarget)}
+        title={archiveTarget?.is_archived ? "Dezarhivează compania" : "Arhivează compania"}
+        body={
+          archiveTarget?.is_archived
+            ? `Ești sigur că vrei să dezarhivezi compania „${archiveTarget.name}"? Compania va deveni din nou activă.`
+            : `Ești sigur că vrei să arhivezi compania „${archiveTarget?.name}"? Anunțurile active vor fi suspendate.`
+        }
+        confirmLabel={archiveTarget?.is_archived ? "Dezarhivează" : "Arhivează"}
+        confirmColor={archiveTarget?.is_archived ? "primary" : "error"}
+        loading={archiving}
+        onConfirm={handleArchiveConfirm}
+        onCancel={handleArchiveCancel}
+      />
     </>
   );
 }

@@ -9,8 +9,8 @@ interface BorderedCardProps extends PaperProps {
 }
 
 /**
- * A `Paper` with a `1px divider` border and `borderRadius: 2` — the most
- * frequently repeated card pattern across dashboard and forms pages.
+ * A `Paper` with the standard card border and radius — driven by the MUI
+ * `Paper` `outlined` variant theme override (1px divider, borderRadius 16px).
  *
  * @pattern BorderedCard
  * @usedBy DashboardContent, forms/page, forms/[id]/responses/page
@@ -26,9 +26,6 @@ export function BorderedCard({ p = 3, sx, children, ...rest }: BorderedCardProps
     <Paper
       variant="outlined"
       sx={{
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 2,
         p,
         ...sx,
       }}

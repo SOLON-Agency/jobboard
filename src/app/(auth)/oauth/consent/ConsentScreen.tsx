@@ -112,8 +112,7 @@ export function ConsentScreen({
         elevation={0}
         sx={{
           p: { xs: 3, sm: 5 },
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid rgba(3, 23, 12, 0.1)",
           borderRadius: 3,
         }}
       >
@@ -173,8 +172,7 @@ export function ConsentScreen({
               height: 52,
               borderRadius: 2,
               bgcolor: "action.hover",
-              border: "1px solid",
-              borderColor: "divider",
+              border: "1px solid rgba(3, 23, 12, 0.1)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -232,8 +230,7 @@ export function ConsentScreen({
             mb: 3,
             borderRadius: 2,
             bgcolor: "action.hover",
-            border: "1px solid",
-            borderColor: "divider",
+            border: "1px solid rgba(3, 23, 12, 0.1)",
           }}
           aria-label={`Conectat ca ${userEmail}`}
         >
@@ -271,8 +268,7 @@ export function ConsentScreen({
                     gap: 1.5,
                     p: 1.5,
                     borderRadius: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
+                    border: "1px solid rgba(3, 23, 12, 0.1)",
                     bgcolor: "background.paper",
                   }}
                 >

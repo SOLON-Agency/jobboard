@@ -62,8 +62,7 @@ export function LoginForm() {
       <Paper
         sx={{
           p: 4,
-          border: "1px solid",
-          borderColor: "divider",
+          border: "1px solid rgba(3, 23, 12, 0.1)",
           borderRadius: 3,
         }}
       >

@@ -80,8 +80,7 @@ function EmptyArchive({ title = "Niciun element arhivat", description = "Element
       sx={{
         p: 6,
         textAlign: "center",
-        border: "1px solid",
-        borderColor: "divider",
+        border: "1px solid rgba(3, 23, 12, 0.1)",
         borderRadius: 2,
       }}
     >
@@ -239,8 +238,7 @@ function ArchiveContent() {
                   gap: 2,
                   px: 3,
                   py: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
                   borderRadius: 2,
                 }}
               >
@@ -282,8 +280,7 @@ function ArchiveContent() {
                   gap: 2,
                   px: 3,
                   py: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
                   borderRadius: 2,
                 }}
               >
@@ -336,8 +333,7 @@ function ArchiveContent() {
                     gap: { xs: 1.5, sm: 2 },
                     px: { xs: 2, sm: 3 },
                     py: 2,
-                    border: "1px solid",
-                    borderColor: "divider",
+                    border: "1px solid rgba(3, 23, 12, 0.1)",
                     borderRadius: 2,
                   }}
                 >
@@ -396,8 +392,7 @@ function ArchiveContent() {
                   gap: 2,
                   px: 3,
                   py: 2,
-                  border: "1px solid",
-                  borderColor: "divider",
+                  border: "1px solid rgba(3, 23, 12, 0.1)",
                   borderRadius: 2,
                 }}
               >

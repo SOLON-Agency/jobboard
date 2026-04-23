@@ -17,6 +17,7 @@ import {
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
+import HourglassEmptyOutlinedIcon from "@mui/icons-material/HourglassEmptyOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -87,10 +88,6 @@ export function EditSkills({
       try {
         const newItem = await addProfileSkill(supabase, user.id, trimmed, items.length);
         setItems((prev) => [...prev, newItem]);
-        // Keep local allSkills in sync if a new skill was created
-        if (!allSkills.some((s) => s.id === newItem.skill.id)) {
-          setAllSkills((prev) => [...prev, newItem.skill].sort((a, b) => a.name.localeCompare(b.name)));
-        }
         setInputValue("");
         onReload?.();
       } catch (err) {
@@ -138,9 +135,22 @@ export function EditSkills({
     [supabase, items]
   );
 
-  // ── Autocomplete options (exclude already-added skills) ───────────────────
+  // ── Autocomplete options (approved only, exclude already-added) ───────────
   const addedIds = new Set(items.map((i) => i.skill.id));
   const options = allSkills.filter((s) => !addedIds.has(s.id));
+
+  // True when the typed value doesn't match any approved skill name (→ will create new, unapproved skill)
+  const trimmedInput = inputValue.trim();
+  const isNewSkill =
+    trimmedInput.length > 0 &&
+    !options.some((s) => s.name.toLowerCase() === trimmedInput.toLowerCase()) &&
+    !items.some((i) => i.skill.name.toLowerCase() === trimmedInput.toLowerCase());
+
+  const helperText = error
+    ? error
+    : isNewSkill
+    ? `„${trimmedInput}" va fi adăugată ca personalizată și va apărea pe profilul tău după aprobare de admin.`
+    : "Selectează din listă sau tastează o competență nouă și apasă Enter";
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -159,12 +169,12 @@ export function EditSkills({
         inputValue={inputValue}
         onInputChange={(_, val) => setInputValue(val)}
         onChange={(_, value) => {
-          if (value && typeof value === "string") handleAdd(value);
+          if (value && typeof value === "string") void handleAdd(value);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && inputValue.trim()) {
             e.preventDefault();
-            handleAdd(inputValue);
+            void handleAdd(inputValue);
           }
         }}
         filterOptions={(opts, state) =>
@@ -178,8 +188,11 @@ export function EditSkills({
             label="Adaugă o competență"
             placeholder="ex. Drept civil, Litigii..."
             size="small"
-            helperText={error ?? "Selectează din listă sau tastează o competență personalizată și apasă Enter"}
+            helperText={helperText}
             error={!!error}
+            FormHelperTextProps={{
+              sx: isNewSkill && !error ? { color: "warning.main" } : undefined,
+            }}
             InputProps={{
               ...params.InputProps,
               endAdornment: (
@@ -208,74 +221,124 @@ export function EditSkills({
         </Typography>
       ) : (
         <Stack spacing={0.75}>
-          {items.map((item, idx) => (
-            <Stack
-              key={item.id}
-              direction="row"
-              alignItems="center"
-              spacing={0.5}
-              sx={{
-                px: 1.5,
-                py: 0.75,
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                "&:hover": { bgcolor: "action.hover" },
-              }}
-            >
-              <Typography variant="body2" fontWeight={500}
-                sx={{ flex: 1, minWidth: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>
-                {item.skill.name}
-              </Typography>
+          {items.map((item, idx) => {
+            const isPending = item.skill.is_approved === false;
+            return (
+              <Tooltip
+                key={item.id}
+                title={
+                  isPending
+                    ? "Competență personalizată — va fi vizibilă public după aprobare de admin"
+                    : ""
+                }
+                placement="left"
+              >
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={0.5}
+                  sx={{
+                    px: 1.5,
+                    py: 0.75,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: isPending ? "warning.light" : "divider",
+                    bgcolor: isPending ? "warning.50" : "transparent",
+                    "&:hover": { bgcolor: isPending ? "warning.50" : "action.hover" },
+                  }}
+                >
+                  {isPending && (
+                    <HourglassEmptyOutlinedIcon
+                      sx={{ fontSize: 14, color: "warning.main", flexShrink: 0 }}
+                      aria-label="În așteptare aprobare"
+                    />
+                  )}
+                  <Typography
+                    variant="body2"
+                    fontWeight={500}
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      color: isPending ? "warning.dark" : "text.primary",
+                    }}
+                  >
+                    {item.skill.name}
+                    {isPending && (
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        sx={{ ml: 1, color: "warning.main", fontWeight: 400 }}
+                      >
+                        (în așteptare)
+                      </Typography>
+                    )}
+                  </Typography>
 
-              <Stack direction="row" spacing={0.25}>
-                <Tooltip title="Mută sus">
-                  <span>
-                    <IconButton size="small" onClick={() => move(idx, -1)} disabled={idx === 0}>
-                      <ArrowUpwardIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title="Mută jos">
-                  <span>
-                    <IconButton size="small" onClick={() => move(idx, 1)} disabled={idx === items.length - 1}>
-                      <ArrowDownwardIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                <Tooltip title="Elimină">
-                  <IconButton size="small" sx={{ color: "error.main" }} onClick={() => handleRemove(item.id)}>
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            </Stack>
-          ))}
+                  <Stack direction="row" spacing={0.25}>
+                    <Tooltip title="Mută sus">
+                      <span>
+                        <IconButton size="small" onClick={() => void move(idx, -1)} disabled={idx === 0}>
+                          <ArrowUpwardIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Mută jos">
+                      <span>
+                        <IconButton size="small" onClick={() => void move(idx, 1)} disabled={idx === items.length - 1}>
+                          <ArrowDownwardIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="Elimină">
+                      <IconButton
+                        size="small"
+                        sx={{ color: "error.main" }}
+                        onClick={() => void handleRemove(item.id)}
+                        aria-label={`Elimină ${item.skill.name}`}
+                      >
+                        <CloseIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </Stack>
+              </Tooltip>
+            );
+          })}
         </Stack>
       )}
 
-      {/* ── Tag preview (read-only mini preview) ── */}
+      {/* ── Tag preview (approved skills only — what others see on public profile) ── */}
       {items.length > 0 && (
         <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
           <Typography variant="caption" color="text.disabled" sx={{ mb: 1, display: "block" }}>
-            Previzualizare
+            Previzualizare (vizibil pe profilul public)
           </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-            {items.map((item) => (
-              <Chip
-                key={item.id}
-                label={item.skill.name}
-                size="small"
-                sx={{
-                  bgcolor: "rgba(3,23,12,0.06)",
-                  color: "text.primary",
-                  fontWeight: 500,
-                  border: "none",
-                  borderRadius: "20px",
-                }}
-              />
-            ))}
-          </Box>
+          {items.every((i) => i.skill.is_approved === false) ? (
+            <Typography variant="caption" color="text.disabled">
+              Nicio competență aprobată momentan.
+            </Typography>
+          ) : (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+              {items
+                .filter((item) => item.skill.is_approved !== false)
+                .map((item) => (
+                  <Chip
+                    key={item.id}
+                    label={item.skill.name}
+                    size="small"
+                    sx={{
+                      bgcolor: "rgba(3,23,12,0.06)",
+                      color: "text.primary",
+                      fontWeight: 500,
+                      border: "none",
+                      borderRadius: "20px",
+                    }}
+                  />
+                ))}
+            </Box>
+          )}
         </Box>
       )}
     </Paper>

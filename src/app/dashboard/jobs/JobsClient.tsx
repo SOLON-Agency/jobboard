@@ -11,12 +11,15 @@ import {
   FormControl,
   Select,
   MenuItem,
+  Tooltip,
   type SelectChangeEvent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useRole } from "@/hooks/useRole";
+import { MAX_ACTIVE_JOBS } from "@/lib/roles";
 import { getUserCompanies } from "@/services/companies.service";
 import { createJob, updateJob, deleteJob, archiveJob } from "@/services/jobs.service";
 import { createBenefit } from "@/services/benefits.service";
@@ -25,6 +28,7 @@ import { JobList } from "@/components/jobs/JobList";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditJob } from "@/components/forms/AddEditJob";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { useToast } from "@/contexts/ToastContext";
 import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/forms/AddEditJob";
 
 
@@ -32,6 +36,8 @@ export function JobsClient() {
   const { user } = useAuth();
   const supabase = useSupabase();
   const router = useRouter();
+  const { role } = useRole();
+  const { showToast } = useToast();
 
   const [jobs, setJobs] = useState<JobWithCompany[]>([]);
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
@@ -126,6 +132,15 @@ export function JobsClient() {
         const appUrl = data.application_method === "url" ? (data.application_url || null) : null;
         const appFormId = data.application_method === "form" ? (data.form_id || null) : null;
 
+        // Enforce active job limit when creating a published job
+        if (!editingJob && status === "published" && atJobLimit && maxJobs !== null) {
+          setMessage({
+            type: "error",
+            text: `Ai atins limita de ${maxJobs} anunțuri active. Arhivează un anunț sau treci la un plan superior.`,
+          });
+          return;
+        }
+
         if (editingJob) {
           const companyName =
             editingJob.companies?.name ??
@@ -149,6 +164,7 @@ export function JobsClient() {
             application_form_id: appFormId,
           });
           setMessage({ type: "success", text: "Anunț actualizat." });
+          showToast("Anunț actualizat cu succes.");
         } else {
           const companyName = companies.find((c) => c.id === data.company_id)?.name ?? "";
           const slug = companyName
@@ -176,10 +192,26 @@ export function JobsClient() {
               newBenefits.map((b) => createBenefit(supabase, { job_id: job.id, title: b.title, sort_order: b.sort_order }))
             );
           }
+          if (status === "published") {
+            void supabase.functions
+              .invoke("company-followers-notify", {
+                body: {
+                  company_id: data.company_id,
+                  event: "job_created",
+                  job_id: job.id,
+                  job_title: data.title,
+                  job_slug: slug,
+                },
+              })
+              .catch((e: unknown) => console.warn("company-followers-notify:", e));
+          }
           setMessage({
             type: "success",
             text: status === "published" ? "Anunț publicat cu succes." : "Anunț salvat ca ciornă.",
           });
+          showToast(
+            status === "published" ? "Anunț publicat cu succes." : "Anunț salvat ca ciornă."
+          );
         }
         await loadJobs();
         setTimeout(closeDrawer, 900);
@@ -195,6 +227,24 @@ export function JobsClient() {
       status,
       published_at: status === "published" ? new Date().toISOString() : undefined,
     });
+    if (status === "archived") showToast("Anunț arhivat.", "info");
+    else if (status === "published") showToast("Anunț publicat.");
+    if (status === "published") {
+      const job = jobs.find((j) => j.id === jobId);
+      if (job) {
+        void supabase.functions
+          .invoke("company-followers-notify", {
+            body: {
+              company_id: job.company_id,
+              event: "job_created",
+              job_id: job.id,
+              job_title: job.title,
+              job_slug: job.slug,
+            },
+          })
+          .catch((e: unknown) => console.warn("company-followers-notify:", e));
+      }
+    }
     await loadJobs();
   };
 
@@ -237,6 +287,10 @@ export function JobsClient() {
       ? jobs
       : jobs.filter((j) => j.company_id === selectedCompanyId);
 
+  const activeJobCount = jobs.filter((j) => j.status === "published").length;
+  const maxJobs = MAX_ACTIVE_JOBS[role];
+  const atJobLimit = maxJobs !== null && activeJobCount >= maxJobs;
+
   if (loading) return null;
 
   return (
@@ -262,16 +316,31 @@ export function JobsClient() {
             )}
 
             {companies.length > 0 && (
-              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-                Anunț nou
-              </Button>
+              <Tooltip
+                title={
+                  atJobLimit
+                    ? `Ai atins limita de ${maxJobs} anunț${maxJobs === 1 ? "" : "uri"} active. Arhivează un anunț sau treci la un plan superior.`
+                    : ""
+                }
+              >
+                <span>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={openCreate}
+                    disabled={atJobLimit}
+                  >
+                    Anunț nou
+                  </Button>
+                </span>
+              </Tooltip>
             )}
           </>
         }
       />
 
       {companies.length === 0 ? (
-        <Paper sx={{ p: 4, border: "1px solid", borderColor: "divider", textAlign: "center" }}>
+        <Paper sx={{ p: 4, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2, textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
           <Typography variant="h5" sx={{ mb: 1 }}>Nicio companie</Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
@@ -282,7 +351,7 @@ export function JobsClient() {
           </Button>
         </Paper>
       ) : filteredJobs.length === 0 ? (
-        <Paper sx={{ p: 4, border: "1px solid", borderColor: "divider", textAlign: "center" }}>
+        <Paper sx={{ p: 4, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2, textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
           <Typography variant="h5" sx={{ mb: 1 }}>
             {selectedCompanyId === "all" ? "Niciun anunț de muncă" : "Niciun anunț pentru această companie"}

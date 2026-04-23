@@ -292,6 +292,32 @@ export type Database = {
         }
         Relationships: []
       }
+      company_favourites: {
+        Row: {
+          company_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_favourites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorites: {
         Row: {
           created_at: string
@@ -793,6 +819,7 @@ export type Database = {
           notifications_email: boolean
           notifications_sms: boolean
           phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
           slug: string | null
           updated_at: string
         }
@@ -810,6 +837,7 @@ export type Database = {
           notifications_email?: boolean
           notifications_sms?: boolean
           phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           slug?: string | null
           updated_at?: string
         }
@@ -827,6 +855,7 @@ export type Database = {
           notifications_email?: boolean
           notifications_sms?: boolean
           phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           slug?: string | null
           updated_at?: string
         }
@@ -835,14 +864,17 @@ export type Database = {
       skills: {
         Row: {
           id: string
+          is_approved: boolean
           name: string
         }
         Insert: {
           id?: string
+          is_approved?: boolean
           name: string
         }
         Update: {
           id?: string
+          is_approved?: boolean
           name?: string
         }
         Relationships: []
@@ -876,6 +908,25 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: undefined
       }
+      admin_set_user_role: {
+        Args: { p_user_id: string; p_role: Database["public"]["Enums"]["user_role"] }
+        Returns: undefined
+      }
+      admin_set_skill_approval: {
+        Args: { p_skill_id: string; p_is_approved: boolean }
+        Returns: undefined
+      }
+      admin_list_users: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          full_name: string | null
+          email: string
+          role: Database["public"]["Enums"]["user_role"]
+          created_at: string
+          avatar_url: string | null
+        }[]
+      }
     }
     Enums: {
       alert_frequency: "daily" | "weekly"
@@ -888,6 +939,7 @@ export type Database = {
       company_role: "owner" | "admin" | "member"
       entity_type: "user" | "company"
       job_status: "draft" | "published" | "archived"
+      user_role: "user" | "employer" | "premium_employer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1026,6 +1078,7 @@ export const Constants = {
       company_role: ["owner", "admin", "member"],
       entity_type: ["user", "company"],
       job_status: ["draft", "published", "archived"],
+      user_role: ["user", "employer", "premium_employer", "admin"],
     },
   },
 } as const

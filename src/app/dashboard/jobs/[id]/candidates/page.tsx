@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireEmployerRole } from "@/lib/server-guards";
 import { CandidatesClient } from "./CandidatesClient";
 
 export const metadata: Metadata = {
@@ -6,6 +7,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function JobCandidatesPage() {
+export default async function JobCandidatesPage() {
+  await requireEmployerRole();
   return <CandidatesClient />;
 }

@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 export default function PolicyPage() {
   return (
     <Container maxWidth="md" sx={{ py: 8 }}>
-      <Paper sx={{ p: { xs: 3, md: 5 }, border: "1px solid", borderColor: "divider" }}>
+      <Paper sx={{ p: { xs: 3, md: 5 }, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
         <Typography variant="h2" sx={{ mb: 4 }}>
           Politică de confidențialitate
         </Typography>

@@ -36,6 +36,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { getFormWithFields } from "@/services/forms.service";
 import { trackCompanyEngage } from "@/services/companies.service";
 import { parseSupabaseError, truncate } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
 import type { Tables } from "@/types/database";
 import { JobTags } from "../jobs/JobTags";
@@ -278,6 +279,7 @@ export function ApplicationForm({
 }: ApplicationFormProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [formSpec, setFormSpec] = useState<FormWithFields | null>(null);
   const [loadingForm, setLoadingForm] = useState(false);
@@ -399,6 +401,7 @@ export function ApplicationForm({
       }
 
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
+      showToast("Candidatura ta a fost trimisă cu succes! 🎉");
       setSubmitted(true);
       onSubmitted();
     } catch (err) {
