@@ -18,6 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { LocationAutocomplete } from "@/components/common/LocationAutocomplete";
 import { alertSchema, type AlertFormData } from "@/components/forms/validations/alert.schema";
 import { jobTypeLabels, experienceLevelLabels } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
@@ -137,21 +138,13 @@ export function AlertForm({
           name="location"
           control={control}
           render={({ field }) => (
-            <TextField
-              {...field}
-              label="Locație"
-              placeholder="Oraș, țară..."
-              fullWidth
+            <LocationAutocomplete
+              value={field.value}
+              onChange={field.onChange}
+              onInputChange={field.onChange}
+              onBlur={field.onBlur}
               size="small"
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
+              fullWidth
             />
           )}
         />

@@ -27,6 +27,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { jobTypeLabels, experienceLevelLabels } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
 import { SaveSearchAsAlertCta } from "@/components/alerts/SaveSearchAsAlertCta";
+import { LocationAutocomplete } from "@/components/common/LocationAutocomplete";
 
 const SALARY_MAX = appSettings.config.salaryMax ?? 30000;
 const SALARY_MIN = appSettings.config.salaryMin ?? 5000;
@@ -165,25 +166,14 @@ export function JobFilters() {
         <SectionHeader label="Locație" open={open.location} onToggle={() => toggle("location")} controlsId="filter-location" />
         <Collapse id="filter-location" in={open.location}>
           <Box sx={{ pb: 2 }}>
-            <TextField
-              placeholder="Oraș, țară..."
+            <LocationAutocomplete
+              value={searchParams.get("location") ?? ""}
+              onChange={(val) => updateParam("location", val)}
+              onInputChange={(val) => { if (!val) updateParam("location", ""); }}
               size="small"
-              fullWidth
-              defaultValue={searchParams.get("location") ?? ""}
-              inputProps={{ "aria-label": "Locație" }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  updateParam("location", (e.target as HTMLInputElement).value);
-              }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: "text.secondary", fontSize: 18 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
+              aria-label="Locație"
+              label=""
+              placeholder="Oraș..."
             />
           </Box>
         </Collapse>

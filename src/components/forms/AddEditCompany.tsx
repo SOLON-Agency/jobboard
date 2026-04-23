@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useImperativeHandle, forwardRef } from "react";
+import { LocationAutocomplete } from "@/components/common/LocationAutocomplete";
 import {
   Typography,
   TextField,
@@ -161,7 +162,15 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
             <Controller
               name="location"
               control={control}
-              render={({ field }) => <TextField {...field} label="Locație" fullWidth />}
+              render={({ field }) => (
+                <LocationAutocomplete
+                  value={field.value}
+                  onChange={field.onChange}
+                  onInputChange={field.onChange}
+                  onBlur={field.onBlur}
+                  fullWidth
+                />
+              )}
             />
             <Controller
               name="founded_year"

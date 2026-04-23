@@ -241,7 +241,7 @@ export function JobList({
             {loading ? (
               <Skeleton variant="text" width={120} />
             ) : (
-              <><strong>{displayCount}</strong> {displayCount === 1 ? "anunț" : "anunțuri"}</>
+              <><strong>{displayCount}</strong> {displayCount === 1 ? "anunț " : "anunțuri "}de muncă în domeniul juridic</>
             )}
           </Typography>
 

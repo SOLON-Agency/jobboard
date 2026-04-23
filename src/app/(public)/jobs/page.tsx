@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 export default function JobsPage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography
+      {/* <Typography
         variant="h1"
         sx={{
           fontSize: { xs: "1.5rem", md: "1.75rem" },
@@ -44,7 +44,7 @@ export default function JobsPage() {
         }}
       >
         Locuri de muncă juridice
-      </Typography>
+      </Typography> */}
 
       <Box
         sx={{

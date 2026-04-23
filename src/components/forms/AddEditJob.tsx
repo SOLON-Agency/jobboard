@@ -35,6 +35,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useSupabase } from "@/hooks/useSupabase";
 import { jobTypeLabels, experienceLevelLabels, parseSupabaseError, truncate } from "@/lib/utils";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
+import { LocationAutocomplete } from "@/components/common/LocationAutocomplete";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditForm, type FormBuilderData, type FormField } from "@/components/forms/AddEditForm";
 import { createForm } from "@/services/forms.service";
@@ -344,7 +345,21 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
           />
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <TextField {...register("location")} disabled={watch("is_remote")} label={watch("is_remote") ? "Remote" : "Locație"} fullWidth />
+            <Controller
+              name="location"
+              control={control}
+              render={({ field }) => (
+                <LocationAutocomplete
+                  value={field.value}
+                  onChange={field.onChange}
+                  onInputChange={field.onChange}
+                  onBlur={field.onBlur}
+                  label={watch("is_remote") ? "Remote" : "Locație"}
+                  disabled={watch("is_remote")}
+                  fullWidth
+                />
+              )}
+            />
             <Controller
               name="is_remote"
               control={control}

@@ -27,6 +27,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import PublicIcon from "@mui/icons-material/Public";
 import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
+import { LocationAutocomplete } from "@/components/common/LocationAutocomplete";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileFormData } from "@/components/forms/validations/profile.schema";
 import { useAuth } from "@/hooks/useAuth";
@@ -551,7 +552,19 @@ export function ProfileClient() {
               error={!!errors.bio}
               helperText={errors.bio?.message}
             />
-            <TextField {...register("location")} label="Locație" fullWidth />
+            <Controller
+              name="location"
+              control={control}
+              render={({ field }) => (
+                <LocationAutocomplete
+                  value={field.value}
+                  onChange={field.onChange}
+                  onInputChange={field.onChange}
+                  onBlur={field.onBlur}
+                  fullWidth
+                />
+              )}
+            />
             <Controller
               name="experience_level"
               control={control}
