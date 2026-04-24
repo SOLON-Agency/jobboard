@@ -287,7 +287,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
             >
               <Button
                 component={Link}
-                href="/jobs"
+                href="/anunt"
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardIcon sx={{ transition: "transform 0.2s", ".MuiButton-root:hover &": { transform: "translateX(4px)" } }} />}
@@ -304,11 +304,11 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                   transition: "all 0.2s",
                 }}
               >
-                Explorează anunțuri
+                Creează un anunț
               </Button>
               <Button
                 component={Link}
-                href="/register"
+                href="/jobs"
                 variant="outlined"
                 size="large"
                 sx={{
@@ -329,7 +329,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                   transition: "all 0.2s",
                 }}
               >
-                Creează cont gratuit
+                Explorează anunțuri
               </Button>
             </Stack>
           </motion.div>

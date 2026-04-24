@@ -671,8 +671,9 @@ export function AnuntWizard() {
         salary_max: jobData.salary_max ? Number(jobData.salary_max) : null,
         is_remote: jobData.is_remote,
         application_url: jobData.application_method === "url" ? (jobData.application_url || null) : null,
-        status: "published",
-        published_at: new Date().toISOString(),
+        published_at: new Date(jobData.published_at).toISOString(),
+        expires_at: new Date(jobData.expires_at).toISOString(),
+        status: new Date(jobData.published_at) <= new Date() ? "published" : "draft",
       });
 
       if (jobBenefits.length > 0) {
@@ -909,6 +910,12 @@ export function AnuntWizard() {
                       salary_min: "",
                       salary_max: "",
                       is_remote: false,
+                      published_at: new Date().toISOString().slice(0, 10),
+                      expires_at: (() => {
+                        const d = new Date();
+                        d.setMonth(d.getMonth() + 6);
+                        return d.toISOString().slice(0, 10);
+                      })(),
                       application_method: "url",
                       application_url: "",
                       form_id: "",

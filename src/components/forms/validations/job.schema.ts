@@ -10,7 +10,8 @@ export const jobSchema = z.object({
       "Descrierea trebuie să aibă cel puțin 10 caractere",
     ),
   location: z.string().optional().or(z.literal("")),
-  created_at: z.string().optional().or(z.literal("")),
+  published_at: z.string().min(1, "Data publicării este obligatorie"),
+  expires_at: z.string().min(1, "Data expirării este obligatorie"),
   job_type: z.string().optional().or(z.literal("")),
   experience_level: z.array(z.string()),
   salary_min: z.string().optional(),
@@ -23,6 +24,18 @@ export const jobSchema = z.object({
     .or(z.literal("")),
   form_id: z.string().optional().or(z.literal("")),
 }).superRefine((data, ctx) => {
+  if (data.published_at && data.expires_at) {
+    const pub = new Date(data.published_at);
+    const exp = new Date(data.expires_at);
+    if (exp <= pub) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["expires_at"],
+        message: "Data expirării trebuie să fie după data publicării",
+      });
+    }
+  }
+
   if (data.application_method === "url") {
     const val = data.application_url ?? "";
     if (!val.trim()) {

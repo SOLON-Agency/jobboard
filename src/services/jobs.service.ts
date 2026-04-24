@@ -19,11 +19,14 @@ export const getPublishedJobs = async (
   };
   const { column, ascending } = sortMap[filters.sort ?? "newest"];
 
+  const nowIso = new Date().toISOString();
+
   let query = supabase
     .from("job_listings")
     .select("*, companies(*)", { count: "exact" })
     .eq("status", "published")
     .eq("is_archived", false)
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order(column, { ascending, nullsFirst: false })
     .range(from, to);
 

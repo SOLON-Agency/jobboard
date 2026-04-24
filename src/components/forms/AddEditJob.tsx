@@ -466,6 +466,58 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             <TextField {...register("salary_max")} label="Salariu maxim" type="number" fullWidth />
           </Stack>
 
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <Controller
+              name="published_at"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  id="published_at"
+                  label="Data publicării"
+                  type="date"
+                  fullWidth
+                  required
+                  aria-required="true"
+                  error={!!errors.published_at}
+                  helperText={
+                    errors.published_at?.message ??
+                    "Anunțul va fi publicat automat în această dată"
+                  }
+                  inputProps={{
+                    "aria-describedby": "published_at-helper",
+                  }}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+              )}
+            />
+            <Controller
+              name="expires_at"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  id="expires_at"
+                  label="Data expirării"
+                  type="date"
+                  fullWidth
+                  required
+                  aria-required="true"
+                  error={!!errors.expires_at}
+                  helperText={
+                    errors.expires_at?.message ??
+                    "Anunțul va fi dezactivat automat după această dată"
+                  }
+                  inputProps={{
+                    "aria-describedby": "expires_at-helper",
+                    min: watch("published_at") || undefined,
+                  }}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                />
+              )}
+            />
+          </Stack>
+
           {/* ── Benefits ─────────────────────────────────────────────────── */}
           <Box>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>

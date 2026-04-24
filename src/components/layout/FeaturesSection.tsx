@@ -190,8 +190,8 @@ export function FeaturesSection() {
           <Typography variant="h2" sx={{ color: "#F0EBD8", mb: 2 }}>
             Cum funcționează?
           </Typography>
-          <Typography sx={{ color: "rgba(240,235,216,0.55)", maxWidth: 480, mx: "auto" }}>
-            Doi pași simpli te separă de următoarea oportunitate juridică.
+          <Typography sx={{ color: "rgba(240,235,216,0.55)", mx: "auto" }}>
+            Doi pași simpli te separă de următoarea oportunitate profesională în domeniul juridic.
           </Typography>
         </Box>
 

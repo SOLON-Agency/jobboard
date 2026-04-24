@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   AppBar,
   Toolbar,
@@ -23,7 +24,6 @@ import {
   Skeleton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
@@ -106,20 +106,15 @@ export function Navbar() {
               flexShrink: 0,
             }}
           >
-            <WorkOutlineIcon sx={{ color: CREAM, fontSize: 22, opacity: 0.9 }} />
-            <Typography
-              variant="h6"
-              component="span"
-              sx={{
-                fontWeight: 800,
-                color: CREAM,
-                letterSpacing: "0.06em",
-                fontSize: "1rem",
-                textTransform: "uppercase",
-              }}
-            >
-              {appSettings.name}
-            </Typography>
+            {/* <Image
+              src="/logo.png"
+              alt={appSettings.name}
+              width={140}
+              height={36}
+              style={{ objectFit: "contain" }}
+              priority
+            /> */}
+            <Typography variant="h1" fontWeight={700} sx={{ fontSize: "1.125rem", textTransform: "uppercase" }}>{appSettings.name}</Typography>
           </Box>
 
           {/* Desktop nav links */}

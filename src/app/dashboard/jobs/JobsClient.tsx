@@ -31,6 +31,27 @@ import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader"
 import { useToast } from "@/contexts/ToastContext";
 import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/forms/AddEditJob";
 
+// ─── Scheduling helpers ────────────────────────────────────────────────────────
+
+function toDateInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  return iso.slice(0, 10);
+}
+
+function todayDateInput(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function sixMonthsFromNow(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 6);
+  return d.toISOString().slice(0, 10);
+}
+
+/** A published_at on or before today should go live immediately. */
+function deriveStatus(publishedAtDate: string): "published" | "draft" {
+  return new Date(publishedAtDate) <= new Date() ? "published" : "draft";
+}
 
 export function JobsClient() {
   const { user } = useAuth();
@@ -89,6 +110,8 @@ export function JobsClient() {
       salary_min: "",
       salary_max: "",
       is_remote: false,
+      published_at: todayDateInput(),
+      expires_at: sixMonthsFromNow(),
       application_method: "form",
       application_url: "",
       form_id: "",
@@ -109,6 +132,8 @@ export function JobsClient() {
       salary_min: job.salary_min?.toString() ?? "",
       salary_max: job.salary_max?.toString() ?? "",
       is_remote: job.is_remote,
+      published_at: toDateInput(job.published_at) || todayDateInput(),
+      expires_at: toDateInput(job.expires_at) || sixMonthsFromNow(),
       application_method: job.application_url
         ? "url"
         : job.application_form_id
@@ -150,6 +175,13 @@ export function JobsClient() {
             ? `${slugify(data.title)}-${slugify(companyName)}-${editingJob.id.slice(0, 8)}`
             : `${slugify(data.title)}-${editingJob.id.slice(0, 8)}`;
 
+          const publishedAt = new Date(data.published_at).toISOString();
+          const expiresAt = new Date(data.expires_at).toISOString();
+          const rescheduledStatus =
+            editingJob.status !== "archived"
+              ? deriveStatus(data.published_at)
+              : editingJob.status;
+
           await updateJob(supabase, editingJob.id, {
             title: data.title,
             slug,
@@ -162,6 +194,9 @@ export function JobsClient() {
             is_remote: data.is_remote,
             application_url: appUrl,
             application_form_id: appFormId,
+            published_at: publishedAt,
+            expires_at: expiresAt,
+            status: rescheduledStatus,
           });
           setMessage({ type: "success", text: "Anunț actualizat." });
           showToast("Anunț actualizat cu succes.");
@@ -170,6 +205,11 @@ export function JobsClient() {
           const slug = companyName
             ? `${slugify(data.title)}-${slugify(companyName)}-${Date.now().toString(36)}`
             : `${slugify(data.title)}-${Date.now().toString(36)}`;
+
+          const publishedAt = new Date(data.published_at).toISOString();
+          const expiresAt = new Date(data.expires_at).toISOString();
+          const effectiveStatus =
+            status === "published" ? deriveStatus(data.published_at) : "draft";
 
           const job = await createJob(supabase, {
             company_id: data.company_id,
@@ -184,15 +224,16 @@ export function JobsClient() {
             is_remote: data.is_remote,
             application_url: appUrl,
             application_form_id: appFormId,
-            status,
-            published_at: status === "published" ? new Date().toISOString() : null,
+            status: effectiveStatus,
+            published_at: publishedAt,
+            expires_at: expiresAt,
           });
           if (newBenefits && newBenefits.length > 0) {
             await Promise.all(
               newBenefits.map((b) => createBenefit(supabase, { job_id: job.id, title: b.title, sort_order: b.sort_order }))
             );
           }
-          if (status === "published") {
+          if (effectiveStatus === "published") {
             void supabase.functions
               .invoke("company-followers-notify", {
                 body: {
@@ -208,13 +249,14 @@ export function JobsClient() {
               .invoke("alerts-job-match", { body: { job_id: job.id } })
               .catch((e: unknown) => console.warn("alerts-job-match:", e));
           }
-          setMessage({
-            type: "success",
-            text: status === "published" ? "Anunț publicat cu succes." : "Anunț salvat ca ciornă.",
-          });
-          showToast(
-            status === "published" ? "Anunț publicat cu succes." : "Anunț salvat ca ciornă."
-          );
+          const successMsg =
+            effectiveStatus === "published"
+              ? "Anunț publicat cu succes."
+              : status === "published"
+              ? "Anunț programat — va fi publicat automat la data selectată."
+              : "Anunț salvat ca ciornă.";
+          setMessage({ type: "success", text: successMsg });
+          showToast(successMsg);
         }
         await loadJobs();
         setTimeout(closeDrawer, 900);

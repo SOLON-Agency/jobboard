@@ -19,6 +19,7 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
+import EmojiPeopleOutlinedIcon from "@mui/icons-material/EmojiPeopleOutlined";
 import type { Tables } from "@/types/database";
 import {
   formatSalary,
@@ -188,6 +189,24 @@ export function JobRow({
                 borderColor: "rgba(46,125,50,0.4)",
                 bgcolor: "rgba(46,125,50,0.06)",
                 "& .MuiChip-icon": { color: "success.main", ml: "4px" },
+                "& .MuiChip-label": { pr: "6px" },
+              }}
+            />
+          )}
+          {job.applications_count === 0 && (
+            <Chip
+              icon={<EmojiPeopleOutlinedIcon sx={{ fontSize: "12px !important" }} />}
+              label="Fii primul care aplică!"
+              size="small"
+              variant="outlined"
+              sx={{
+                height: 18,
+                fontSize: "0.65rem",
+                fontWeight: 700,
+                color: "warning.dark",
+                borderColor: "rgba(237,108,2,0.4)",
+                bgcolor: "rgba(237,108,2,0.06)",
+                "& .MuiChip-icon": { color: "warning.dark", ml: "4px" },
                 "& .MuiChip-label": { pr: "6px" },
               }}
             />

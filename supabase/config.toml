@@ -395,6 +395,10 @@ verify_jwt = false
 # Recruiter JWT is validated inside the function via supabase.auth.getUser().
 verify_jwt = false
 
+[functions.jobs-lifecycle]
+# Auth is enforced inside the function via CRON_SECRET bearer token comparison.
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.

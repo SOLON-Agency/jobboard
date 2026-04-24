@@ -53,38 +53,6 @@ export type Database = {
         }
         Relationships: []
       }
-      job_benefits: {
-        Row: {
-          created_at: string | null
-          id: string
-          job_id: string
-          sort_order: number
-          title: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          job_id: string
-          sort_order?: number
-          title: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          job_id?: string
-          sort_order?: number
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_benefits_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "job_listings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       applications: {
         Row: {
           applied_at: string
@@ -198,6 +166,32 @@ export type Database = {
         }
         Relationships: []
       }
+      company_favourites: {
+        Row: {
+          company_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_favourites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_users: {
         Row: {
           accepted_at: string | null
@@ -297,32 +291,6 @@ export type Database = {
           id?: string
         }
         Relationships: []
-      }
-      company_favourites: {
-        Row: {
-          company_id: string
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_favourites_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       favorites: {
         Row: {
@@ -510,10 +478,43 @@ export type Database = {
           },
         ]
       }
+      job_benefits: {
+        Row: {
+          created_at: string | null
+          id: string
+          job_id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          job_id: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_benefits_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_listings: {
         Row: {
           application_form_id: string | null
           application_url: string | null
+          applications_count: number
           archived_at: string | null
           benefits_count: number
           company_id: string
@@ -542,6 +543,7 @@ export type Database = {
         Insert: {
           application_form_id?: string | null
           application_url?: string | null
+          applications_count?: number
           archived_at?: string | null
           benefits_count?: number
           company_id: string
@@ -570,6 +572,7 @@ export type Database = {
         Update: {
           application_form_id?: string | null
           application_url?: string | null
+          applications_count?: number
           archived_at?: string | null
           benefits_count?: number
           company_id?: string
@@ -680,6 +683,53 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_education: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_year: number | null
+          id: string
+          institution: string
+          is_current: boolean
+          sort_order: number
+          start_year: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_year?: number | null
+          id?: string
+          institution: string
+          is_current?: boolean
+          sort_order?: number
+          start_year?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_year?: number | null
+          id?: string
+          institution?: string
+          is_current?: boolean
+          sort_order?: number
+          start_year?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_education_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_experience: {
         Row: {
           company: string
@@ -756,53 +806,6 @@ export type Database = {
           },
           {
             foreignKeyName: "profile_skills_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profile_education: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          end_year: number | null
-          id: string
-          institution: string
-          is_current: boolean
-          sort_order: number
-          start_year: number | null
-          title: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          end_year?: number | null
-          id?: string
-          institution: string
-          is_current?: boolean
-          sort_order?: number
-          start_year?: number | null
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          end_year?: number | null
-          id?: string
-          institution?: string
-          is_current?: boolean
-          sort_order?: number
-          start_year?: number | null
-          title?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_education_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -890,48 +893,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      application_notification_recipient: {
-        Args: { p_job_id: string }
+      admin_list_users: {
+        Args: never
         Returns: {
-          poster_email: string | null
-          poster_name: string | null
-          poster_user_id: string | null
+          avatar_url: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
         }[]
-      },
-      company_has_no_owner: { Args: { p_company_id: string }; Returns: boolean }
-      is_company_member: {
-        Args: {
-          p_company_id: string
-          p_min_role?: Database["public"]["Enums"]["company_role"]
-        }
-        Returns: boolean
       }
-      increment_company_visits: {
-        Args: { p_company_id: string }
-        Returns: undefined
-      }
-      increment_company_engages: {
-        Args: { p_company_id: string }
+      admin_set_skill_approval: {
+        Args: { p_is_approved: boolean; p_skill_id: string }
         Returns: undefined
       }
       admin_set_user_role: {
-        Args: { p_user_id: string; p_role: Database["public"]["Enums"]["user_role"] }
+        Args: {
+          p_role: Database["public"]["Enums"]["user_role"]
+          p_user_id: string
+        }
         Returns: undefined
-      }
-      admin_set_skill_approval: {
-        Args: { p_skill_id: string; p_is_approved: boolean }
-        Returns: undefined
-      }
-      admin_list_users: {
-        Args: Record<string, never>
-        Returns: {
-          id: string
-          full_name: string | null
-          email: string
-          role: Database["public"]["Enums"]["user_role"]
-          created_at: string
-          avatar_url: string | null
-        }[]
       }
       alerts_matching_job: {
         Args: { _job_id: string }
@@ -946,6 +928,48 @@ export type Database = {
           last_sent_at: string | null
           name: string
           user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "alerts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      application_notification_recipient: {
+        Args: { p_job_id: string }
+        Returns: {
+          poster_email: string
+          poster_name: string
+          poster_user_id: string
+        }[]
+      }
+      can_submit_form_response: {
+        Args: { p_form_id: string; p_job_listing_id: string }
+        Returns: boolean
+      }
+      company_has_no_owner: { Args: { p_company_id: string }; Returns: boolean }
+      increment_company_engages: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
+      increment_company_visits: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
+      is_company_member: {
+        Args: {
+          p_company_id: string
+          p_min_role?: Database["public"]["Enums"]["company_role"]
+        }
+        Returns: boolean
+      }
+      job_poster_recipient: {
+        Args: { p_job_id: string }
+        Returns: {
+          poster_email: string
+          poster_name: string
+          poster_user_id: string
         }[]
       }
     }
@@ -1088,7 +1112,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      alert_frequency: ["daily", "weekly"],
+      alert_frequency: ["instant", "daily", "weekly"],
       application_status: [
         "pending",
         "reviewed",
@@ -1102,4 +1126,4 @@ export const Constants = {
       user_role: ["user", "employer", "premium_employer", "admin"],
     },
   },
-} as const
+} as const;

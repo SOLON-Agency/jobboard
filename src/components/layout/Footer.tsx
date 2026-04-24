@@ -2,8 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { Box, Container, Typography, Stack, useTheme } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import Image from "next/image";
+import { Box, Container, Typography, Stack } from "@mui/material";
 import appSettings from "@/config/app.settings.json";
 
 const footerLinks = [
@@ -13,12 +13,6 @@ const footerLinks = [
 ];
 
 export function Footer() {
-  const theme = useTheme();
-  const brandGradient =
-    theme.palette.mode === "dark"
-      ? "linear-gradient(135deg, #748CAB 0%, #c3ae61 100%)"
-      : "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)";
-
   return (
     <Box
       component="footer"
@@ -37,19 +31,16 @@ export function Footer() {
           alignItems={{ xs: "center", md: "flex-start" }}
           spacing={3}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <WorkOutlineIcon aria-hidden="true" sx={{ color: "primary.main", fontSize: 24 }} />
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 800,
-                background: brandGradient,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              {appSettings.name}
-            </Typography>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            {/* <Image
+              src="/logo-light.png"
+              alt={`${appSettings.name} logo`}
+              width={200}
+              height={110}
+              priority={false}
+              style={{ width: "auto", height: 20 }}
+            /> */}
+            <Typography variant="body2" fontWeight={700} sx={{ textTransform: "uppercase" }}>{appSettings.name}</Typography>
           </Box>
 
           <Box component="nav" aria-label="Linkuri utile">

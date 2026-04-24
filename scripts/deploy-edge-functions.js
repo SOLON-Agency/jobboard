@@ -62,6 +62,7 @@ const NO_VERIFY_JWT = new Set([
   'increase_company_engagement',
   'job-application',
   'application-withdrawn',
+  'jobs-lifecycle',
 ]);
 
 // ---- Deploy ----------------------------------------------------------------
