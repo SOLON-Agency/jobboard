@@ -22,7 +22,7 @@ export interface RecruitingAgenciesSectionProps {
 export const RecruitingAgenciesSection = ({
   sectionId = "agentii-recrutare",
   sectionHeadingId = "agentii-recrutare-heading",
-  title = "Agenții de recrutare (HR)",
+  title = "Agenții de recrutare",
   ctaLabel = "Postează un anunț gratuit",
   ctaHref = "/anunt",
 }: RecruitingAgenciesSectionProps) => (

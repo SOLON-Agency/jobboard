@@ -22,6 +22,7 @@ export function Footer() {
         left: 0,
         right: 0,
         backgroundColor: "background.paper",
+        mb: { xs: "10px", sm: 0 },
       }}
     >
       <Container maxWidth="lg" sx={{ paddingBottom: 2, paddingTop: 2 }}>
