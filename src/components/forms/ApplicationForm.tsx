@@ -4,7 +4,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Checkbox,
@@ -40,6 +39,7 @@ import { useToast } from "@/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
 import type { Tables } from "@/types/database";
 import { JobTags } from "../jobs/JobTags";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -454,19 +454,17 @@ export function ApplicationForm({
         <JobTags job={job} sx={{ px: 3, pb: 2.5 }} />
 
         <Stack direction="row" spacing={2} alignItems="center" sx={{ px: 3, pb: 2.5 }}>
-          <Avatar
-            src={company?.logo_url ?? undefined}
+          <CompanyLogoAvatar
+            logoUrl={company?.logo_url}
+            alt={company?.name ?? ""}
             variant="rounded"
+            size={52}
             sx={{
-              width: 52,
-              height: 52,
-              bgcolor: "background.default",
               borderRadius: 0,
               flexShrink: 0,
             }}
-          >
-            <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 24 }} />
-          </Avatar>
+            fallback={<WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 24 }} />}
+          />
           <Box sx={{ minWidth: 0 }}>
             
             <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.5 }}>

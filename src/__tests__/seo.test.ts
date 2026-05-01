@@ -56,6 +56,29 @@ describe("generateJobPostingJsonLd", () => {
     expect(jsonLd.hiringOrganization?.name).toBe("Test Law Firm");
   });
 
+  it("omits invalid hiringOrganization logo URLs from JSON-LD", () => {
+    const jsonLd = generateJobPostingJsonLd({
+      ...mockJob,
+      companies: mockJob.companies
+        ? { ...mockJob.companies, logo_url: "not-a-valid-url" }
+        : null,
+    });
+    expect(jsonLd.hiringOrganization?.logo).toBeUndefined();
+  });
+
+  it("includes normalized hiringOrganization logo when URL is valid", () => {
+    const jsonLd = generateJobPostingJsonLd({
+      ...mockJob,
+      companies: mockJob.companies
+        ? {
+            ...mockJob.companies,
+            logo_url: "https://example.com/logo.png",
+          }
+        : null,
+    });
+    expect(jsonLd.hiringOrganization?.logo).toBe("https://example.com/logo.png");
+  });
+
   it("includes salary information", () => {
     const jsonLd = generateJobPostingJsonLd(mockJob);
     expect(jsonLd.baseSalary?.currency).toBe("EUR");

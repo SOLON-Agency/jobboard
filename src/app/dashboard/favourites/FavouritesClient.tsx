@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Avatar,
   Box,
   Button,
   Chip,
@@ -34,6 +33,7 @@ import {
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { formatSalary, timeAgo } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 
 function RowSkeleton() {
   return (
@@ -210,19 +210,12 @@ function FavouritesContent() {
                 }}
               >
                 {/* Logo */}
-                <Avatar
-                  src={job.companies?.logo_url ?? undefined}
+                <CompanyLogoAvatar
+                  logoUrl={job.companies?.logo_url}
                   alt={job.companies?.name ?? ""}
-                  sx={{
-                    width: 44,
-                    height: 44,
-                    flexShrink: 0,
-                    bgcolor: "background.default",
-                    borderRadius: 0,
-                  }}
-                >
-                  <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                </Avatar>
+                  size={44}
+                  fallback={<WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 20 }} />}
+                />
 
                 {/* Info */}
                 <Box
@@ -311,20 +304,14 @@ function FavouritesContent() {
                 }}
               >
                 {/* Logo */}
-                <Avatar
-                  src={company.logo_url ?? undefined}
+                <CompanyLogoAvatar
+                  logoUrl={company.logo_url}
                   alt={company.name}
                   variant="rounded"
-                  sx={{
-                    width: 44,
-                    height: 44,
-                    flexShrink: 0,
-                    bgcolor: "background.default",
-                    borderRadius: 0,
-                  }}
-                >
-                  <BusinessIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                </Avatar>
+                  size={44}
+                  sx={{ borderRadius: 0 }}
+                  fallback={<BusinessIcon sx={{ color: "text.secondary", fontSize: 20 }} />}
+                />
 
                 {/* Info */}
                 <Box

@@ -1,4 +1,5 @@
 import type { Tables } from "@/types/database";
+import { normalizeCompanyLogoUrl } from "@/lib/companyLogo";
 import appSettings from "@/config/app.settings.json";
 
 const BASE_URL =
@@ -45,7 +46,7 @@ export const generateJobPostingJsonLd = (
         "@type": "Organization",
         name: job.companies.name,
         sameAs: job.companies.website ?? undefined,
-        logo: job.companies.logo_url ?? undefined,
+        logo: normalizeCompanyLogoUrl(job.companies.logo_url),
       }
     : undefined,
   baseSalary:
@@ -85,7 +86,7 @@ export const generateOrganizationJsonLd = (company: Tables<"companies">) => ({
   name: company.name,
   description: company.description ?? undefined,
   url: company.website ?? `${BASE_URL}/companies/${company.slug}`,
-  logo: company.logo_url ?? undefined,
+  logo: normalizeCompanyLogoUrl(company.logo_url),
   foundingDate: company.founded_year?.toString() ?? undefined,
   sameAs: [company.website].filter(Boolean) as string[],
   address: company.location

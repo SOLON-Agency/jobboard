@@ -9,7 +9,6 @@ import {
   Chip,
   Stack,
   Box,
-  Avatar,
   IconButton,
   Button,
   Tooltip,
@@ -29,6 +28,7 @@ import {
   experienceLevelLabels,
 } from "@/lib/utils";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import appSettings from "@/config/app.settings.json";
 
 const statusColor: Record<string, "default" | "success" | "warning"> = {
@@ -70,18 +70,16 @@ export function JobRow({
       }}
     >
       {/* Company logo */}
-      <Avatar
-        src={job.companies?.logo_url ?? undefined}
+      <CompanyLogoAvatar
+        logoUrl={job.companies?.logo_url}
+        alt={job.companies?.name ?? ""}
+        size={44}
         sx={{
           width: { xs: 44, sm: 52 },
           height: { xs: 44, sm: 52 },
-          flexShrink: 0,
-          bgcolor: "background.default",
-          borderRadius: 0,
         }}
-      >
-        <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 22 }} />
-      </Avatar>
+        fallback={<WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 22 }} />}
+      />
 
       {/* Middle — chips + title + company + mobile salary */}
       <Box

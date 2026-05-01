@@ -96,25 +96,24 @@ export function Navbar() {
           <Box
             component={Link}
             href="/"
+            aria-label={`${appSettings.name} — pagina principală`}
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
               textDecoration: "none",
               color: "inherit",
               mr: 5,
               flexShrink: 0,
             }}
           >
-            {/* <Image
-              src="/logo.png"
+            <Image
+              src="/logo-icon.png"
               alt={appSettings.name}
-              width={140}
-              height={36}
-              style={{ objectFit: "contain" }}
+              width={48}
+              height={48}
+              style={{ width: "auto", objectFit: "contain" }}
               priority
-            /> */}
-            <Typography variant="h1" fontWeight={700} sx={{ fontSize: "1.125rem", textTransform: "uppercase" }}>{appSettings.name}</Typography>
+            />
           </Box>
 
           {/* Desktop nav links */}

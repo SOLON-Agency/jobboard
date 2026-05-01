@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/layout/HeroSection";
 import { FeaturesSection } from "@/components/layout/FeaturesSection";
+import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getPublicCounts } from "@/services/stats.service";
 import appSettings from "@/config/app.settings.json";
@@ -42,6 +43,7 @@ export default async function HomePage() {
         }}
       />
       <FeaturesSection />
+      <RecruitingAgenciesSection />
     </>
   );
 }

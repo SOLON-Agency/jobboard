@@ -28,19 +28,23 @@ export function Footer() {
         <Stack
           direction={{ xs: "column", md: "row" }}
           justifyContent="space-between"
-          alignItems={{ xs: "center", md: "flex-start" }}
+          alignItems="center"
           spacing={3}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* <Image
-              src="/logo-light.png"
+          <Box
+            component={Link}
+            href="/"
+            aria-label={`${appSettings.name} — pagina principală`}
+            sx={{ display: "flex", alignItems: "center", textDecoration: "none" }}
+          >
+            <Image
+              src="/footer-logo.png"
               alt={`${appSettings.name} logo`}
-              width={200}
-              height={110}
+              width={480}
+              height={160}
               priority={false}
-              style={{ width: "auto", height: 20 }}
-            /> */}
-            <Typography variant="body2" fontWeight={700} sx={{ textTransform: "uppercase" }}>{appSettings.name}</Typography>
+              style={{ width: "auto", height: 44, objectFit: "contain" }}
+            />
           </Box>
 
           <Box component="nav" aria-label="Linkuri utile">
@@ -54,7 +58,19 @@ export function Footer() {
                   sx={{
                     color: "text.secondary",
                     textDecoration: "none",
-                    "&:hover": { color: "primary.main" },
+                    textUnderlineOffset: 4,
+                    transition: "color 0.2s ease, text-decoration-color 0.2s ease",
+                    "&:hover": {
+                      color: "primary.main",
+                      textDecoration: "underline",
+                      textDecorationThickness: "2px",
+                    },
+                    "&:focus-visible": {
+                      color: "primary.main",
+                      textDecoration: "underline",
+                      textDecorationThickness: "2px",
+                      outline: "none",
+                    },
                   }}
                 >
                   {link.label}

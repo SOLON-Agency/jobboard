@@ -6,7 +6,6 @@ import {
   Box,
   Paper,
   Stack,
-  Avatar,
   Chip,
   Divider,
   Button,
@@ -35,6 +34,7 @@ import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import { CompanyDescription } from "@/components/companies/CompanyDescription";
 import { CompanyPageTracker } from "@/components/companies/CompanyPageTracker";
 import { CompanyFavouriteButton } from "@/components/companies/CompanyFavouriteButton";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import { jobTypeLabels, jobTypeChipSx, experienceLevelLabels } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import type { Metadata } from "next";
@@ -333,18 +333,14 @@ export default async function CompanyPage({ params }: Props) {
                   textAlign: "center",
                 }}
               >
-                <Avatar
-                  src={company.logo_url ?? undefined}
+                <CompanyLogoAvatar
+                  logoUrl={company.logo_url}
+                  alt={company.name}
                   variant="rounded"
-                  sx={{
-                    width: 72,
-                    height: 72,
-                    bgcolor: "background.default",
-                    borderRadius: 0,
-                  }}
-                >
-                  <BusinessIcon sx={{ fontSize: 36, color: "text.secondary" }} />
-                </Avatar>
+                  size={72}
+                  sx={{ borderRadius: 0 }}
+                  fallback={<BusinessIcon sx={{ fontSize: 36, color: "text.secondary" }} />}
+                />
                 <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.3 }}>
                   {company.name}
                 </Typography>

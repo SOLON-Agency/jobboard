@@ -41,8 +41,7 @@ export interface HeroCounts {
 }
 
 // ── Pills ─────────────────────────────────────────────────────────────────────
-
-const pills = ["Acces gratuit", "Aplicare rapidă", "Alerte inteligente"] as const;
+const pills = ["Acces gratuit", "Alerte inteligente","Aplicare rapidă"] as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -200,7 +199,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
         <motion.div variants={heroContainer} initial="hidden" animate="visible">
 
           {/* Badge */}
-          <motion.div variants={heroItem}>
+          {/* <motion.div variants={heroItem}>
             <Box
               sx={{
                 display: "inline-flex",
@@ -229,7 +228,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                 Platforma #1 pentru recrutat avocați
               </Typography>
             </Box>
-          </motion.div>
+          </motion.div> */}
 
           {/* Heading */}
           <motion.div variants={heroItem}>
@@ -244,7 +243,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                 mb: 3,
               }}
             >
-              Cariera ta{" "}
+              Recrutare{" "}
               <Box
                 component="span"
                 sx={{
@@ -255,8 +254,8 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                 }}
               >
                 juridică
-              </Box>
-              {" "}începe aici
+              </Box>{" "}
+              inteligentă
             </Typography>
           </motion.div>
 
@@ -333,6 +332,8 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
               </Button>
             </Stack>
           </motion.div>
+          <br/>
+          <br/>
 
           {/* Feature pills */}
           <motion.div variants={heroItem}>
@@ -367,7 +368,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
           </motion.div>
 
           {/* Stats bar */}
-          <motion.div variants={statsContainer}>
+          {/* <motion.div variants={statsContainer}>
             <Box
               sx={{
                 display: "grid",
@@ -421,7 +422,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                 </motion.div>
               ))}
             </Box>
-          </motion.div>
+          </motion.div> */}
 
         </motion.div>
       </Container>

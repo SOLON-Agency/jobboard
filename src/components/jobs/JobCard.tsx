@@ -9,7 +9,6 @@ import {
   Chip,
   Stack,
   Box,
-  Avatar,
   IconButton,
   Button,
   Tooltip,
@@ -17,13 +16,13 @@ import {
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import type { Tables } from "@/types/database";
 import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx, truncate } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import EmojiPeopleOutlinedIcon from "@mui/icons-material/EmojiPeopleOutlined";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 
 interface JobCardProps {
   job: Tables<"job_listings"> & { companies: Tables<"companies"> | null };
@@ -60,19 +59,11 @@ export function JobCard({
         alignItems="flex-start"
         sx={{ mb: 2 }}
       >
-        <Avatar
-          src={job.companies?.logo_url ?? undefined}
+        <CompanyLogoAvatar
+          logoUrl={job.companies?.logo_url}
           alt={job.companies?.name ?? ""}
-          sx={{
-            width: 44,
-            height: 44,
-            flexShrink: 0,
-            bgcolor: "background.default",
-            borderRadius: 0,
-          }}
-        >
-          <WorkOutlineIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-        </Avatar>
+          size={44}
+        />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" alignItems="flex-start" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
             <Typography

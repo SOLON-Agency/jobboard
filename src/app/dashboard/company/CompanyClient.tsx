@@ -13,7 +13,6 @@ import {
   Paper,
   Stack,
   Box,
-  Avatar,
   Chip,
   IconButton,
   Skeleton,
@@ -22,6 +21,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import BusinessIcon from "@mui/icons-material/Business";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -402,18 +402,15 @@ export function CompanyClient() {
                 "&:hover": { borderColor: "rgba(62, 92, 118, 0.35)", boxShadow: "0 4px 20px rgba(3, 23, 12, 0.08)" },
               }}
             >
-              <Avatar
-                src={company.logo_url ?? undefined}
+              <CompanyLogoAvatar
+                logoUrl={company.logo_url}
+                alt={company.name}
+                size={52}
                 sx={{
-                  width: 52,
-                  height: 52,
-                  bgcolor: "background.default",
                   border: "1px solid rgba(3, 23, 12, 0.1)",
-                  flexShrink: 0,
                 }}
-              >
-                <BusinessIcon sx={{ color: "text.secondary" }} />
-              </Avatar>
+                fallback={<BusinessIcon sx={{ color: "text.secondary" }} />}
+              />
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Stack direction="row" alignItems="flex-start" flexWrap="wrap" gap={0.75} sx={{ mb: 0.5 }}>

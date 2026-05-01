@@ -10,7 +10,6 @@ import {
   Chip,
   Stack,
   IconButton,
-  Avatar,
   Paper,
   useMediaQuery,
   useTheme,
@@ -25,6 +24,7 @@ import { ApplyButton } from "@/components/jobs/ApplyButton";
 import type { BenefitItem } from "@/services/benefits.service";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import { JobTags } from "./JobTags";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 
 type JobWithCompany = Tables<"job_listings"> & { companies: Tables<"companies"> | null; benefits_count: number };
 
@@ -296,18 +296,12 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
                 }}
               >
                 <Stack direction="row" justifyContent="flex-start" alignItems="flex-start">
-                  <Avatar
-                    src={job.companies?.logo_url ?? undefined}
+                  <CompanyLogoAvatar
+                    logoUrl={job.companies?.logo_url}
                     alt={job.companies?.name ?? ""}
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      bgcolor: "background.default",
-                      borderRadius: 0,
-                    }}
-                  >
-                    <WorkOutlineIcon sx={{ fontSize: 20, color: "text.secondary" }} />
-                  </Avatar>
+                    size={44}
+                    fallback={<WorkOutlineIcon sx={{ fontSize: 20, color: "text.secondary" }} />}
+                  />
                   <Stack direction="column" spacing={0} alignItems="flex-start" sx={{ ml: 1 }}>
                     <Typography variant="subtitle1" fontWeight={700}>
                       {truncate(job.title, 20)}

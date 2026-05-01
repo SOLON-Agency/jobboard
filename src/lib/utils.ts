@@ -1,3 +1,9 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+/** Merge Tailwind classes (shadcn-style helper). */
+export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+
 interface SupabaseErrorLike {
   code?: string;
   message?: string;

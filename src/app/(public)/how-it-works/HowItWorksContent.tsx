@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/motion";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import SearchIcon from "@mui/icons-material/Search";
@@ -27,10 +26,10 @@ import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelIcon from "@mui/icons-material/Gavel";
-import SpeedOutlinedIcon from "@mui/icons-material/SpeedOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import appSettings from "@/config/app.settings.json";
+import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const BG = "#03170C";
@@ -242,12 +241,19 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                 fontSize: { xs: "1.05rem", md: "1.2rem" },
                 color: CREAM_55, maxWidth: 560, mx: "auto", mb: 6, lineHeight: 1.75,
               }}>
-                Simplu, rapid și accesibil de pe orice dispozitiv.
+                Cea mai avansată platformă de recrutare juridică în România.
               </Typography>
             </motion.div>
 
             <motion.div variants={fadeUp} custom={3}>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                justifyContent="center"
+                alignItems="center"
+                useFlexGap
+                flexWrap="wrap"
+              >
                 <Button
                   component={Link} href="#candidati" variant="contained" size="large"
                   endIcon={<ArrowForwardIcon />}
@@ -272,10 +278,98 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                 >
                   Sunt angajator
                 </Button>
+                <Button
+                  component={Link}
+                  href="#agentii-recrutare"
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    px: 4, py: 1.6, borderRadius: 99, fontWeight: 600,
+                    borderColor: "rgba(195,174,97,0.45)", color: GOLD,
+                    backdropFilter: "blur(8px)", bgcolor: "rgba(195,174,97,0.06)",
+                    "&:hover": {
+                      borderColor: "rgba(195,174,97,0.75)",
+                      bgcolor: "rgba(195,174,97,0.12)",
+                      transform: "translateY(-1px)",
+                    },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  Agenții de recrutare
+                </Button>
               </Stack>
             </motion.div>
 
           </motion.div>
+        </Container>
+      </Box>
+
+      {/* ── BENEFITS ─────────────────────────────────────────────────────────── */}
+      <Box component="section" sx={{ bgcolor: "background.default", py: { xs: 10, md: 14 } }}>
+        <Container maxWidth="lg">
+          <motion.div variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
+            <Box sx={{ textAlign: "center", mb: 8 }}>
+              {/* <Typography variant="overline" sx={{
+                color: "primary.main", fontWeight: 700, letterSpacing: "0.2em",
+                display: "block", mb: 1.5,
+              }}>
+                De ce {appSettings.name}?
+              </Typography> */}
+              <Typography variant="h2" sx={{ mb: 2 }}>
+                Construit special pentru{" "}
+                <Box component="span" sx={{
+                  background: "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)",
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+                }}>
+                  lumea juridică
+                </Box>
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: "auto" }}>
+                O platformă inteligentă pentru juriști inteligenți.
+              </Typography>
+            </Box>
+          </motion.div>
+
+          <Box sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr", md: "repeat(3, 1fr)" },
+            gap: 3,
+          }}>
+            {benefits.map((b, i) => (
+              <motion.div
+                key={b.title}
+                custom={i}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-60px" }}
+              >
+                <Paper variant="outlined" sx={{
+                  p: 3, height: "100%", borderRadius: 3,
+                  borderColor: b.border, bgcolor: b.bg,
+                  transition: "all 0.25s",
+                  "&:hover": {
+                    borderColor: b.color,
+                    transform: "translateY(-4px)",
+                    boxShadow: `0 12px 40px ${b.bg}`,
+                  },
+                }}>
+                  <Box sx={{
+                    width: 52, height: 52, borderRadius: 2.5,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    bgcolor: b.bg, border: `1px solid ${b.border}`,
+                    color: b.color, mb: 2.5,
+                  }}>
+                    {b.icon}
+                  </Box>
+                  <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{b.title}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                    {b.body}
+                  </Typography>
+                </Paper>
+              </motion.div>
+            ))}
+          </Box>
         </Container>
       </Box>
 
@@ -401,12 +495,12 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                 Pentru angajatori
               </Typography>
               <Typography variant="h2" sx={{ color: CREAM, mb: 2 }}>
-                Atrage talentele juridice{" "}
+                Atrage talente juridice{" "}
                 <Box component="span" sx={{
                   background: "linear-gradient(135deg, rgba(195,174,97,1) 0%, rgba(116,140,171,0.9) 100%)",
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
                 }}>
-                  potrivite
+                  excelente
                 </Box>
               </Typography>
               <Typography sx={{ color: CREAM_55, maxWidth: 480, mx: "auto" }}>
@@ -455,74 +549,12 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
         </Container>
       </Box>
 
-      {/* ── BENEFITS ─────────────────────────────────────────────────────────── */}
-      <Box component="section" sx={{ bgcolor: "background.default", py: { xs: 10, md: 14 } }}>
-        <Container maxWidth="lg">
-          <motion.div variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-            <Box sx={{ textAlign: "center", mb: 8 }}>
-              <Typography variant="overline" sx={{
-                color: "primary.main", fontWeight: 700, letterSpacing: "0.2em",
-                display: "block", mb: 1.5,
-              }}>
-                De ce {appSettings.name}?
-              </Typography>
-              <Typography variant="h2" sx={{ mb: 2 }}>
-                Construit special pentru{" "}
-                <Box component="span" sx={{
-                  background: "linear-gradient(135deg, #03170C 0%, #3E5C76 100%)",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                }}>
-                  lumea juridică
-                </Box>
-              </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520, mx: "auto" }}>
-                O platformă inteligentă pentru juriști inteligenți.
-              </Typography>
-            </Box>
-          </motion.div>
-
-          <Box sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr", md: "repeat(3, 1fr)" },
-            gap: 3,
-          }}>
-            {benefits.map((b, i) => (
-              <motion.div
-                key={b.title}
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-60px" }}
-              >
-                <Paper variant="outlined" sx={{
-                  p: 3, height: "100%", borderRadius: 3,
-                  borderColor: b.border, bgcolor: b.bg,
-                  transition: "all 0.25s",
-                  "&:hover": {
-                    borderColor: b.color,
-                    transform: "translateY(-4px)",
-                    boxShadow: `0 12px 40px ${b.bg}`,
-                  },
-                }}>
-                  <Box sx={{
-                    width: 52, height: 52, borderRadius: 2.5,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    bgcolor: b.bg, border: `1px solid ${b.border}`,
-                    color: b.color, mb: 2.5,
-                  }}>
-                    {b.icon}
-                  </Box>
-                  <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{b.title}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                    {b.body}
-                  </Typography>
-                </Paper>
-              </motion.div>
-            ))}
-          </Box>
-        </Container>
-      </Box>
+      {/* ── RECRUITING AGENCIES ─────────────────────────────────────────────── */}
+      <RecruitingAgenciesSection
+        title="Recrutare juridică inteligentă"
+        ctaLabel="Postează un anunț gratuit"
+        ctaHref="/anunt"
+      />
 
       {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
       <Box component="section" sx={{ bgcolor: BG, py: { xs: 10, md: 14 }, position: "relative", overflow: "hidden" }}>
@@ -544,7 +576,7 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                 Ai întrebări?
               </Typography>
               <Typography sx={{ color: CREAM_55, maxWidth: 400, mx: "auto" }}>
-                Răspunsuri la cele mai comune nelămuriri despre platformă.
+                Răspunsuri la cele mai comune nelămuriri.
               </Typography>
             </Box>
           </motion.div>

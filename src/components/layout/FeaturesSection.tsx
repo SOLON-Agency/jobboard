@@ -47,7 +47,7 @@ const features = [
     icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
     title: "Alerte inteligente",
     description:
-      "Salvează filtrele de căutare ca alerte și primești notificări când apar noi poziții care corespund criteriilor tale.",
+      "Salvează filtrele de căutare ca alerte și primești notificări când apar noi oportunități care corespund criteriilor tale.",
     color: "#748CAB",
     lightBg: "rgba(116,140,171,0.06)",
     border: "rgba(116,140,171,0.15)",

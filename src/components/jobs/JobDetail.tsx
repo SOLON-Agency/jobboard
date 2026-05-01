@@ -9,7 +9,6 @@ import {
   Chip,
   Stack,
   Button,
-  Avatar,
   Paper,
   Divider,
   IconButton,
@@ -37,6 +36,7 @@ import {
 } from "@/lib/utils";
 import { JobTags } from "@/components/jobs/JobTags";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import appSettings from "@/config/app.settings.json";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
@@ -377,19 +377,13 @@ export function JobDetail({
               textAlign: "center",
             }}
           >
-            <Avatar
-              src={job.companies?.logo_url ?? undefined}
+            <CompanyLogoAvatar
+              logoUrl={job.companies?.logo_url}
               alt={job.companies?.name ?? ""}
-              sx={{
-                width: 64,
-                height: 64,
-                bgcolor: "background.default",
-                borderRadius: 0,
-                mb: 1.5,
-              }}
-            >
-              <WorkOutlineIcon sx={{ fontSize: 30, color: "text.secondary" }} />
-            </Avatar>
+              size={64}
+              sx={{ mb: 1.5 }}
+              fallback={<WorkOutlineIcon sx={{ fontSize: 30, color: "text.secondary" }} />}
+            />
             <Typography
               variant="subtitle1"
               fontWeight={700}

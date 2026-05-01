@@ -646,13 +646,13 @@ export function AnuntWizard() {
 
       if (companyLogoFile) {
         const ext = companyLogoFile.name.split(".").pop() ?? "jpg";
-        const path = `${company.id}/logo.${ext}`;
+        const path = `${company.id}/${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
-          .from("company-logos")
+          .from("logos")
           .upload(path, companyLogoFile, { upsert: true });
         if (!upErr) {
           const { data: urlData } = supabase.storage
-            .from("company-logos")
+            .from("logos")
             .getPublicUrl(path);
           await updateCompany(supabase, company.id, { logo_url: urlData.publicUrl });
         }
