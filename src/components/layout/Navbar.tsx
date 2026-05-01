@@ -107,7 +107,7 @@ export function Navbar() {
             }}
           >
             <Image
-              src="/logo-icon.png"
+              src="/logo-icon-light.png"
               alt={appSettings.name}
               width={48}
               height={48}
