@@ -127,6 +127,21 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
             )}
           />
           <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Email companie"
+                type="email"
+                fullWidth
+                error={!!errors.email}
+                helperText={errors.email?.message ?? "Folosit pentru notificări către recrutori"}
+                inputProps={{ "aria-describedby": "company-email-hint" }}
+              />
+            )}
+          />
+          <Controller
             name="website"
             control={control}
             render={({ field }) => (

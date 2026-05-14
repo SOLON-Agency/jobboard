@@ -14,14 +14,21 @@
  *   NEXT_PUBLIC_SITE_URL  — canonical site origin (used in email footer)
  *
  * Request body (JSON):
- *   recipient  string   (required) — user ID of the notification recipient
- *   channel    string   (required) — "email" | "sms"  (default: "email")
- *   body       string   (optional*) — HTML body when not using a Resend template
- *   subject    string   (optional) — email subject (defaults to site name; overrides template default when set)
- *   resend_template  object (optional*) — { id: string, variables: Record<string, string|number> }
- *   idempotency_key  string (optional) — forwarded to Resend
+ *   recipient        string   (required*) — user ID of the notification recipient
+ *   to_email         string   (required*) — direct email address; only accepted when
+ *                                          the caller is authorised with the service-role
+ *                                          key. Use for unclaimed-company notifications
+ *                                          where the recipient has no auth account yet.
+ *   to_name          string   (optional)  — display name for the recipient (to_email mode)
+ *   channel          string   (required)  — "email" | "sms"  (default: "email")
+ *   body             string   (optional*) — HTML body when not using a Resend template
+ *   subject          string   (optional)  — email subject (defaults to site name; overrides
+ *                                          template default when set)
+ *   resend_template  object   (optional*) — { id: string, variables: Record<string, string|number> }
+ *   idempotency_key  string   (optional)  — forwarded to Resend
  *
- * *Either `body` (non-empty) or `resend_template` with a valid `id` is required for email.
+ * *Either `recipient` or `to_email` is required. For email, either `body` (non-empty)
+ *  or `resend_template` with a valid `id` is required.
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -43,7 +50,15 @@ interface ResendTemplatePayload {
 }
 
 interface NotificationPayload {
-  recipient: string;
+  /** User ID of the registered recipient. Mutually exclusive with `to_email`. */
+  recipient?: string;
+  /**
+   * Raw email address. Only accepted when the caller provides the service-role key.
+   * Used for unclaimed-company notifications where the recipient has no auth account.
+   */
+  to_email?: string;
+  /** Display name when using `to_email` mode. */
+  to_name?: string;
   channel?: NotificationChannel;
   body?: string;
   subject?: string;
@@ -60,6 +75,11 @@ interface NotificationResult {
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
+function isServiceRoleToken(token: string): boolean {
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  return !!(serviceRoleKey && token === serviceRoleKey);
+}
+
 /**
  * Validates the caller's credentials.
  * Accepts:
@@ -74,8 +94,7 @@ async function isAuthorised(authHeader: string | null): Promise<boolean> {
   const token = authHeader.replace(/^Bearer\s+/i, "");
 
   // Service-role shortcut — trusted internal call from another edge function.
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (serviceRoleKey && token === serviceRoleKey) return true;
+  if (isServiceRoleToken(token)) return true;
 
   // Otherwise validate as a regular user JWT.
   const supabase = createClient(
@@ -187,6 +206,52 @@ async function sendSmsNotification(
   throw new Error("SMS notifications are not yet implemented.");
 }
 
+/**
+ * Sends an email directly to a known address (no Supabase user account needed).
+ * Used for unclaimed-company notifications.
+ * Only callable when the bearer token is the service-role key.
+ */
+async function sendEmailToAddress(
+  toEmail: string,
+  subject: string,
+  siteName: string,
+  siteUrl: string,
+  options:
+    | { mode: "html"; body: string }
+    | { mode: "template"; template: ResendTemplatePayload; subjectOverride?: string },
+  idempotencyKey?: string
+): Promise<void> {
+  const resolvedIdempotency =
+    idempotencyKey?.trim() || `unclaimed/${toEmail}/${Date.now()}`;
+
+  if (options.mode === "template") {
+    await sendResendTemplateEmail({
+      to: toEmail,
+      subject: options.subjectOverride?.trim(),
+      template: {
+        id: options.template.id,
+        variables: options.template.variables,
+      },
+      idempotencyKey: resolvedIdempotency,
+    });
+    return;
+  }
+
+  const html = buildEmail({
+    heading: subject,
+    bodyHtml: `<p>${options.body}</p>`,
+    siteUrl,
+    siteName,
+  });
+
+  await sendResendEmail({
+    to: toEmail,
+    subject,
+    html,
+    idempotencyKey: resolvedIdempotency,
+  });
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -221,14 +286,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const { recipient, body, subject, resend_template, idempotency_key } = payload;
+  const { recipient, to_email, to_name, body, subject, resend_template, idempotency_key } = payload;
   const channel: NotificationChannel = payload.channel ?? "email";
 
-  if (!recipient || typeof recipient !== "string") {
-    return new Response(JSON.stringify({ error: "recipient is required" }), {
+  const hasToEmail = typeof to_email === "string" && to_email.trim() !== "";
+  const hasRecipient = typeof recipient === "string" && recipient.trim() !== "";
+
+  if (!hasRecipient && !hasToEmail) {
+    return new Response(JSON.stringify({ error: "recipient or to_email is required" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+
+  // to_email is only accepted from service-role callers for security.
+  if (hasToEmail && !isServiceRoleToken((authHeader ?? "").replace(/^Bearer\s+/i, ""))) {
+    return new Response(
+      JSON.stringify({ error: "to_email is only allowed for service-role callers" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   const hasTemplate =
@@ -291,17 +367,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     { auth: { persistSession: false } }
   );
 
-  // ── Preference check ──────────────────────────────────────────────────────
-  const enabled = await hasNotificationsEnabled(adminClient, recipient, channel);
-  if (!enabled) {
-    const result: NotificationResult = {
-      ok: true,
-      sent: false,
-      skipped: `User has ${channel} notifications disabled.`,
-    };
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  // ── Preference check (skipped for to_email — no profile exists) ──────────
+  if (hasRecipient && recipient) {
+    const enabled = await hasNotificationsEnabled(adminClient, recipient, channel);
+    if (!enabled) {
+      const result: NotificationResult = {
+        ok: true,
+        sent: false,
+        skipped: `User has ${channel} notifications disabled.`,
+      };
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   // ── Send ──────────────────────────────────────────────────────────────────
@@ -318,33 +396,62 @@ Deno.serve(async (req: Request): Promise<Response> => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (hasTemplate && resend_template) {
-        await sendEmailNotification(
-          adminClient,
-          recipient,
-          resolvedSubject,
-          siteName,
-          siteUrl,
-          {
-            mode: "template",
-            template: resend_template,
-            subjectOverride: subject?.trim() || undefined,
-          },
-          idempotency_key
-        );
-      } else {
-        await sendEmailNotification(
-          adminClient,
-          recipient,
-          resolvedSubject,
-          siteName,
-          siteUrl,
-          { mode: "html", body: body ?? "" },
-          idempotency_key
-        );
+
+      if (hasToEmail && to_email) {
+        // ── Direct-address branch (unclaimed companies, no user account) ─────
+        if (hasTemplate && resend_template) {
+          await sendEmailToAddress(
+            to_email,
+            resolvedSubject,
+            siteName,
+            siteUrl,
+            {
+              mode: "template",
+              template: resend_template,
+              subjectOverride: subject?.trim() || undefined,
+            },
+            idempotency_key
+          );
+        } else {
+          await sendEmailToAddress(
+            to_email,
+            resolvedSubject,
+            siteName,
+            siteUrl,
+            { mode: "html", body: body ?? "" },
+            idempotency_key
+          );
+        }
+      } else if (hasRecipient && recipient) {
+        // ── User-ID branch (registered user) ─────────────────────────────────
+        if (hasTemplate && resend_template) {
+          await sendEmailNotification(
+            adminClient,
+            recipient,
+            resolvedSubject,
+            siteName,
+            siteUrl,
+            {
+              mode: "template",
+              template: resend_template,
+              subjectOverride: subject?.trim() || undefined,
+            },
+            idempotency_key
+          );
+        } else {
+          await sendEmailNotification(
+            adminClient,
+            recipient,
+            resolvedSubject,
+            siteName,
+            siteUrl,
+            { mode: "html", body: body ?? "" },
+            idempotency_key
+          );
+        }
       }
     } else {
-      await sendSmsNotification(recipient, body);
+      await sendSmsNotification(recipient ?? "", body);
     }
   } catch (err) {
     console.error("notifications error:", err);

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Alert,
   Box,
@@ -21,12 +21,18 @@ import appSettings from "@/config/app.settings.json";
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const { user, signUp } = useAuth();
 
+  // ?email= pre-fills the email field (e.g. when coming from the claim flow)
+  const prefillEmail = searchParams.get("email") ?? "";
+  // ?redirect= is where to send the user after successful registration
+  const redirectAfter = searchParams.get("redirect") ?? "/dashboard";
+
   useEffect(() => {
-    if (user) router.replace("/dashboard");
-  }, [user, router]);
+    if (user) router.replace(redirectAfter);
+  }, [user, router, redirectAfter]);
 
   const {
     register,
@@ -34,6 +40,7 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { email: prefillEmail, fullName: "", password: "", confirmPassword: "" },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
@@ -51,11 +58,15 @@ export function RegisterForm() {
       authData?.user?.email_confirmed_at != null;
 
     if (!emailVerified) {
-      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+      // Preserve the redirect param so that after verification they go to the claim page
+      const verifyQuery = redirectAfter && redirectAfter !== "/dashboard"
+        ? `?email=${encodeURIComponent(data.email)}&redirect=${encodeURIComponent(redirectAfter)}`
+        : `?email=${encodeURIComponent(data.email)}`;
+      router.push(`/verify-email${verifyQuery}`);
       return;
     }
 
-    router.push("/dashboard");
+    router.push(redirectAfter);
   };
 
   return (

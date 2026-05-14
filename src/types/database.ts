@@ -207,14 +207,18 @@ export type Database = {
       companies: {
         Row: {
           archived_at: string | null
+          claimed_at: string | null
+          claimed_by: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          email: string | null
           engages: number
           founded_year: number | null
           id: string
           industry: string | null
           is_archived: boolean
+          is_claimed: boolean
           location: string | null
           logo_url: string | null
           name: string
@@ -226,14 +230,18 @@ export type Database = {
         }
         Insert: {
           archived_at?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          email?: string | null
           engages?: number
           founded_year?: number | null
           id?: string
           industry?: string | null
           is_archived?: boolean
+          is_claimed?: boolean
           location?: string | null
           logo_url?: string | null
           name: string
@@ -245,14 +253,18 @@ export type Database = {
         }
         Update: {
           archived_at?: string | null
+          claimed_at?: string | null
+          claimed_by?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          email?: string | null
           engages?: number
           founded_year?: number | null
           id?: string
           industry?: string | null
           is_archived?: boolean
+          is_claimed?: boolean
           location?: string | null
           logo_url?: string | null
           name?: string
@@ -263,6 +275,79 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      company_claim_tokens: {
+        Row: {
+          code_hash: string
+          company_id: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          failed_attempts: number
+          last_attempt_at: string | null
+          token: string
+        }
+        Insert: {
+          code_hash: string
+          company_id: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          failed_attempts?: number
+          last_attempt_at?: string | null
+          token?: string
+        }
+        Update: {
+          code_hash?: string
+          company_id?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          failed_attempts?: number
+          last_attempt_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_claim_tokens_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_claim_nudge_log: {
+        Row: {
+          company_id: string | null
+          id: string
+          sent_at: string
+          sent_to: string | null
+          status: string
+        }
+        Insert: {
+          company_id?: string | null
+          id?: string
+          sent_at?: string
+          sent_to?: string | null
+          status?: string
+        }
+        Update: {
+          company_id?: string | null
+          id?: string
+          sent_at?: string
+          sent_to?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_claim_nudge_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_favourites: {
         Row: {
@@ -994,6 +1079,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_company: {
+        Args: { p_token: string; p_code: string }
+        Returns: { company_id: string; slug: string }[]
+      }
+      issue_company_claim_token: {
+        Args: { p_company_id: string }
+        Returns: { code: string; token: string }[]
+      }
+      verify_claim_code: {
+        Args: { p_token: string; p_code: string }
+        Returns: string
+      }
       admin_list_users: {
         Args: never
         Returns: {

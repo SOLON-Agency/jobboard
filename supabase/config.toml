@@ -395,6 +395,10 @@ verify_jwt = false
 # Auth is enforced inside the function via CRON_SECRET bearer token comparison.
 verify_jwt = false
 
+[functions.unclaimed-companies-nudge]
+# Auth is enforced inside the function via CRON_SECRET bearer token comparison.
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
