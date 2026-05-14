@@ -45,9 +45,12 @@ import { slugify, parseSupabaseError, truncate } from "@/lib/utils";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { ConfirmDialog } from "@/components/layout/ConfirmDialog";
 import { AddEditCompany } from "@/components/forms/AddEditCompany";
+import { EditCompanySkills } from "@/components/company/EditCompanySkills";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useToast } from "@/contexts/ToastContext";
 import type { CompanyFormData } from "@/components/forms/AddEditCompany";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 
 interface CompanyActionsProps {
   company: CompanyWithJobCount;
@@ -214,6 +217,14 @@ export function CompanyClient() {
     try {
       await archiveCompany(supabase, archiveTarget.id, next);
       showToast(next ? "Companie arhivată." : "Companie dezarhivată.", "info");
+      if (next && user) {
+        void dispatchNotification(supabase, {
+          type: NOTIFICATION_TYPES.COMPANY_ARCHIVED,
+          recipients: [user.id],
+          data: { company_name: archiveTarget.name },
+          idempotencyKey: `company-archived/${archiveTarget.id}`,
+        }).catch((e: unknown) => console.warn("notify-archived:", e));
+      }
       await load();
     } catch (err) {
       setMessage({ type: "error", text: String(err) });
@@ -314,11 +325,12 @@ export function CompanyClient() {
 
           setMessage({ type: "success", text: "Companie creată." });
           showToast("Companie creată cu succes.");
-          void supabase.functions
-            .invoke("send-email", {
-              body: { event: "company_created", company_id: newCompany.id },
-            })
-            .catch((e: unknown) => console.warn("notify-created failed:", e));
+          void dispatchNotification(supabase, {
+            type: NOTIFICATION_TYPES.COMPANY_CREATED,
+            recipients: [user.id],
+            data: { company_name: data.name, company_id: newCompany.id },
+            idempotencyKey: `company-created/${newCompany.id}`,
+          }).catch((e: unknown) => console.warn("notify-created failed:", e));
         }
         await load();
         setTimeout(closeDrawer, 900);
@@ -527,6 +539,11 @@ export function CompanyClient() {
             onSubmit={onSubmit}
             onCancel={closeDrawer}
           />
+        )}
+        {editing && appSettings.features.matchmaking?.enabled && (
+          <Box sx={{ mt: 3 }}>
+            <EditCompanySkills companyId={editing.id} />
+          </Box>
         )}
       </EditSideDrawer>
 

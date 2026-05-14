@@ -1,103 +1,58 @@
 /**
  * jobs-lifecycle — Supabase Edge Function (daily cron)
  *
- * Processes two automated lifecycle transitions for job listings:
+ * Processes two automated lifecycle transitions:
+ *   1. PUBLISH  — drafts with published_at ≤ NOW() → status = 'published'
+ *   2. EXPIRE   — published jobs with expires_at ≤ NOW() → status = 'archived'
  *
- *   1. PUBLISH  — drafts whose `published_at` is on or before NOW() are
- *                 flipped to `status = 'published'` and the creator is notified.
+ * Notifications sent via v2 dispatcher (typed mode).
  *
- *   2. EXPIRE   — published jobs whose `expires_at` is on or before NOW() are
- *                 flipped to `status = 'archived'`, `is_archived = true`, and
- *                 the creator is notified.
- *
- * Authentication: Bearer <CRON_SECRET> (not a user JWT — this is an internal
- * server-to-server call from a scheduler).
- *
- * Required Supabase secrets:
- *   CRON_SECRET            — shared secret validated in this function
- *   SUPABASE_SERVICE_ROLE_KEY — used for the admin Supabase client
- *   NEXT_PUBLIC_SITE_URL   — forwarded to the notifications function
+ * Authentication: Bearer <CRON_SECRET>
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+interface JobRow { id: string; title: string; slug: string; }
+interface PosterRow { poster_user_id: string | null; poster_email: string | null; poster_name: string | null; }
+interface LifecycleResult { published: number; expired: number; errors: string[]; }
 
-interface JobRow {
-  id: string;
-  title: string;
-  slug: string;
-}
-
-interface PosterRow {
-  poster_user_id: string | null;
-  poster_email: string | null;
-  poster_name: string | null;
-}
-
-interface LifecycleResult {
-  published: number;
-  expired: number;
-  errors: string[];
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function notificationsUrl(): string {
-  const base = Deno.env.get("SUPABASE_URL")!;
-  return `${base}/functions/v1/notifications`;
-}
-
-function serviceRoleKey(): string {
-  return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-}
+function notificationsUrl(): string { return `${Deno.env.get("SUPABASE_URL")!}/functions/v1/notifications`; }
+function serviceRoleKey(): string { return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!; }
 
 async function notifyPoster(
   posterUserId: string,
-  subject: string,
-  bodyHtml: string,
-  idempotencyKey: string,
+  type: string,
+  jobTitle: string,
+  jobUrl: string,
+  siteUrl: string,
+  idempotencyKey: string
 ): Promise<void> {
   const res = await fetch(notificationsUrl(), {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${serviceRoleKey()}`,
+      Authorization: `Bearer ${serviceRoleKey()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      recipient: posterUserId,
-      channel: "email",
-      subject,
-      body: bodyHtml,
+      type,
+      recipients: [posterUserId],
+      data: { job_title: jobTitle, job_url: jobUrl, site_url: siteUrl },
       idempotency_key: idempotencyKey,
     }),
   });
-
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`notifications responded ${res.status}: ${text}`);
   }
 }
 
-async function resolvePoster(
-  // deno-lint-ignore no-explicit-any
-  adminClient: any,
-  jobId: string,
-): Promise<PosterRow | null> {
-  const { data, error } = await adminClient.rpc("job_poster_recipient", {
-    p_job_id: jobId,
-  });
-
-  if (error) {
-    console.warn(`jobs-lifecycle: job_poster_recipient(${jobId}) error:`, error.message);
-    return null;
-  }
-
+// deno-lint-ignore no-explicit-any
+async function resolvePoster(adminClient: any, jobId: string): Promise<PosterRow | null> {
+  const { data, error } = await adminClient.rpc("job_poster_recipient", { p_job_id: jobId });
+  if (error) { console.warn(`jobs-lifecycle: job_poster_recipient(${jobId}):`, error.message); return null; }
   if (!data || data.length === 0) return null;
   return data[0] as PosterRow;
 }
-
-// ─── Main handler ─────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== "POST") {
@@ -107,7 +62,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  // ── Auth: CRON_SECRET bearer only ─────────────────────────────────────────
   const cronSecret = Deno.env.get("CRON_SECRET");
   if (!cronSecret) {
     return new Response(JSON.stringify({ error: "CRON_SECRET not configured" }), {
@@ -125,11 +79,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  // ── Admin client (service role — no user JWT needed) ──────────────────────
   const adminClient = createClient(
     Deno.env.get("SUPABASE_URL")!,
     serviceRoleKey(),
-    { auth: { persistSession: false } },
+    { auth: { persistSession: false } }
   );
 
   const siteUrl = (Deno.env.get("NEXT_PUBLIC_SITE_URL") ?? "https://legaljobs.ro").replace(/\/$/, "");
@@ -147,7 +100,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .not("published_at", "is", null);
 
     if (selectErr) throw selectErr;
-
     const jobs = (dueDrafts ?? []) as JobRow[];
 
     if (jobs.length > 0) {
@@ -166,15 +118,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
         try {
           const poster = await resolvePoster(adminClient, job.id);
           if (!poster?.poster_user_id) continue;
-
-          const jobUrl = `${siteUrl}/jobs/${job.slug}`;
           await notifyPoster(
             poster.poster_user_id,
-            `Anunțul tău „${job.title}" a fost publicat`,
-            `<p>Salut${poster.poster_name ? `, <strong>${poster.poster_name}</strong>` : ""},</p>
-             <p>Anunțul tău de muncă <strong>${job.title}</strong> a fost publicat automat pe <a href="${siteUrl}">LegalJobs</a>.</p>
-             <p><a href="${jobUrl}">Vizualizează anunțul</a></p>`,
-            `job-published-${job.id}`,
+            "job_published",
+            job.title,
+            `${siteUrl}/jobs/${job.slug}`,
+            siteUrl,
+            `job-published-${job.id}`
           );
         } catch (notifyErr) {
           console.warn(`jobs-lifecycle: notify failed for job ${job.id}:`, notifyErr);
@@ -198,18 +148,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .not("expires_at", "is", null);
 
     if (selectErr) throw selectErr;
-
     const jobs = (expiredJobs ?? []) as JobRow[];
 
     if (jobs.length > 0) {
       const ids = jobs.map((j) => j.id);
       const { error: updateErr } = await adminClient
         .from("job_listings")
-        .update({
-          status: "archived",
-          is_archived: true,
-          archived_at: now,
-        })
+        .update({ status: "archived", is_archived: true, archived_at: now })
         .in("id", ids);
 
       if (updateErr) throw updateErr;
@@ -221,15 +166,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
         try {
           const poster = await resolvePoster(adminClient, job.id);
           if (!poster?.poster_user_id) continue;
-
-          const dashboardUrl = `${siteUrl}/dashboard/jobs`;
           await notifyPoster(
             poster.poster_user_id,
-            `Anunțul tău „${job.title}" a expirat`,
-            `<p>Salut${poster.poster_name ? `, <strong>${poster.poster_name}</strong>` : ""},</p>
-             <p>Anunțul tău de muncă <strong>${job.title}</strong> a expirat și a fost dezactivat automat.</p>
-             <p>Poți oricând să republici sau să extinzi durata anunțului din <a href="${dashboardUrl}">panoul de control</a>.</p>`,
-            `job-expired-${job.id}`,
+            "job_unpublished",
+            job.title,
+            `${siteUrl}/dashboard/jobs`,
+            siteUrl,
+            `job-expired-${job.id}`
           );
         } catch (notifyErr) {
           console.warn(`jobs-lifecycle: notify failed for job ${job.id}:`, notifyErr);

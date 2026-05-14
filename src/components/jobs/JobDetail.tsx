@@ -37,7 +37,7 @@ import {
 import { JobTags } from "@/components/jobs/JobTags";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
-import appSettings from "@/config/app.settings.json";
+import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -90,6 +90,7 @@ export function JobDetail({
   isFavorite = false,
   onToggleFavorite,
 }: JobDetailProps) {
+  const favouritesEnabled = useFavouritesFeature();
   const [snackOpen, setSnackOpen] = useState(false);
   const [snackMsg, setSnackMsg] = useState("");
 
@@ -180,7 +181,7 @@ export function JobDetail({
 
           <Stack direction="row" spacing={1} sx={{ flexShrink: 0, pt: 0.5 }}>
             {/* Bookmark */}
-            {appSettings.features.favourites && onToggleFavorite && (
+            {favouritesEnabled && onToggleFavorite && (
               <Tooltip title={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}>
                 <IconButton
                   onClick={onToggleFavorite}

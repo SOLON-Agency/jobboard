@@ -6,6 +6,8 @@ export type FeatureFlag = keyof typeof appSettings.features;
 /**
  * Returns true when the given feature flag is enabled in app.settings.json.
  * Safe to call in both Server and Client Components.
+ *
+ * Favourites are not included here — use `getFavouritesEnabled()` / `useFavouritesFeature()` (`src/flags.ts`).
  */
 export function isFeatureEnabled(flag: FeatureFlag): boolean {
   return Boolean(appSettings.features[flag]);

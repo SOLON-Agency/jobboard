@@ -18,7 +18,7 @@
 
 'use strict';
 
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
 
 const { execFileSync } = require('child_process');
 const path = require('path');

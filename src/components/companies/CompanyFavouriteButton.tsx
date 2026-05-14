@@ -6,7 +6,7 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavourites } from "@/hooks/useFavourites";
-import appSettings from "@/config/app.settings.json";
+import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 
 interface CompanyFavouriteButtonProps {
   companyId: string;
@@ -19,8 +19,9 @@ export function CompanyFavouriteButton({
 }: CompanyFavouriteButtonProps) {
   const { user } = useAuth();
   const { isCompanyFavourite, toggleCompany } = useFavourites();
+  const favouritesEnabled = useFavouritesFeature();
 
-  if (!appSettings.features.favourites || !user) return null;
+  if (!favouritesEnabled || !user) return null;
 
   const isFav = isCompanyFavourite(companyId);
 

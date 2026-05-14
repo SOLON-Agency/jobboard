@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Saira } from "next/font/google";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { FavouritesFeatureRoot } from "@/components/providers/FavouritesFeatureRoot";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { VercelToolbar } from "@vercel/toolbar/next";
 import { generateWebSiteJsonLd } from "@/lib/seo";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import "./globals.css";
@@ -76,19 +78,22 @@ export default function RootLayout({
   return (
     <html lang="ro" className={saira.variable}>
       <body style={{ fontFamily: "var(--font-saira), sans-serif" }}>
-        <ThemeRegistry>
-          <ToastProvider>
-            {/* Skip navigation — visible only on keyboard focus via CSS */}
-            <a href="#main-content" className="skip-nav">
-              Sari la conținut
-            </a>
-            <Navbar />
-            <main id="main-content" style={{ flex: 1 }} className="main-content">
-              {children}
-            </main>
-            <Footer />
-          </ToastProvider>
-        </ThemeRegistry>
+        <FavouritesFeatureRoot>
+          <ThemeRegistry>
+            <ToastProvider>
+              {/* Skip navigation — visible only on keyboard focus via CSS */}
+              <a href="#main-content" className="skip-nav">
+                Sari la conținut
+              </a>
+              <Navbar />
+              <main id="main-content" style={{ flex: 1 }} className="main-content">
+                {children}
+              </main>
+              <Footer />
+              {process.env.NODE_ENV === "development" ? <VercelToolbar /> : null}
+            </ToastProvider>
+          </ThemeRegistry>
+        </FavouritesFeatureRoot>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}

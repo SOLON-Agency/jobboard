@@ -29,7 +29,7 @@ import {
 } from "@/lib/utils";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
-import appSettings from "@/config/app.settings.json";
+import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 
 const statusColor: Record<string, "default" | "success" | "warning"> = {
   draft: "warning",
@@ -52,6 +52,7 @@ export function JobRow({
   showStatus = false,
   actions,
 }: JobRowProps) {
+  const favouritesEnabled = useFavouritesFeature();
   return (
     <Paper
       sx={{
@@ -229,7 +230,7 @@ export function JobRow({
           spacing={0.5}
           sx={{ flexShrink: 0 }}
         >
-          {appSettings.features.favourites && onToggleFavorite && (
+          {favouritesEnabled && onToggleFavorite && (
             <Tooltip title={isFavorite ? "Elimină din favorite" : "Salvează anunțul"}>
               <IconButton
                 size="small"

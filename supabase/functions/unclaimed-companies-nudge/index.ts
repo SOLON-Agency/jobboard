@@ -19,6 +19,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
+import { buildEmail, detailRow, infoTable } from "../_shared/email-templates.ts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -243,24 +244,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
         code
       );
 
+      const nudgeHtml = buildEmail({
+        heading: `${company.name} — revendică profilul companiei`,
+        preheader: subject,
+        bodyHtml: `
+          <p>Salut,</p>
+          <p>Compania <strong>${company.name}</strong> are un profil pe LegalJobs pe care nu l-ai revendicat încă.</p>
+          ${infoTable([
+            detailRow("Companie", company.name),
+            detailRow("Candidați (7 zile)", String(applicationsLast7d ?? 0)),
+            detailRow("Total candidați", String(totalApplications ?? 0)),
+            detailRow("Zile de la publicare", String(daysSincePosted)),
+            detailRow("Cod de revendicare", code),
+          ].join(""))}
+          <p>Revendică profilul gratuit și gestionează candidaturile direct de pe platformă.</p>
+        `,
+        ctaUrl: claimUrl,
+        ctaLabel: "Revendică profilul acum",
+        siteUrl,
+      });
+
       await invokeNotifications(serviceKey, {
         to_email: company.email,
         to_name: company.name,
         channel: "email",
         subject,
-        resend_template: {
-          id: "unclaimed-company-nudge",
-          variables: {
-            companyName: company.name,
-            applicationsLast7d: applicationsLast7d ?? 0,
-            totalApplications: totalApplications ?? 0,
-            daysSincePosted,
-            claimUrl,
-            code,
-            siteUrl,
-            dayOfWeek: String(dayOfWeek),
-          },
-        },
+        body: nudgeHtml,
         idempotency_key: `unclaimed-nudge/${company.id}/${today.toISOString().slice(0, 10)}`,
       });
 

@@ -10,7 +10,7 @@ import {
   toggleJobFavourite,
   toggleCompanyFavourite,
 } from "@/services/favourites.service";
-import appSettings from "@/config/app.settings.json";
+import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 
 export interface UseFavouritesReturn {
   jobFavourites: Set<string>;
@@ -25,6 +25,7 @@ export function useFavourites(): UseFavouritesReturn {
   const { user } = useAuth();
   const supabase = useSupabase();
   const { showToast } = useToast();
+  const favouritesEnabled = useFavouritesFeature();
 
   const [jobFavourites, setJobFavourites] = useState<Set<string>>(new Set());
   const [companyFavourites, setCompanyFavourites] = useState<Set<string>>(
@@ -32,14 +33,14 @@ export function useFavourites(): UseFavouritesReturn {
   );
 
   useEffect(() => {
-    if (!user || !appSettings.features.favourites) return;
+    if (!user || !favouritesEnabled) return;
     void getUserJobFavourites(supabase, user.id)
       .then(setJobFavourites)
       .catch(() => {});
     void getUserCompanyFavourites(supabase, user.id)
       .then(setCompanyFavourites)
       .catch(() => {});
-  }, [supabase, user]);
+  }, [supabase, user, favouritesEnabled]);
 
   const toggleJob = useCallback(
     async (jobId: string) => {

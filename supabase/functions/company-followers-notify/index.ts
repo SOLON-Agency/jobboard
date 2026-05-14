@@ -1,43 +1,26 @@
 /**
  * company-followers-notify — Supabase Edge Function
  *
- * Notifies all users who have favourited a company about two events:
- *   - "company_updated": the company edited its profile details.
+ * Notifies users who have favourited a company about two events:
+ *   - "company_updated": the company edited its profile.
  *   - "job_created":     the company published a new job listing.
  *
- * Auth: Supabase user JWT (the recruiter / company owner or member).
- *   The caller must be a member of the company to prevent spoofing.
+ * Uses the v2 notifications dispatcher (typed mode).
  *
- * Followers are fetched via the service-role client (company_favourites has
- * per-user RLS so the recruiter cannot read other users' rows directly).
- * Each follower's email preference is respected by the `notifications` fn.
- *
- * Body:
- *   { company_id: string,
- *     event: "company_updated" | "job_created",
- *     job_id?: string,      // required for job_created
- *     job_title?: string,   // required for job_created
- *     job_slug?: string }   // required for job_created
- *
- * Required secrets: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, RESEND_FROM,
- *                   NEXT_PUBLIC_SITE_URL.
+ * Auth: Supabase user JWT (recruiter / company member).
+ * Body: { company_id, event, job_id?, job_title?, job_slug? }
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { corsHeaders, handleCors } from "../_shared/cors.ts";
-import {
-  buildEmail,
-  detailRow,
-  infoTable,
-} from "../_shared/email-templates.ts";
 
-type Event = "company_updated" | "job_created";
+type CompanyEvent = "company_updated" | "job_created";
 
 async function invokeNotifications(
   serviceKey: string,
   supabaseUrl: string,
   body: Record<string, unknown>
-): Promise<{ ok: boolean; sent?: boolean; skipped?: string; error?: string }> {
+): Promise<{ ok: boolean; error?: string }> {
   const res = await fetch(`${supabaseUrl}/functions/v1/notifications`, {
     method: "POST",
     headers: {
@@ -48,74 +31,10 @@ async function invokeNotifications(
   });
   const text = await res.text();
   let parsed: Record<string, unknown> = {};
-  try {
-    parsed = JSON.parse(text) as Record<string, unknown>;
-  } catch { /* non-JSON */ }
-  const out = parsed as { ok?: boolean; sent?: boolean; skipped?: string; error?: string };
-  if (!res.ok) return { ok: false, error: out.error || text || res.statusText };
-  if (out.ok === false) return { ok: false, error: out.error || "notifications failed" };
-  return { ok: true, sent: out.sent === true, skipped: out.skipped, error: out.error };
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-
-function buildCompanyUpdatedEmail(
-  companyName: string,
-  companyUrl: string,
-  siteUrl: string
-): string {
-  const heading = `${escapeHtml(companyName)} și-a actualizat profilul`;
-  const bodyHtml = `
-    <p>Salut,</p>
-    <p>
-      Compania <strong>${escapeHtml(companyName)}</strong>, pe care o urmărești,
-      și-a actualizat recent informațiile de profil.
-    </p>
-    ${infoTable(detailRow("Companie", escapeHtml(companyName)))}
-    <p>Vizitează profilul actualizat pentru a vedea ce s-a schimbat.</p>
-  `;
-  return buildEmail({
-    heading,
-    bodyHtml,
-    ctaUrl: companyUrl,
-    ctaLabel: "Vezi profilul companiei",
-    siteUrl,
-    preheader: `${companyName} și-a actualizat profilul pe LegalJobs.`,
-  });
-}
-
-function buildJobCreatedEmail(
-  companyName: string,
-  jobTitle: string,
-  jobUrl: string,
-  siteUrl: string
-): string {
-  const heading = `Anunț nou de la ${escapeHtml(companyName)}`;
-  const bodyHtml = `
-    <p>Salut,</p>
-    <p>
-      Compania <strong>${escapeHtml(companyName)}</strong>, pe care o urmărești,
-      a publicat un nou anunț de angajare.
-    </p>
-    ${infoTable(
-      [
-        detailRow("Companie", escapeHtml(companyName)),
-        detailRow("Post", escapeHtml(jobTitle)),
-      ].join("")
-    )}
-    <p>Aplică acum dacă postul ți se potrivește!</p>
-  `;
-  return buildEmail({
-    heading,
-    bodyHtml,
-    ctaUrl: jobUrl,
-    ctaLabel: "Vezi anunțul",
-    siteUrl,
-    preheader: `${companyName} a publicat: „${jobTitle}".`,
-  });
+  try { parsed = JSON.parse(text) as Record<string, unknown>; } catch { /* non-JSON */ }
+  const out = parsed as { ok?: boolean; error?: string };
+  if (!res.ok) return { ok: false, error: out.error ?? text ?? res.statusText };
+  return { ok: true };
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -147,7 +66,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  // ── Authenticate the recruiter ─────────────────────────────────────────────
   const recruiterClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
     auth: { persistSession: false },
@@ -161,9 +79,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  // ── Parse body ─────────────────────────────────────────────────────────────
   let companyId = "";
-  let event: Event = "company_updated";
+  let event: CompanyEvent = "company_updated";
   let jobId = "";
   let jobTitle = "";
   let jobSlug = "";
@@ -194,12 +111,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const siteUrl = (
-    Deno.env.get("NEXT_PUBLIC_SITE_URL") ?? "http://localhost:3000"
-  ).replace(/\/$/, "");
+  const siteUrl = (Deno.env.get("NEXT_PUBLIC_SITE_URL") ?? "http://localhost:3000").replace(/\/$/, "");
 
   try {
-    // ── Verify the recruiter is a member of this company (anti-spoofing) ─────
+    // Verify membership (anti-spoofing)
     const { data: membership, error: memberErr } = await recruiterClient
       .from("company_users")
       .select("role")
@@ -216,10 +131,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // ── Fetch company details ──────────────────────────────────────────────
-    const serviceClient = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false },
-    });
+    const serviceClient = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
     const { data: company, error: companyErr } = await serviceClient
       .from("companies")
@@ -241,7 +153,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const companySlug: string = c.slug ?? "";
     const companyUrl = companySlug ? `${siteUrl}/companies/${companySlug}` : siteUrl;
 
-    // ── Fetch all followers of this company ───────────────────────────────
     const { data: followers, error: followersErr } = await serviceClient
       .from("company_favourites")
       .select("user_id")
@@ -255,45 +166,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // ── Build email HTML ──────────────────────────────────────────────────
-    let subject: string;
-    let html: string;
+    // deno-lint-ignore no-explicit-any
+    const followerIds = (followers as any[]).map((f: { user_id: string }) => f.user_id);
 
-    if (event === "job_created") {
-      const resolvedJobTitle = jobTitle || "Anunț nou";
-      const jobUrl = jobSlug ? `${siteUrl}/jobs/${jobSlug}` : companyUrl;
-      subject = `Anunț nou de la ${companyName}: „${resolvedJobTitle}"`;
-      html = buildJobCreatedEmail(companyName, resolvedJobTitle, jobUrl, siteUrl);
-    } else {
-      subject = `${companyName} și-a actualizat profilul`;
-      html = buildCompanyUpdatedEmail(companyName, companyUrl, siteUrl);
-    }
+    const notifType = event === "job_created" ? "job_created" : "company_updated";
+    const resolvedJobTitle = jobTitle || "Anunț nou";
+    const jobUrl = jobSlug ? `${siteUrl}/jobs/${jobSlug}` : companyUrl;
 
-    // ── Notify each follower concurrently ─────────────────────────────────
-    const results = await Promise.allSettled(
-      // deno-lint-ignore no-explicit-any
-      (followers as any[]).map((row: { user_id: string }) =>
-        invokeNotifications(serviceKey, supabaseUrl, {
-          recipient: row.user_id,
-          channel: "email",
-          subject,
-          body: html,
-          idempotency_key: `company-followers-notify/${companyId}/${event}/${jobId || Date.now()}/${row.user_id}`,
-        })
-      )
-    );
+    const notifData = event === "job_created"
+      ? { job_title: resolvedJobTitle, company_name: companyName, company_url: companyUrl, job_url: jobUrl, site_url: siteUrl }
+      : { company_name: companyName, company_url: companyUrl, site_url: siteUrl };
 
-    const sent = results.filter(
-      (r) => r.status === "fulfilled" && r.value.sent === true
-    ).length;
-    const errors = results.filter((r) => r.status === "rejected").length;
+    const result = await invokeNotifications(serviceKey, supabaseUrl, {
+      type: notifType,
+      recipients: followerIds,
+      data: notifData,
+      idempotency_key: `company-followers-notify/${companyId}/${event}/${jobId || Date.now()}`,
+    });
 
-    console.log(
-      `company-followers-notify: event=${event} company=${companyId} followers=${followers.length} sent=${sent} errors=${errors}`
-    );
+    console.log(`company-followers-notify: event=${event} company=${companyId} followers=${followerIds.length} ok=${result.ok}`);
 
     return new Response(
-      JSON.stringify({ ok: true, sent, total: followers.length, errors }),
+      JSON.stringify({ ok: result.ok, total: followerIds.length, error: result.error }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

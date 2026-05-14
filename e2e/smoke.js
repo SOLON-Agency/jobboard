@@ -12,7 +12,7 @@
 
 'use strict';
 
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
 
 const { TestRunner } = require('./runner');
 const { launchBrowser, newPage, goto, expectSelector, screenshotOnFail, BASE_URL } = require('./helpers');

@@ -16,7 +16,7 @@
 
 'use strict';
 
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: '.env' });
 
 const { TestRunner } = require('../runner');
 const {

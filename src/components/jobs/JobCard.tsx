@@ -18,11 +18,11 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import type { Tables } from "@/types/database";
 import { formatSalary, timeAgo, jobTypeLabels, jobTypeChipSx, truncate } from "@/lib/utils";
-import appSettings from "@/config/app.settings.json";
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
+import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import EmojiPeopleOutlinedIcon from "@mui/icons-material/EmojiPeopleOutlined";
-import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 
 interface JobCardProps {
   job: Tables<"job_listings"> & { companies: Tables<"companies"> | null };
@@ -35,6 +35,7 @@ export function JobCard({
   isFavorite = false,
   onToggleFavorite,
 }: JobCardProps) {
+  const favouritesEnabled = useFavouritesFeature();
   return (
   <Card
     sx={{
@@ -208,7 +209,7 @@ export function JobCard({
       </Stack>
     </CardContent>
 
-    {appSettings.features.favourites && (
+    {favouritesEnabled && (
       <Box
         sx={{
           px: 3,

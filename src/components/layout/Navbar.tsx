@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   AppBar,
   Toolbar,
@@ -31,7 +32,6 @@ import ChatIcon from "@mui/icons-material/Chat";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import appSettings from "@/config/app.settings.json";
 
 const CREAM = "#F0EBD8";
@@ -47,11 +47,17 @@ const navLinks = [
 export function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const pathname = usePathname();
+  const isHomepage = pathname === "/";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { user, loading: authLoading, signOut } = useAuth();
   const supabase = useSupabase();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  // On the homepage, the hero section spans 100vh — keep the primary nav links
+  // hidden until the user has scrolled ~90vh so the hero isn't competing with
+  // duplicate CTAs in the header. On every other page, always show them.
+  const [showNavLinks, setShowNavLinks] = useState(!isHomepage);
 
   useEffect(() => {
     if (!user) { setAvatarUrl(null); return; }
@@ -62,6 +68,36 @@ export function Navbar() {
       .single()
       .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
   }, [user, supabase]);
+
+  useEffect(() => {
+    if (!isHomepage) {
+      setShowNavLinks(true);
+      return;
+    }
+
+    const threshold = () => window.innerHeight * 0.9;
+    const evaluate = () => setShowNavLinks(window.scrollY > threshold());
+
+    evaluate();
+
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        evaluate();
+        rafId = 0;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", evaluate);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", evaluate);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, [isHomepage]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -118,13 +154,30 @@ export function Navbar() {
 
           {/* Desktop nav links */}
           {!isMobile && (
-            <Box sx={{ display: "flex", gap: 0.5, flexGrow: 1 }}>
+            <Box
+              aria-hidden={!showNavLinks}
+              sx={{
+                display: "flex",
+                gap: 0.5,
+                flexGrow: 1,
+                opacity: showNavLinks ? 1 : 0,
+                visibility: showNavLinks ? "visible" : "hidden",
+                pointerEvents: showNavLinks ? "auto" : "none",
+                transform: showNavLinks ? "translateY(0)" : "translateY(-4px)",
+                transition:
+                  "opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease",
+                "@media (prefers-reduced-motion: reduce)": {
+                  transition: "opacity 0s, transform 0s, visibility 0s",
+                },
+              }}
+            >
               {navLinks.map((link) => (
                 <Button
                   key={link.href}
                   component={Link}
                   href={link.href}
                   disableRipple
+                  tabIndex={showNavLinks ? 0 : -1}
                   sx={{
                     color: "white",
                     fontWeight: 400,
@@ -183,9 +236,11 @@ export function Navbar() {
                   >
                     Dashboard
                   </Button>
-                  {appSettings.features.notifications && <IconButton aria-label="Notificări" sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
-                    <NotificationsOutlinedIcon />
-                  </IconButton>}  
+                  {appSettings.features.notifications && (
+                    <NotificationBell
+                      sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}
+                    />
+                  )}
                   {appSettings.features.messages && <IconButton
                     component={Link}
                     href="/dashboard/messages"

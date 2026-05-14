@@ -1,46 +1,65 @@
 import { describe, it, expect } from "vitest";
+import type { Tables } from "@/types/database";
 import { generateJobPostingJsonLd, generateOrganizationJsonLd } from "@/lib/seo";
 
+type JobWithCompany = Tables<"job_listings"> & {
+  companies: Tables<"companies"> | null;
+};
+
+const mockCompany: Tables<"companies"> = {
+  archived_at: null,
+  claimed_at: null,
+  claimed_by: null,
+  created_at: "2026-01-01T00:00:00Z",
+  created_by: "user-id",
+  description: null,
+  email: null,
+  engages: 0,
+  founded_year: 2010,
+  id: "comp-id",
+  industry: "Legal",
+  is_archived: false,
+  is_claimed: false,
+  location: "Bucharest",
+  logo_url: null,
+  name: "Test Law Firm",
+  size: "50-200",
+  slug: "test-law-firm",
+  updated_at: "2026-01-01T00:00:00Z",
+  visits: 0,
+  website: "https://example.com",
+};
+
 describe("generateJobPostingJsonLd", () => {
-  const mockJob = {
-    id: "test-id",
-    company_id: "comp-id",
-    title: "Senior Associate",
-    slug: "senior-associate",
-    description: "Great opportunity",
-    location: "Bucharest",
-    job_type: "full-time",
-    experience_level: "senior",
-    salary_min: 3000,
-    salary_max: 5000,
-    salary_currency: "EUR",
-    is_remote: false,
-    application_url: null,
+  const mockJob: JobWithCompany = {
     application_form_id: null,
-    status: "published" as const,
-    is_external: false,
-    source_url: null,
-    source_hash: null,
-    search_vector: null as unknown,
-    published_at: "2026-01-01T00:00:00Z",
-    expires_at: null,
+    application_url: null,
+    applications_count: 0,
+    archived_at: null,
+    benefits_count: 0,
+    company_id: "comp-id",
     created_at: "2026-01-01T00:00:00Z",
+    description: "Great opportunity",
+    experience_level: ["senior"],
+    expires_at: null,
+    id: "test-id",
+    is_archived: false,
+    is_external: false,
+    is_remote: false,
+    job_type: "full-time",
+    location: "Bucharest",
+    published_at: "2026-01-01T00:00:00Z",
+    salary_currency: "EUR",
+    salary_max: 5000,
+    salary_min: 3000,
+    search_vector: null,
+    slug: "senior-associate",
+    source_hash: null,
+    source_url: null,
+    status: "published",
+    title: "Senior Associate",
     updated_at: "2026-01-01T00:00:00Z",
-    companies: {
-      id: "comp-id",
-      name: "Test Law Firm",
-      slug: "test-law-firm",
-      description: null,
-      logo_url: null,
-      website: "https://example.com",
-      industry: "Legal",
-      size: "50-200",
-      location: "Bucharest",
-      founded_year: 2010,
-      created_by: "user-id",
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-01T00:00:00Z",
-    },
+    companies: mockCompany,
   };
 
   it("generates valid JobPosting schema", () => {
@@ -89,21 +108,17 @@ describe("generateJobPostingJsonLd", () => {
 
 describe("generateOrganizationJsonLd", () => {
   it("generates valid Organization schema", () => {
-    const jsonLd = generateOrganizationJsonLd({
+    const company: Tables<"companies"> = {
+      ...mockCompany,
       id: "test",
       name: "Test Firm",
       slug: "test-firm",
       description: "A test firm",
-      logo_url: null,
-      website: "https://example.com",
-      industry: "Legal",
       size: null,
-      location: "Bucharest",
       founded_year: 2015,
       created_by: "user",
-      created_at: "2026-01-01",
-      updated_at: "2026-01-01",
-    });
+    };
+    const jsonLd = generateOrganizationJsonLd(company);
     expect(jsonLd["@type"]).toBe("Organization");
     expect(jsonLd.name).toBe("Test Firm");
     expect(jsonLd.url).toBe("https://example.com");

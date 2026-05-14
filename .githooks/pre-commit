@@ -6,18 +6,25 @@
 #   git config core.hooksPath .githooks
 #
 # Steps:
+#   0. `vercel env pull` → merge into `.env` — sync FLAGS / FLAGS_SECRET (and
+#      other Vercel development env vars) without removing locally-only keys.
+#      Requires `vercel link` and a logged-in CLI. Use the same flow manually:
+#      `npm run vercel:env`.
 #   1. `next build` — fail fast on TypeScript / build errors.
 #   2. Deploy Supabase Edge Functions that changed under `supabase/functions/`.
 #      If `_shared/` changed, redeploy everything.
 #   3. Push Supabase migrations when any `supabase/migrations/*.sql` is staged.
 #
 # Opt-outs (set to 1 to skip individual steps):
-#   SKIP_BUILD=1        bypass the Next.js build
-#   SKIP_DEPLOY=1       bypass edge-function deployment
-#   SKIP_MIGRATIONS=1   bypass `supabase db push`
+#   SKIP_VERCEL_ENV_PULL=1  bypass Vercel `env pull`
+#   SKIP_BUILD=1            bypass the Next.js build
+#   SKIP_DEPLOY=1           bypass edge-function deployment
+#   SKIP_MIGRATIONS=1       bypass `supabase db push`
 #
 # Bypass everything for a WIP commit:
 #   git commit --no-verify -m "wip"
+#
+# Offline / no Vercel CLI login: use SKIP_VERCEL_ENV_PULL=1 (pull step warns and continues).
 
 set -e
 
@@ -58,6 +65,35 @@ FUNCTIONS_DIR="supabase/functions"
 MIGRATIONS_DIR="supabase/migrations"
 DEPLOY_SCRIPT="scripts/deploy-edge-functions.js"
 MIGRATE_SCRIPT="scripts/push-migrations.js"
+
+# ── 0. Vercel env pull → .env (merge) ────────────────────────────────────────
+
+if [ "${SKIP_VERCEL_ENV_PULL:-0}" = "1" ]; then
+  echo "⚠️  SKIP_VERCEL_ENV_PULL=1 — skipping Vercel env pull."
+else
+  if [ ! -f .vercel/project.json ]; then
+    echo "ℹ️  No .vercel/project.json — skipping Vercel env pull (run: npx vercel link)."
+  else
+    echo ""
+    echo "🚩  Pulling Vercel development env → merging into .env ..."
+    echo ""
+    tmp_env=".env.vercel.pull.tmp"
+    rm -f "$tmp_env"
+    if npx --yes vercel@latest env pull "$tmp_env" --yes; then
+      node scripts/merge-vercel-env.cjs "$tmp_env"
+      rm -f "$tmp_env"
+      echo ""
+      echo "✅ Vercel env merged into .env."
+      echo ""
+    else
+      rm -f "$tmp_env"
+      echo ""
+      echo "⚠️  vercel env pull failed (not logged in, or network). Continuing commit."
+      echo "   Fix: npx vercel login   or   SKIP_VERCEL_ENV_PULL=1 git commit ..."
+      echo ""
+    fi
+  fi
+fi
 
 # ── 1. Next.js build check ──────────────────────────────────────────────────
 

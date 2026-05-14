@@ -36,6 +36,8 @@ import appSettings from "@/config/app.settings.json";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useToast } from "@/contexts/ToastContext";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 import { getUserCompanies } from "@/services/companies.service";
 import {
   getUserForms,
@@ -255,6 +257,13 @@ export function FormsClient() {
           );
           setMessage({ type: "success", text: status === "published" ? "Formularul a fost publicat." : "Formularul a fost salvat ca ciornă." });
           showToast(status === "published" ? "Formular publicat cu succes." : "Formular salvat ca ciornă.");
+          if (user) {
+            void dispatchNotification(supabase, {
+              type: NOTIFICATION_TYPES.FORM_CREATED,
+              recipients: [user.id],
+              data: { form_name: data.name },
+            }).catch((e: unknown) => console.warn("notify-form-created:", e));
+          }
         }
         await load();
         setTimeout(closeDrawer, 800);
@@ -270,6 +279,14 @@ export function FormsClient() {
     try {
       await deleteForm(supabase, form.id);
       showToast(`Formularul „${form.name}" a fost șters.`, "info");
+      if (user) {
+        void dispatchNotification(supabase, {
+          type: NOTIFICATION_TYPES.FORM_DELETED,
+          recipients: [user.id],
+          data: { form_name: form.name },
+          idempotencyKey: `form-deleted/${form.id}`,
+        }).catch((e: unknown) => console.warn("notify-form-deleted:", e));
+      }
       await load();
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });
@@ -280,6 +297,14 @@ export function FormsClient() {
     try {
       await archiveForm(supabase, form.id, true);
       showToast(`Formularul „${form.name}" a fost arhivat.`, "info");
+      if (user) {
+        void dispatchNotification(supabase, {
+          type: NOTIFICATION_TYPES.FORM_ARCHIVED,
+          recipients: [user.id],
+          data: { form_name: form.name },
+          idempotencyKey: `form-archived/${form.id}`,
+        }).catch((e: unknown) => console.warn("notify-form-archived:", e));
+      }
       await load();
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });

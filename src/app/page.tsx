@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/layout/HeroSection";
 import { FeaturesSection } from "@/components/layout/FeaturesSection";
+import { PlatformAdvantagesSection } from "@/components/marketing/PlatformAdvantagesSection";
+import { AudienceSection } from "@/components/marketing/AudienceSection";
+import { PricingSection } from "@/components/marketing/PricingSection";
+import { TestimonialsSection } from "@/components/marketing/TestimonialsSection";
+import { FaqSection } from "@/components/marketing/FaqSection";
+import { BlogPreviewSection } from "@/components/marketing/BlogPreviewSection";
 import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
 import { NewsletterSection } from "@/components/newsletter/NewsletterSection";
 import { createStaticClient } from "@/lib/supabase/static";
@@ -10,23 +16,38 @@ import appSettings from "@/config/app.settings.json";
 // Revalidate once per day so counts stay fresh without a full redeploy
 export const revalidate = 86400;
 
+const SEO_TITLE = `${appSettings.name} — Recrutare juridică inteligentă în România`;
+const SEO_DESCRIPTION =
+  `${appSettings.name} este platforma premium de recrutare dedicată exclusiv pieței juridice din România: avocați, juriști, departamente in-house și agenții de recrutare. Matchmaking inteligent, alerte personalizate, transparență salarială, candidați verificați și conformitate GDPR. Publici până la 5 anunțuri complet gratuit.`;
+
 export const metadata: Metadata = {
-  title: `${appSettings.name} — Platformă de carieră juridică`,
-  description:
-    "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește sute de locuri de muncă de la cele mai bune firme de avocatură din România, aplică direct și gestionează-ți cariera.",
+  title: SEO_TITLE,
+  description: SEO_DESCRIPTION,
+  keywords: [
+    "joburi avocați România",
+    "recrutare juridică",
+    "avocat definitiv",
+    "avocat stagiar",
+    "consilier juridic",
+    "in-house counsel",
+    "joburi firme avocatură",
+    "platformă carieră juridică",
+    appSettings.name,
+  ],
   alternates: { canonical: "/" },
   openGraph: {
-    title: `${appSettings.name} — Platformă de carieră juridică`,
+    title: SEO_TITLE,
     description:
-      "Platformă de carieră pentru profesioniști juridici din România. Locuri de muncă la firme de top, aplicare directă.",
+      "Platforma premium de carieră juridică din România. Matchmaking inteligent, transparență salarială și candidați verificați. Publici până la 5 anunțuri gratuit.",
     url: "/",
     type: "website",
+    locale: "ro_RO",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${appSettings.name} — Platformă de carieră juridică`,
+    title: SEO_TITLE,
     description:
-      "Platformă de carieră pentru profesioniști juridici din România.",
+      "Recrutare juridică inteligentă pentru avocați, juriști și echipe in-house. Matchmaking AI, alerte personalizate și 5 anunțuri gratuite.",
   },
 };
 
@@ -44,7 +65,13 @@ export default async function HomePage() {
         }}
       />
       <FeaturesSection />
+      <PlatformAdvantagesSection />
+      <AudienceSection />
+      <PricingSection />
+      {/* <TestimonialsSection /> */}
       <RecruitingAgenciesSection />
+      <FaqSection />
+      <BlogPreviewSection />
       <NewsletterSection />
     </>
   );
