@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          excerpt: string | null
+          cover_image_url: string | null
+          content_markdown: string
+          status: string
+          published_at: string | null
+          created_at: string
+          updated_at: string
+          notified_at: string | null
+          author_id: string | null
+          seo_title: string | null
+          seo_description: string | null
+          reading_time_minutes: number | null
+          tags: string[]
+          canonical_url: string | null
+        }
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          excerpt?: string | null
+          cover_image_url?: string | null
+          content_markdown: string
+          status?: string
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+          notified_at?: string | null
+          author_id?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          reading_time_minutes?: number | null
+          tags?: string[]
+          canonical_url?: string | null
+        }
+        Update: {
+          id?: string
+          slug?: string
+          title?: string
+          excerpt?: string | null
+          cover_image_url?: string | null
+          content_markdown?: string
+          status?: string
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+          notified_at?: string | null
+          author_id?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          reading_time_minutes?: number | null
+          tags?: string[]
+          canonical_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      newsletter_subscribers: {
+        Row: {
+          id: string
+          email: string
+          is_active: boolean
+          source: string | null
+          created_at: string
+          updated_at: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          is_active?: boolean
+          source?: string | null
+          created_at?: string
+          updated_at?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          is_active?: boolean
+          source?: string | null
+          created_at?: string
+          updated_at?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
           archived_at: string | null
@@ -817,6 +915,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          completeness: number
           created_at: string
           cv_url: string | null
           experience_level: string | null
@@ -835,6 +934,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          completeness?: number
           created_at?: string
           cv_url?: string | null
           experience_level?: string | null
@@ -853,6 +953,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          completeness?: number
           created_at?: string
           cv_url?: string | null
           experience_level?: string | null
@@ -971,6 +1072,10 @@ export type Database = {
           poster_name: string
           poster_user_id: string
         }[]
+      }
+      recompute_profile_completeness: {
+        Args: { p_user_id: string }
+        Returns: number
       }
     }
     Enums: {

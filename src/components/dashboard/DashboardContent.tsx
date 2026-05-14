@@ -53,8 +53,14 @@ import appSettings from "@/config/app.settings.json";
 export interface DashboardStats {
   profileName: string | null;
   profileComplete: boolean;
+  /**
+   * Onboarding progress percentage (0–100) read from `profiles.completeness`.
+   * The value is maintained by Postgres triggers — see
+   * `supabase/migrations/20260514120000_profile_completeness.sql`.
+   */
+  profileCompleteness: number;
 
-  // Profile completeness breakdown (for progress steps)
+  // Profile completeness breakdown (only used to colour the step dots).
   profileHasAvatar: boolean;
   profileHasBio: boolean;
   profileHasExperience: boolean;
@@ -66,6 +72,7 @@ export interface DashboardStats {
   applicationsReceived: number;
   applicationsSent: number;
   savedCompanies: number;
+  applicationsWithdrawn: number;
   formsTotal: number;
   formResponsesTotal: number;
 
@@ -284,6 +291,13 @@ function ChartCard({
 
 // All colors are chosen for WCAG AA contrast on the dark hero (#03170C→#3E5C76).
 interface ProfileProgressProps {
+  /**
+   * Authoritative completeness percentage read from `profiles.completeness`.
+   * The weighted formula lives in the Postgres function
+   * `public.recompute_profile_completeness(uuid)` and is recomputed by
+   * triggers on every contributing table.
+   */
+  profileCompleteness: number;
   profileHasAvatar: boolean;
   profileHasBio: boolean;
   profileHasExperience: boolean;
@@ -296,6 +310,7 @@ interface ProfileProgressProps {
   publishedJobs: number;
   draftJobs: number;
   applicationsReceived: number;
+  applicationsWithdrawn: number;
   hasRejectedCandidate: boolean;
   hasShortlistedCandidate: boolean;
   hasArchived: boolean;
@@ -305,6 +320,7 @@ interface ProfileProgressProps {
 }
 
 function ProfileProgress({
+  profileCompleteness,
   profileHasAvatar,
   profileHasBio,
   profileHasExperience,
@@ -317,58 +333,51 @@ function ProfileProgress({
   publishedJobs,
   draftJobs,
   applicationsReceived,
-  hasRejectedCandidate,
+  applicationsWithdrawn,
   hasShortlistedCandidate,
   hasArchived,
   isAtLeastEmployer,
   isAdmin,
 }: ProfileProgressProps) {
-  type Step = { visibleLabel: string; visible: boolean; label: string; weight: number; done: boolean };
+  type Step = { visibleLabel: string; visible: boolean; label: string; done: boolean };
 
-  // ── User role steps (weights sum to 40 → normalised to 100%) ──────────────
+  // The step lists below mirror the weighted formula in
+  // `public.recompute_profile_completeness(uuid)`. They are kept here purely
+  // to render the breakdown dots; the percentage itself comes from the DB so
+  // both surfaces (bar + dots) always stay in sync with persisted state.
   const userSteps: Step[] = [
-    { visibleLabel: "Cont creat",            visible: true,  label: "Cont creat",             weight: 5,  done: true },
-    { visibleLabel: "Profil",                visible: true,  label: "Profil, bio & experiență", weight: 10, done: profileHasAvatar && profileHasBio && profileHasExperience },
-    { visibleLabel: "Profil — educație",     visible: false, label: "Profil — educație",       weight: 5,  done: profileHasEducation },
-    { visibleLabel: "Profil — experiență",   visible: false, label: "Profil — experiență",     weight: 5,  done: profileHasExperience },
-    { visibleLabel: "Profil — competențe",   visible: false, label: "Profil — competențe",     weight: 5,  done: profileHasSkills },
-    { visibleLabel: "Alertă",               visible: true,  label: "Prima alertă",            weight: 5,  done: hasAlerts },
-    { visibleLabel: "Aplicat la un anunț",  visible: true,  label: "Aplicat la un anunț",     weight: 5,  done: applicationsSent > 0 },
+    { visibleLabel: "Cont creat",           visible: true,  label: "Cont creat",               done: true },
+    { visibleLabel: "Profil",               visible: true,  label: "Profil, bio & experiență", done: profileHasAvatar && profileHasBio && profileHasExperience },
+    { visibleLabel: "Profil — educație",    visible: false, label: "Profil — educație",        done: profileHasEducation },
+    { visibleLabel: "Profil — experiență",  visible: false, label: "Profil — experiență",      done: profileHasExperience },
+    { visibleLabel: "Profil — competențe",  visible: false, label: "Profil — competențe",      done: profileHasSkills },
+    { visibleLabel: "Alertă",               visible: true,  label: "Prima alertă",             done: hasAlerts },
+    { visibleLabel: "Aplicat la un anunț",  visible: true,  label: "Aplicat la un anunț",      done: applicationsSent > 0 },
+    { visibleLabel: "Aplicație retrasă",    visible: true,  label: "Aplicație retrasă",        done: applicationsWithdrawn > 0 },
   ];
 
-  // ── Employer / premium_employer / admin steps (weights sum to 60 → normalised to 100%) ──
   const employerSteps: Step[] = [
-    { visibleLabel: "Companie",                  visible: true,  label: "Companie creată",          weight: 5,  done: hasCompanies },
-    { visibleLabel: "Formular",                  visible: true,  label: "Formular creat",            weight: 10, done: formsTotal > 0 },
-    { visibleLabel: "Anunțuri",                  visible: true,  label: "Anunț creat",               weight: 10, done: publishedJobs + draftJobs > 0 },
-    { visibleLabel: "Primul candidat aplicat",   visible: false, label: "Primul candidat aplicat",   weight: 10, done: applicationsReceived > 0 },
-    { visibleLabel: "Primul candidat respins",   visible: false, label: "Primul candidat respins",   weight: 10, done: hasRejectedCandidate },
-    { visibleLabel: "Candidați",                 visible: true,  label: "Candidat acceptat",         weight: 10, done: hasShortlistedCandidate },
-    { visibleLabel: "Arhivare",                  visible: true,  label: "Arhivare",                  weight: 5,  done: hasArchived },
+    { visibleLabel: "Companie",              visible: true, label: "Companie creată",          done: hasCompanies },
+    { visibleLabel: "Formular",              visible: true, label: "Formular creat",           done: formsTotal > 0 },
+    { visibleLabel: "Creare anunț",          visible: true, label: "Anunț creat",              done: publishedJobs + draftJobs > 0 },
+    { visibleLabel: "Gestioneaza anunțuri",  visible: true, label: "Anunț creat",              done: publishedJobs + draftJobs > 0 },
+    { visibleLabel: "Primul candidat",       visible: true, label: "Primul candidat aplicat",  done: applicationsReceived > 0 },
+    { visibleLabel: "Gestionare candidați",  visible: true, label: "Candidați acceptat",       done: hasShortlistedCandidate },
+    { visibleLabel: "Arhivare",              visible: true, label: "Arhivare",                 done: hasArchived },
   ];
 
-  // Admins share the employer progress track
   const steps = isAtLeastEmployer || isAdmin ? employerSteps : userSteps;
 
-  // Percentage normalises automatically: earnedWeight / totalWeight * 100
-  // so each group independently reaches 100% regardless of raw weight totals.
-  const totalWeight = steps.reduce((s, x) => s + x.weight, 0);
-  const earnedWeight = steps.filter((x) => x.done).reduce((s, x) => s + x.weight, 0);
-  const pct = Math.round((earnedWeight / totalWeight) * 100);
-
-  const complete = pct === 100;
-  // const barColor = complete ? "#6fcf97" : C.goldOnDark;
+  const pct = Math.max(0, Math.min(100, Math.round(profileCompleteness)));
   const barColor = "#6fcf97";
   const pctColor = barColor;
-
-  const pendingSteps = steps.filter((s) => !s.done);
 
   return (
     <Box>
       {/* Bar + label row */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
         <Typography variant="caption" sx={{ color: `${C.soft}aa` }}>
-          Progres cont
+          Progres actualizare cont
         </Typography>
         <Typography variant="caption" fontWeight={700} sx={{ color: pctColor }}>
           {pct}%
@@ -378,7 +387,7 @@ function ProfileProgress({
       <LinearProgress
         variant="determinate"
         value={pct}
-        aria-label={`Progres cont: ${pct}%`}
+        aria-label={`Progres actualizare cont: ${pct}%`}
         sx={{
           height: 6,
           borderRadius: 4,
@@ -502,6 +511,7 @@ function QuickAction({ href, icon, color, label, sublabel, warn = false }: Quick
 export function DashboardContent({
   profileName,
   profileComplete,
+  profileCompleteness,
   profileHasAvatar,
   profileHasBio,
   profileHasExperience,
@@ -520,6 +530,7 @@ export function DashboardContent({
   hasAlerts,
   hasRejectedCandidate,
   hasShortlistedCandidate,
+  applicationsWithdrawn,
   hasArchived,
   activityByMonth,
   jobsByStatus,
@@ -546,6 +557,7 @@ export function DashboardContent({
   const hasJobStatus = jobsByStatus.some((s) => s.value > 0);
   const hasAppStatus = applicationsByStatus.some((s) => s.value > 0);
   const hasFormResponses = formResponsesByMonth.some((m) => m.count > 0);
+  const hasApplicationsWithdrawn = applicationsWithdrawn > 0;
 
   // Greeting based on time of day
   const hour = new Date().getHours();
@@ -592,9 +604,9 @@ export function DashboardContent({
             </Typography>
             <Typography variant="body2" sx={{ color: `${C.soft}aa` }}>
               {hasCompanies
-                ? `Ai ${publishedJobs} anunț${publishedJobs === 1 ? "" : "uri"} activ${publishedJobs === 1 ? "" : "e"} și ${applicationsReceived} aplicație${applicationsReceived === 1 ? "" : " primite"}.`
+                ? `Ai ${publishedJobs} ${publishedJobs === 1 ? "anunț activ" : "anunțuri active"}, ${applicationsReceived} ${applicationsReceived === 1 ? "aplicație primită" : "aplicații primite"} și ${applicationsWithdrawn} ${applicationsWithdrawn === 1 ? "aplicație retrasă" : "aplicații retrase"}.`
                 : applicationsSent > 0
-                ? `Ai trimis ${applicationsSent} aplicație${applicationsSent === 1 ? "" : " până acum"}. Continuă!`
+                ? `Ai trimis ${applicationsSent} ${applicationsSent === 1 ? "o aplicație" : applicationsSent+"aplicații"} până acum. Continuă!`
                 : "Explorează locuri de muncă și aplică la joburile potrivite."}
             </Typography>
           </Box>
@@ -637,6 +649,7 @@ export function DashboardContent({
         {/* Profile progress bar inside hero */}
         <Box sx={{ mt: 2.5, pt: 2.5, borderTop: `1px solid ${C.soft}22` }}>
           <ProfileProgress
+            profileCompleteness={profileCompleteness}
             profileHasAvatar={profileHasAvatar}
             profileHasBio={profileHasBio}
             profileHasExperience={profileHasExperience}
@@ -650,6 +663,7 @@ export function DashboardContent({
             draftJobs={draftJobs}
             applicationsReceived={applicationsReceived}
             hasRejectedCandidate={hasRejectedCandidate}
+            applicationsWithdrawn={applicationsWithdrawn}
             hasShortlistedCandidate={hasShortlistedCandidate}
             hasArchived={hasArchived}
             isAtLeastEmployer={isAtLeastEmployer}

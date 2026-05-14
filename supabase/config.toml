@@ -371,10 +371,6 @@ verify_jwt = false
 # Auth is handled inside the function (accepts user JWTs + service-role key).
 verify_jwt = false
 
-[functions.increase_company_engagement]
-# JWT verification is done inside the function via supabase.auth.getUser().
-verify_jwt = false
-
 [functions.job-application]
 # Applicant JWT is validated inside the function.
 verify_jwt = false

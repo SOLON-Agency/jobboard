@@ -11,7 +11,7 @@
  *                 the creator is notified.
  *
  * Authentication: Bearer <CRON_SECRET> (not a user JWT — this is an internal
- * server-to-server call from a scheduler, matching the scrape-jobs pattern).
+ * server-to-server call from a scheduler).
  *
  * Required Supabase secrets:
  *   CRON_SECRET            — shared secret validated in this function

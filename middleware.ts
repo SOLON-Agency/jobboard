@@ -1,7 +1,23 @@
 import { updateSession } from "@/lib/supabase/middleware";
-import type { NextRequest } from "next/server";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Gate all blog routes (public + admin) behind the feature flag.
+  // Must run before updateSession so that disabled routes never touch the DB.
+  if (!isFeatureEnabled("blog")) {
+    const isBlogRoute =
+      pathname === "/blog" ||
+      pathname.startsWith("/blog/") ||
+      pathname === "/dashboard/blog" ||
+      pathname.startsWith("/dashboard/blog/");
+    if (isBlogRoute) {
+      return new NextResponse(null, { status: 404 });
+    }
+  }
+
   return updateSession(request);
 }
 

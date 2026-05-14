@@ -41,10 +41,9 @@ export interface HeroCounts {
 }
 
 // ── Pills ─────────────────────────────────────────────────────────────────────
-const pills = ["Acces gratuit", "Alerte inteligente","Aplicare rapidă"] as const;
+const pills = ["Matchmaking inteligent", "Alerte personalizate", "Transparență salarială", "Candidați verificați"] as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────
-
 export function HeroSection({ counts }: { counts?: HeroCounts }) {
   const stats = [
     { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Anunțuri", value: counts ? formatCount(counts.jobs) : "100+" },

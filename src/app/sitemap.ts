@@ -1,6 +1,8 @@
 import { createStaticClient } from "@/lib/supabase/static";
 import { getAllJobSlugs } from "@/services/jobs.service";
 import { getAllCompanySlugs } from "@/services/companies.service";
+import { getAllPublishedSlugs } from "@/services/blog.service";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import type { MetadataRoute } from "next";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -11,6 +13,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
     { url: `${BASE_URL}/jobs`, lastModified: new Date(), changeFrequency: "hourly", priority: 0.9 },
+    ...(isFeatureEnabled("blog")
+      ? [{ url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.8 }]
+      : []),
     { url: `${BASE_URL}/how-it-works`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${BASE_URL}/policy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];
@@ -37,5 +42,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* build-time fallback */ }
 
-  return [...staticPages, ...jobPages, ...companyPages];
+  let blogPages: MetadataRoute.Sitemap = [];
+  if (isFeatureEnabled("blog")) {
+    try {
+      const slugs = await getAllPublishedSlugs(supabase);
+      blogPages = slugs.map((slug) => ({
+        url: `${BASE_URL}/blog/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }));
+    } catch { /* build-time fallback */ }
+  }
+
+  return [...staticPages, ...jobPages, ...companyPages, ...blogPages];
 }

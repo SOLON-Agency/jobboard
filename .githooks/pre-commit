@@ -21,6 +21,39 @@
 
 set -e
 
+# ── Ensure npm/node are available ───────────────────────────────────────────
+# Git hooks run outside the user's interactive shell, so version managers
+# (nvm, fnm, Volta, Homebrew) are not automatically sourced. We try each in
+# order of popularity; the first that succeeds makes npm available.
+if ! command -v npm >/dev/null 2>&1; then
+  # nvm
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  # shellcheck disable=SC1090,SC1091
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use 2>/dev/null || true
+
+  # fnm
+  if ! command -v npm >/dev/null 2>&1 && command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --use-on-cd 2>/dev/null)" 2>/dev/null || true
+  fi
+  if ! command -v npm >/dev/null 2>&1 && [ -s "$HOME/.fnm/fnm" ]; then
+    eval "$($HOME/.fnm/fnm env 2>/dev/null)" 2>/dev/null || true
+  fi
+
+  # Volta
+  export PATH="$HOME/.volta/bin:$PATH"
+
+  # Homebrew (Apple Silicon + Intel)
+  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:$PATH"
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo ""
+  echo "❌  npm not found. Make sure Node.js is installed and on your PATH."
+  echo "   To bypass all checks: SKIP_BUILD=1 SKIP_DEPLOY=1 SKIP_MIGRATIONS=1 git commit ..."
+  echo ""
+  exit 1
+fi
+
 FUNCTIONS_DIR="supabase/functions"
 MIGRATIONS_DIR="supabase/migrations"
 DEPLOY_SCRIPT="scripts/deploy-edge-functions.js"

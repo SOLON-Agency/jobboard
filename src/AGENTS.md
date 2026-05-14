@@ -109,10 +109,7 @@ const invokeOpts = session?.access_token
 void supabase.functions.invoke("job-application", invokeOpts);
 ```
 
-Deployed Edge Functions: `send-email`, `job-application`†, `application-withdrawn`, `notifications`, `increase_company_engagement`.
-
-† `job-application` is invoked from three call sites but **its function folder is not in this repo**.
-  Add a TODO comment and ensure it is deployed separately.
+Deployed Edge Functions: `send-email`, `job-application`, `application-withdrawn`, `application-rejected`, `company-followers-notify`, `alerts-job-match`, `notifications`, `jobs-lifecycle`.
 
 ---
 

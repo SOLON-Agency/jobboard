@@ -15,7 +15,7 @@ The function rejects any request that does not carry:
 Authorization: Bearer <CRON_SECRET>
 ```
 
-This must **not** be a Supabase user JWT. Use the same `CRON_SECRET` as `scrape-jobs`.
+This must **not** be a Supabase user JWT. Use the `CRON_SECRET` secret configured in Supabase Edge Function secrets.
 
 ## Required Supabase secrets
 

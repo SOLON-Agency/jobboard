@@ -73,7 +73,7 @@ RESEND_API_KEY=re_xxxxxxxxxxxx
 RESEND_FROM="LegalJobs <noreply@yourdomain.com>"
 ```
 
-> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is **not** used by the Next.js app. It lives exclusively in Supabase Edge Function secrets for the `scrape-jobs` function. Never add it to `.env.local` or Vercel environment variables for the web app.
+> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is **not** used by the Next.js app. It lives exclusively in Supabase Edge Function secrets. Never add it to `.env.local` or Vercel environment variables for the web app.
 
 ### 3 — Apply database migrations
 
@@ -417,11 +417,11 @@ Set these secrets in the Supabase Dashboard → Edge Functions → Secrets:
 
 | Secret | Used by |
 |--------|---------|
-| `SUPABASE_SERVICE_ROLE_KEY` | `scrape-jobs` only |
-| `CRON_SECRET` | `scrape-jobs` — scheduler must send `Authorization: Bearer <value>` |
-| `RESEND_API_KEY` | Legacy (now unused; email is sent from Next.js) |
-| `RESEND_FROM` | Legacy |
-| `SITE_URL` | Legacy |
+| `SUPABASE_SERVICE_ROLE_KEY` | All notification Edge Functions (`notifications`, `job-application`, etc.) |
+| `CRON_SECRET` | `jobs-lifecycle` — scheduler must send `Authorization: Bearer <value>` |
+| `RESEND_API_KEY` | `send-email`, `notifications` |
+| `RESEND_FROM` | `send-email`, `notifications` |
+| `NEXT_PUBLIC_SITE_URL` | All Edge Functions that build email links |
 
 ---
 

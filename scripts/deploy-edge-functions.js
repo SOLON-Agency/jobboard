@@ -5,7 +5,7 @@
  *
  * Usage:
  *   node scripts/deploy-edge-functions.js                  # deploy all functions
- *   node scripts/deploy-edge-functions.js scrape-jobs      # deploy one function
+ *   node scripts/deploy-edge-functions.js jobs-lifecycle    # deploy one function
  *   node scripts/deploy-edge-functions.js fn-a fn-b        # deploy multiple functions
  *
  * Requires SUPABASE_ACCESS_TOKEN in the environment or in .env.local.
@@ -59,10 +59,13 @@ console.log(`\nDeploying ${slugs.length} Edge Function(s): ${slugs.join(', ')}\n
 const NO_VERIFY_JWT = new Set([
   'send-email',
   'notifications',
-  'increase_company_engagement',
   'job-application',
   'application-withdrawn',
+  'application-rejected',
+  'company-followers-notify',
+  'alerts-job-match',
   'jobs-lifecycle',
+  'newsletter-notify',
 ]);
 
 // ---- Deploy ----------------------------------------------------------------

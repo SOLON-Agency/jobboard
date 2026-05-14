@@ -19,7 +19,6 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import CloudQueueIcon from "@mui/icons-material/CloudQueue";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
@@ -71,13 +70,6 @@ export function EdgeFunctionsClient() {
   const [applications, setApplications] = useState<ApplicationWithJob[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  const [engCompanySource, setEngCompanySource] = useState<IdSource>("list");
-  const [engCompanyId, setEngCompanyId] = useState("");
-  const [engManualCompanyId, setEngManualCompanyId] = useState("");
-  const [engPending, setEngPending] = useState(false);
-  const [engResult, setEngResult] = useState<string | null>(null);
-  const [engSeverity, setEngSeverity] = useState<"success" | "error">("success");
-
   const [jobAppSource, setJobAppSource] = useState<IdSource>("list");
   const [jobAppJobId, setJobAppJobId] = useState("");
   const [jobAppManualJobId, setJobAppManualJobId] = useState("");
@@ -121,10 +113,6 @@ export function EdgeFunctionsClient() {
       ]);
       setCompanies(coRows);
       setApplications(apps);
-      setEngCompanyId((prev) => {
-        if (prev && coRows.some((c) => c.id === prev)) return prev;
-        return coRows[0]?.id ?? "";
-      });
       setSendCompanyId((prev) => {
         if (prev && coRows.some((c) => c.id === prev)) return prev;
         return coRows[0]?.id ?? "";
@@ -151,38 +139,9 @@ export function EdgeFunctionsClient() {
     if (user?.email) setSendTo(user.email);
   }, [user?.email]);
 
-  const resolvedEngCompanyId =
-    engCompanySource === "list" ? engCompanyId : engManualCompanyId.trim();
   const resolvedJobId = jobAppSource === "list" ? jobAppJobId : jobAppManualJobId.trim();
   const resolvedSendCompanyId =
     sendCompanySource === "list" ? sendCompanyId : sendManualCompanyId.trim();
-
-  const handleIncreaseEngagement = async () => {
-    if (!resolvedEngCompanyId) {
-      setEngSeverity("error");
-      setEngResult("Introdu sau selectează un company_id.");
-      return;
-    }
-    setEngPending(true);
-    setEngResult(null);
-    try {
-      const { data, error } = await supabase.functions.invoke("increase_company_engagement", {
-        body: { company_id: resolvedEngCompanyId },
-      });
-      if (error) {
-        setEngSeverity("error");
-        setEngResult(formatInvokeResult(data, error));
-        return;
-      }
-      setEngSeverity("success");
-      setEngResult(formatInvokeResult(data, null));
-    } catch (e) {
-      setEngSeverity("error");
-      setEngResult(formatInvokeResult(null, e instanceof Error ? e : new Error(String(e))));
-    } finally {
-      setEngPending(false);
-    }
-  };
 
   const handleJobApplication = async () => {
     if (!resolvedJobId) {
@@ -399,101 +358,6 @@ export function EdgeFunctionsClient() {
       ) : null}
 
       <Stack spacing={3} sx={{ maxWidth: 720 }}>
-        {/* increase_company_engagement */}
-        <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
-          <Stack spacing={2}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <CloudQueueIcon color="primary" aria-hidden />
-              <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-                increase_company_engagement
-              </Typography>
-            </Stack>
-            <Typography variant="body2" color="text.secondary">
-              Body: <code>{"{ company_id }"}</code>. Necesită membru al companiei.
-            </Typography>
-            <FormLabel id="eng-company-source-label">Sursă parametru</FormLabel>
-            <ToggleButtonGroup
-              value={engCompanySource}
-              exclusive
-              onChange={(_e, v: IdSource | null) => v && setEngCompanySource(v)}
-              aria-labelledby="eng-company-source-label"
-              size="small"
-              sx={{ alignSelf: "flex-start" }}
-            >
-              <ToggleButton value="list" aria-label="Companie din listă">
-                Din listă
-              </ToggleButton>
-              <ToggleButton value="manual" aria-label="UUID manual">
-                UUID manual
-              </ToggleButton>
-            </ToggleButtonGroup>
-            {engCompanySource === "list" ? (
-              companies.length === 0 ? (
-                <Alert severity="warning" role="status">
-                  Nu ai companii. Folosește UUID manual sau creează o companie.
-                </Alert>
-              ) : (
-                <FormControl fullWidth>
-                  <InputLabel id="eng-co-label">company_id (companie)</InputLabel>
-                  <Select<string>
-                    labelId="eng-co-label"
-                    label="company_id (companie)"
-                    value={engCompanyId}
-                    onChange={(e: SelectChangeEvent<string>) => setEngCompanyId(e.target.value)}
-                    disabled={engPending}
-                  >
-                    {companies.map((c) => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {c.name} — {c.id}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )
-            ) : (
-              <TextField
-                label="company_id (UUID)"
-                value={engManualCompanyId}
-                onChange={(e) => setEngManualCompanyId(e.target.value)}
-                fullWidth
-                disabled={engPending}
-                inputProps={{ "aria-label": "company_id manual" }}
-              />
-            )}
-            <Button
-              type="button"
-              variant="contained"
-              size="large"
-              onClick={() => void handleIncreaseEngagement()}
-              disabled={engPending || !resolvedEngCompanyId}
-              sx={{ minHeight: 44, alignSelf: "flex-start" }}
-            >
-              {engPending ? "Se trimite…" : "Invocă"}
-            </Button>
-            {engResult ? (
-              <Alert severity={engSeverity} role="status" onClose={() => setEngResult(null)}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Răspuns
-                </Typography>
-                <Box
-                  component="pre"
-                  sx={{
-                    m: 0,
-                    p: 1,
-                    bgcolor: "action.hover",
-                    borderRadius: 1,
-                    fontSize: "0.75rem",
-                    overflow: "auto",
-                    maxHeight: 240,
-                  }}
-                >
-                  {engResult}
-                </Box>
-              </Alert>
-            ) : null}
-          </Stack>
-        </Paper>
-
         {/* job-application */}
         <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2 }}>
           <Stack spacing={2}>

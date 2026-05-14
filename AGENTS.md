@@ -120,10 +120,14 @@ void supabase.functions
 |----------|--------|------|-------|
 | `send-email` | **Active** | user JWT | Profile / company / custom transactional HTML emails under RLS. |
 | `job-application` | **Active** | user JWT (applicant) | Post-apply emails via `notifications` + Resend templates. |
+| `application-withdrawn` | **Active** | user JWT (applicant) | Notifies job poster when candidate withdraws. |
+| `application-rejected` | **Active** | user JWT (recruiter) | Notifies candidate when application is rejected. |
+| `company-followers-notify` | **Active** | user JWT (recruiter) | Notifies company followers on profile update or new job. |
+| `alerts-job-match` | **Active** | user JWT (recruiter) | Notifies alert owners when a matching job is published. |
 | `notifications` | **Active** | user JWT **or** service-role key | Dispatcher; HTML body or Resend `resend_template`; uses service role for `auth.admin` + preferences. |
-| `scrape-jobs` | **Active** (Supabase-only) | `CRON_SECRET` bearer | Job scraper; uses service role key; not in this repo. |
+| `jobs-lifecycle` | **Active** | `CRON_SECRET` bearer | Daily cron; auto-publishes drafts and expires overdue jobs; notifies poster. |
 
-`send-email`, `notifications`, and `job-application` use `verify_jwt = false` and validate auth inside the function.
+All functions use `verify_jwt = false` and validate auth inside the function.
 
 #### `notifications` edge function
 
@@ -176,8 +180,8 @@ await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notifications`, {
 | `NEXT_PUBLIC_SITE_URL` | Vercel / `.env.local` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
 | `RESEND_API_KEY` | **Supabase Edge secrets only** | Transactional email via Resend (`send-email` function) |
 | `RESEND_FROM` | **Supabase Edge secrets only** | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | `scrape-jobs`, internal calls from `notifications` / `job-application`; **never** add to Next.js / Vercel env |
-| `CRON_SECRET` | **Supabase Edge secrets only** | Bearer token required by `scrape-jobs` to reject unauthorised calls |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | Internal calls from `notifications` / `job-application` and other notification fns; **never** add to Next.js / Vercel env |
+| `CRON_SECRET` | **Supabase Edge secrets only** | Bearer token required by `jobs-lifecycle` to reject unauthorised scheduler calls |
 
 Never commit secrets. Add new server-only variables to `.env.example` with a placeholder value and document them in this table.
 
@@ -422,7 +426,7 @@ Add tests for non-trivial logic (utils, services where mockable, critical UI beh
 
 1. **Scope:** Change only what the task requires; match surrounding patterns (imports, error handling, MUI usage).
 2. **Auth:** Any new `/dashboard` route is already protected by middleware; still validate permissions in RLS and/or server code where data is sensitive.
-3. **Secrets:** Supabase service-role key goes **only in Supabase Edge secrets** (scraper). Resend keys go in the app host (Vercel) for the email API routes. **Never** add `SUPABASE_SERVICE_ROLE_KEY` to the Next.js environment.
+3. **Secrets:** Supabase service-role key goes **only in Supabase Edge secrets**. Resend keys also go in Supabase Edge secrets (used by `send-email` and `notifications`). **Never** add `SUPABASE_SERVICE_ROLE_KEY` to the Next.js environment.
 4. **Migrations:** Prefer SQL migrations under `supabase/migrations/` for schema changes; keep RLS policies in mind. Use `SECURITY DEFINER` RPCs for privileged reads that must remain under user-session auth.
 5. **Accessibility:** Run through the WCAG AAA checklist in this document before considering any UI task complete.
 6. **Responsiveness:** Verify all four breakpoints (`xs` / `sm` / `md` / `lg`) before considering any UI task complete.

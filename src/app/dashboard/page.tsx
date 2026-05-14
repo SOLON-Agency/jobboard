@@ -94,8 +94,8 @@ export default async function DashboardPage() {
   // Applications received and form responses require job/form IDs first
   const [appsReceivedRes, formResponsesRes] = await Promise.all([
     jobIds.length > 0
-      ? supabase.from("applications").select("applied_at, status").in("job_id", jobIds)
-      : Promise.resolve({ data: [] as { applied_at: string; status: string }[] }),
+      ? supabase.from("applications").select("applied_at, status, withdrawn_at").in("job_id", jobIds)
+      : Promise.resolve({ data: [] as { applied_at: string; status: string; withdrawn_at: string | null }[] }),
 
     formIds.length > 0
       ? supabase.from("form_responses").select("created_at").in("form_id", formIds)
@@ -158,6 +158,7 @@ export default async function DashboardPage() {
     month: m.month,
     count: m.count,
   }));
+  const applicationsWithdrawn = groupByMonth(applicationsReceived.map((a) => a.withdrawn_at));
 
   // Profile completeness: name + headline + avatar
   const profileComplete = !!(profile?.full_name && profile?.headline && profile?.avatar_url);
@@ -169,6 +170,7 @@ export default async function DashboardPage() {
   const stats: DashboardStats = {
     profileName: profile?.full_name ?? null,
     profileComplete,
+    profileCompleteness: profile?.completeness ?? 0,
     profileHasAvatar,
     profileHasBio,
     profileHasExperience,
@@ -185,6 +187,7 @@ export default async function DashboardPage() {
     companyVisits: companyIds.length > 0 ? companyVisits : undefined,
     companyEngages: companyIds.length > 0 ? companyEngages : undefined,
     hasAlerts,
+    applicationsWithdrawn: applicationsWithdrawn.length,
     hasRejectedCandidate,
     hasShortlistedCandidate,
     hasArchived,

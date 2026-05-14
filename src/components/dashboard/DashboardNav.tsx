@@ -34,6 +34,7 @@ import CloudQueueIcon from "@mui/icons-material/CloudQueue";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
+import ArticleIcon from "@mui/icons-material/Article";
 import appSettings from "@/config/app.settings.json";
 import { useRole } from "@/hooks/useRole";
 
@@ -153,6 +154,9 @@ function useNavItems(): NavItem[] {
       { label: "Utilizatori", href: "/dashboard/admin/users", icon: <GroupOutlinedIcon /> },
       { label: "Competențe", href: "/dashboard/admin/skills", icon: <PsychologyOutlinedIcon /> }
     );
+    if (appSettings.features.blog) {
+      items.push({ label: "Blog", href: "/dashboard/blog", icon: <ArticleIcon /> });
+    }
   }
 
   return items;

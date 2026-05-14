@@ -5,6 +5,7 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { generateWebSiteJsonLd } from "@/lib/seo";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import "./globals.css";
 import appSettings from "@/config/app.settings.json";
 
@@ -17,11 +18,22 @@ const saira = Saira({
   variable: "--font-saira",
 });
 
+const SITE_URL_META = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
   title: {
     default: `${appSettings.name} — Platformă de carieră juridică`,
     template: `%s | ${appSettings.name}`,
   },
+  ...(isFeatureEnabled("blog")
+    ? {
+        alternates: {
+          types: {
+            "application/rss+xml": `${SITE_URL_META}/blog/rss.xml`,
+          },
+        },
+      }
+    : {}),
   description:
     "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură, aplică direct și gestionează-ți cariera.",
   metadataBase: new URL(
@@ -43,7 +55,7 @@ export const metadata: Metadata = {
   },
 };
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const SITE_URL = SITE_URL_META;
 
 const webSiteJsonLd = generateWebSiteJsonLd();
 const rootOrgJsonLd = {

@@ -14,7 +14,8 @@
     "allowEmailNotificationOptOut": false,
     "favourites": false,
     "archiveJobs": true,
-    "edgeFunctions": true
+    "edgeFunctions": true,
+    "blog": true
   },
   "brand": {
     "primary": "#03170C",
