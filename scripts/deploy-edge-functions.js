@@ -8,15 +8,15 @@
  *   node scripts/deploy-edge-functions.js jobs-lifecycle    # deploy one function
  *   node scripts/deploy-edge-functions.js fn-a fn-b        # deploy multiple functions
  *
- * Requires SUPABASE_ACCESS_TOKEN in the environment or in .env.local.
+ * Requires SUPABASE_ACCESS_TOKEN in the environment or in .env.
  */
 
 const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-// ---- Load .env.local -------------------------------------------------------
-require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+// ---- Load .env --------------------------------------------------------------
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const PROJECT_REF = 'uccivcdtfpevtykirkuw';
 const CLI = path.resolve(__dirname, '../node_modules/.bin/supabase');
@@ -28,7 +28,7 @@ if (!token) {
   console.warn(
     '\n⚠️  SUPABASE_ACCESS_TOKEN is not set.\n' +
     '   Generate one at: https://supabase.com/dashboard/account/tokens\n' +
-    '   Then add it to .env.local:\n' +
+    '   Then add it to .env:\n' +
     '     SUPABASE_ACCESS_TOKEN=sbp_xxxxxxxxxxxxxxxxxxxx\n'
   );
   process.exit(1);

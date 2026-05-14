@@ -10,7 +10,7 @@
  *   node scripts/push-migrations.js            # push all un-applied migrations
  *   node scripts/push-migrations.js --dry-run  # show what would be pushed
  *
- * Required env vars (loaded from .env.local if present):
+ * Required env vars (loaded from .env if present):
  *   SUPABASE_ACCESS_TOKEN  — personal access token
  *                            https://supabase.com/dashboard/account/tokens
  *   SUPABASE_DB_PASSWORD   — database password for the linked project
@@ -24,7 +24,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const PROJECT_REF = 'uccivcdtfpevtykirkuw';
 const CLI = path.resolve(__dirname, '../node_modules/.bin/supabase');
@@ -47,7 +47,7 @@ if (!accessToken) {
   console.warn(
     '\n⚠️  SUPABASE_ACCESS_TOKEN is not set.\n' +
       '   Generate one at: https://supabase.com/dashboard/account/tokens\n' +
-      '   Then add it to .env.local:\n' +
+      '   Then add it to .env:\n' +
       '     SUPABASE_ACCESS_TOKEN=sbp_xxxxxxxxxxxxxxxxxxxx\n' +
       '   (To bypass this check run: SKIP_MIGRATIONS=1 git commit …)\n'
   );
@@ -59,7 +59,7 @@ if (!dbPassword) {
   console.warn(
     '\n⚠️  SUPABASE_DB_PASSWORD is not set.\n' +
       '   Copy it from: Supabase Dashboard → Project Settings → Database → Connection string\n' +
-      '   Then add it to .env.local:\n' +
+      '   Then add it to .env:\n' +
       '     SUPABASE_DB_PASSWORD=your-db-password\n' +
       '   (To bypass this check run: SKIP_MIGRATIONS=1 git commit …)\n'
   );

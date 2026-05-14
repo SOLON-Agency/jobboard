@@ -69,7 +69,7 @@ Check the project state to adapt commands and decide which steps you can skip:
 - Which lockfile is present (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lockb`)? → Adapt all package manager commands accordingly (`pnpm add`, `npm install`, `yarn add`, `bun add`).
 - Is `flags` in `package.json`? → Skip install (step 1)
 - Does `.vercel/` directory exist? → Project is linked, skip `vercel link` in step 2
-- Does `.env.local` contain `FLAGS=`? → Env vars already pulled, skip step 3
+- Does `.env` contain `FLAGS=`? → Env vars already pulled, skip step 3
 - Does `flags.ts` (or `lib/flags.ts`, `src/flags.ts`) exist? → Add to it rather than creating from scratch (step 4)
 - Is `@vercel/toolbar` in `package.json`? → Skip toolbar setup (step 6)
 - Does `app/.well-known/vercel/flags/route.ts` exist? → Flags Explorer already set up, skip step 7
@@ -87,7 +87,7 @@ Check the project state to adapt commands and decide which steps you can skip:
 
    Before running `vercel flags add`, verify the project is linked to Vercel. Check for a `.vercel` directory in the project root. If it doesn't exist, run `vercel link` first.
 
-3. **Pull environment variables**: Run `vercel env pull` to write `FLAGS` and `FLAGS_SECRET` to `.env.local`. Without these environment variables, `vercelAdapter()` will not be able to evaluate flags. This step is **mandatory** after creating a flag.
+3. **Pull environment variables**: Run `npm run vercel:env` (or `vercel env pull` merged into `.env`) so `FLAGS` and `FLAGS_SECRET` exist in `.env`. Without these environment variables, `vercelAdapter()` will not be able to evaluate flags. This step is **mandatory** after creating a flag.
 
 4. **Declare the flag in code**: Add it to `flags.ts` (or create the file if it doesn't exist) using `vercelAdapter()`:
    ```ts

@@ -13,7 +13,6 @@
     "notifications": true,
     "smsNotifications": false,
     "allowEmailNotificationOptOut": false,
-    "favourites": false,
     "archiveJobs": true,
     "edgeFunctions": true,
     "blog": true,

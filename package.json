@@ -15,6 +15,7 @@
     "e2e:smoke": "node e2e/smoke.js",
     "e2e:full": "node e2e/full.js",
     "e2e": "node e2e/smoke.js && node e2e/full.js",
+    "vercel:env": "npx --yes vercel@latest env pull .env.vercel.pull.tmp --yes && node scripts/merge-vercel-env.cjs .env.vercel.pull.tmp && rm -f .env.vercel.pull.tmp",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {

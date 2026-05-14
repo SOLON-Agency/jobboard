@@ -6,10 +6,10 @@
 #   git config core.hooksPath .githooks
 #
 # Steps:
-#   0. `vercel env pull` → `.env.vercel.flags` — sync FLAGS / FLAGS_SECRET (and other
-#      development env vars) from the linked Vercel project. Requires `vercel link`
-#      and a logged-in CLI. Next.js still reads `.env.local` first; merge FLAGS from
-#      `.env.vercel.flags` into `.env.local` when needed, or load both (see dotenv-cli).
+#   0. `vercel env pull` → merge into `.env` — sync FLAGS / FLAGS_SECRET (and
+#      other Vercel development env vars) without removing locally-only keys.
+#      Requires `vercel link` and a logged-in CLI. Use the same flow manually:
+#      `npm run vercel:env`.
 #   1. `next build` — fail fast on TypeScript / build errors.
 #   2. Deploy Supabase Edge Functions that changed under `supabase/functions/`.
 #      If `_shared/` changed, redeploy everything.
@@ -66,7 +66,7 @@ MIGRATIONS_DIR="supabase/migrations"
 DEPLOY_SCRIPT="scripts/deploy-edge-functions.js"
 MIGRATE_SCRIPT="scripts/push-migrations.js"
 
-# ── 0. Vercel env pull (FLAGS SDK / dashboard flags) ─────────────────────────
+# ── 0. Vercel env pull → .env (merge) ────────────────────────────────────────
 
 if [ "${SKIP_VERCEL_ENV_PULL:-0}" = "1" ]; then
   echo "⚠️  SKIP_VERCEL_ENV_PULL=1 — skipping Vercel env pull."
@@ -75,13 +75,18 @@ else
     echo "ℹ️  No .vercel/project.json — skipping Vercel env pull (run: npx vercel link)."
   else
     echo ""
-    echo "🚩  Pulling Vercel development env → .env.vercel.flags ..."
+    echo "🚩  Pulling Vercel development env → merging into .env ..."
     echo ""
-    if npx --yes vercel@latest env pull .env.vercel.flags --yes; then
+    tmp_env=".env.vercel.pull.tmp"
+    rm -f "$tmp_env"
+    if npx --yes vercel@latest env pull "$tmp_env" --yes; then
+      node scripts/merge-vercel-env.cjs "$tmp_env"
+      rm -f "$tmp_env"
       echo ""
-      echo "✅ Vercel env updated (.env.vercel.flags)."
+      echo "✅ Vercel env merged into .env."
       echo ""
     else
+      rm -f "$tmp_env"
       echo ""
       echo "⚠️  vercel env pull failed (not logged in, or network). Continuing commit."
       echo "   Fix: npx vercel login   or   SKIP_VERCEL_ENV_PULL=1 git commit ..."

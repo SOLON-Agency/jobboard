@@ -60,20 +60,27 @@ npm install
 
 ### 2 — Configure environment variables
 
-Create `.env.local` (never commit this file):
+Use a **single local file**: **`.env`** (gitignored). Remove any legacy **`.env.vercel.flags`** (merge is into `.env` only).
 
-```bash
-# ── Required ──────────────────────────────────────────────
-NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+1. Copy the template:
 
-# ── Transactional email (Resend) ──────────────────────────
-RESEND_API_KEY=re_xxxxxxxxxxxx
-RESEND_FROM="LegalJobs <noreply@yourdomain.com>"
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is **not** used by the Next.js app. It lives exclusively in Supabase Edge Function secrets. Never add it to `.env.local` or Vercel environment variables for the web app.
+2. Fill in Supabase URL, anon key, site URL, and (for CLI scripts) `SUPABASE_ACCESS_TOKEN` / `SUPABASE_DB_PASSWORD`.
+
+3. If the project is linked to Vercel (`npx vercel link`), merge dashboard env into `.env` **without** overwriting the keys above:
+
+   ```bash
+   npm run vercel:env
+   ```
+
+   This runs `vercel env pull` to a temp file, then merges into `.env`. The pre-commit hook uses the same merge when you commit.
+
+`dotenv` in **scripts** and **E2E** loads **`.env`**.
+
+> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is **not** used by the Next.js app. It lives exclusively in Supabase Edge Function secrets. Never add it to `.env` or Vercel environment variables for the web app.
 
 ### 3 — Apply database migrations
 

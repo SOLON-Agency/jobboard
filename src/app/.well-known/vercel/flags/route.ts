@@ -1,9 +1,8 @@
-import { createFlagsDiscoveryEndpoint } from "flags/next";
-import { getProviderData } from "@flags-sdk/vercel";
+import { createFlagsDiscoveryEndpoint, getProviderData } from "flags/next";
 import type { NextRequest } from "next/server";
-import { favouritesFlag } from "@/flags";
+import * as flags from "@/flags";
 
 export const GET = createFlagsDiscoveryEndpoint(async (request: NextRequest) => {
   void request;
-  return getProviderData({ favouritesFlag });
+  return getProviderData(flags);
 });

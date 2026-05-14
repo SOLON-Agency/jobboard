@@ -213,12 +213,16 @@ Users can override per type per channel via `profiles.notification_preferences`.
 
 ### Environment variables
 
+Local development uses **one file**: **`.env`** (gitignored). Copy **`.env.example`** → `.env` and run **`npm run vercel:env`** when the repo is linked to Vercel to merge `FLAGS` / `FLAGS_SECRET` (and other pulled keys) without erasing local-only variables. See README “Getting started”. Do not use `.env.vercel.flags`.
+
 | Variable | Where set | Purpose |
 |----------|-----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Vercel / `.env.local` | Supabase project URL (public) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env.local` | Browser + server anon client (public) |
-| `NEXT_PUBLIC_SITE_URL` | Vercel / `.env.local` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Vercel / `.env.local` | VAPID public key sent to browser for Web Push subscription |
+| `FLAGS` | Vercel → merged into **`.env`** via `npm run vercel:env` | Vercel Flags SDK (`vercelAdapter`) |
+| `FLAGS_SECRET` | Vercel → **`.env`** (same) | Flags SDK signing / Toolbar |
+| `NEXT_PUBLIC_SUPABASE_URL` | Vercel / `.env` | Supabase project URL (public) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env` | Browser + server anon client (public) |
+| `NEXT_PUBLIC_SITE_URL` | Vercel / `.env` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Vercel / `.env` | VAPID public key sent to browser for Web Push subscription |
 | `RESEND_API_KEY` | **Supabase Edge secrets only** | Transactional email via Resend (`send-email` function) |
 | `RESEND_FROM` | **Supabase Edge secrets only** | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |
 | `VAPID_PRIVATE_KEY` | **Supabase Edge secrets only** | VAPID private key used by `send-browser` to sign push payloads |

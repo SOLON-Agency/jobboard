@@ -7,9 +7,7 @@ export type FeatureFlag = keyof typeof appSettings.features;
  * Returns true when the given feature flag is enabled in app.settings.json.
  * Safe to call in both Server and Client Components.
  *
- * Note: **`favourites`** — `isFeatureEnabled("favourites")` reads `features.favourites` in JSON,
- * which is the same boolean wired as `defaultValue` on the Vercel flag `favourites` in `src/flags.ts`.
- * Runtime resolution with the adapter uses `getFavouritesEnabled()` / `useFavouritesFeature()`.
+ * Favourites are not included here — use `getFavouritesEnabled()` / `useFavouritesFeature()` (`src/flags.ts`).
  */
 export function isFeatureEnabled(flag: FeatureFlag): boolean {
   return Boolean(appSettings.features[flag]);

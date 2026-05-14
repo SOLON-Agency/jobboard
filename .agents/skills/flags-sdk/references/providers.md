@@ -33,7 +33,7 @@ pnpm i flags @flags-sdk/vercel
 Before running any `vercel flags` command, verify the project is linked to Vercel. Check for a `.vercel` directory in the project root. If it doesn't exist, run `vercel link` first.
 
 1. Create a flag in the Vercel dashboard or via CLI: `vercel flags add <flag-key> --kind boolean --description "<description>"`
-2. Pull env vars: you **must** run `vercel env pull` to write `FLAGS` and `FLAGS_SECRET` to `.env.local`. Without these environment variables, `vercelAdapter()` will not be able to evaluate flags.
+2. Pull env vars: you **must** merge Vercel env into `.env` (e.g. `npm run vercel:env`) so `FLAGS` and `FLAGS_SECRET` are set. Without these environment variables, `vercelAdapter()` will not be able to evaluate flags.
 3. Declare the flag:
 
 ```ts
