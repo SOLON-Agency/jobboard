@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import type { DashboardStats } from "@/components/dashboard/DashboardContent";
 import appSettings from "@/config/app.settings.json";
+import { getFavouritesEnabled } from "@/lib/favourites-feature";
 
 // Groups an array of ISO date strings into monthly buckets for the last N months.
 function groupByMonth(dates: (string | null)[], months = 6): { month: string; count: number }[] {
@@ -32,6 +33,8 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const favouritesEnabled = await getFavouritesEnabled();
+
   // ── Fetch user context ────────────────────────────────────────────────────
   const [{ data: profile }, { data: companyUsers }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -59,7 +62,9 @@ export default async function DashboardPage() {
 
     supabase.from("applications").select("applied_at, status, is_archived").eq("user_id", user.id),
 
-    supabase.from("company_favourites").select("company_id", { count: "exact", head: true }).eq("user_id", user.id),
+    favouritesEnabled
+      ? supabase.from("company_favourites").select("company_id", { count: "exact", head: true }).eq("user_id", user.id)
+      : Promise.resolve({ count: 0 } as { count: number | null }),
 
     companyIds.length > 0
       ? supabase.from("forms").select("id, status").in("company_id", companyIds)

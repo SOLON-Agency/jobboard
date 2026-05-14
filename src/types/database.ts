@@ -14,104 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      blog_posts: {
-        Row: {
-          id: string
-          slug: string
-          title: string
-          excerpt: string | null
-          cover_image_url: string | null
-          content_markdown: string
-          status: string
-          published_at: string | null
-          created_at: string
-          updated_at: string
-          notified_at: string | null
-          author_id: string | null
-          seo_title: string | null
-          seo_description: string | null
-          reading_time_minutes: number | null
-          tags: string[]
-          canonical_url: string | null
-        }
-        Insert: {
-          id?: string
-          slug: string
-          title: string
-          excerpt?: string | null
-          cover_image_url?: string | null
-          content_markdown: string
-          status?: string
-          published_at?: string | null
-          created_at?: string
-          updated_at?: string
-          notified_at?: string | null
-          author_id?: string | null
-          seo_title?: string | null
-          seo_description?: string | null
-          reading_time_minutes?: number | null
-          tags?: string[]
-          canonical_url?: string | null
-        }
-        Update: {
-          id?: string
-          slug?: string
-          title?: string
-          excerpt?: string | null
-          cover_image_url?: string | null
-          content_markdown?: string
-          status?: string
-          published_at?: string | null
-          created_at?: string
-          updated_at?: string
-          notified_at?: string | null
-          author_id?: string | null
-          seo_title?: string | null
-          seo_description?: string | null
-          reading_time_minutes?: number | null
-          tags?: string[]
-          canonical_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "blog_posts_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      newsletter_subscribers: {
-        Row: {
-          id: string
-          email: string
-          is_active: boolean
-          source: string | null
-          created_at: string
-          updated_at: string
-          unsubscribed_at: string | null
-        }
-        Insert: {
-          id?: string
-          email: string
-          is_active?: boolean
-          source?: string | null
-          created_at?: string
-          updated_at?: string
-          unsubscribed_at?: string | null
-        }
-        Update: {
-          id?: string
-          email?: string
-          is_active?: boolean
-          source?: string | null
-          created_at?: string
-          updated_at?: string
-          unsubscribed_at?: string | null
-        }
-        Relationships: []
-      }
       alerts: {
         Row: {
           archived_at: string | null
@@ -148,6 +50,54 @@ export type Database = {
           last_sent_at?: string | null
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      app_release_announcements: {
+        Row: {
+          body_html: string
+          created_at: string
+          created_by: string | null
+          draft: boolean
+          id: string
+          sent_at: string | null
+          title: string
+          version: string
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          created_by?: string | null
+          draft?: boolean
+          id?: string
+          sent_at?: string | null
+          title: string
+          version: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          created_by?: string | null
+          draft?: boolean
+          id?: string
+          sent_at?: string | null
+          title?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      app_state: {
+        Row: {
+          key: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          value?: string | null
         }
         Relationships: []
       }
@@ -200,6 +150,74 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "job_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          canonical_url: string | null
+          content_markdown: string
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          notified_at: string | null
+          published_at: string | null
+          reading_time_minutes: number | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          canonical_url?: string | null
+          content_markdown: string
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          notified_at?: string | null
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          canonical_url?: string | null
+          content_markdown?: string
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          notified_at?: string | null
+          published_at?: string | null
+          reading_time_minutes?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -276,6 +294,38 @@ export type Database = {
         }
         Relationships: []
       }
+      company_claim_nudge_log: {
+        Row: {
+          company_id: string | null
+          id: string
+          sent_at: string
+          sent_to: string | null
+          status: string
+        }
+        Insert: {
+          company_id?: string | null
+          id?: string
+          sent_at?: string
+          sent_to?: string | null
+          status?: string
+        }
+        Update: {
+          company_id?: string | null
+          id?: string
+          sent_at?: string
+          sent_to?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_claim_nudge_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_claim_tokens: {
         Row: {
           code_hash: string
@@ -317,38 +367,6 @@ export type Database = {
           },
         ]
       }
-      company_claim_nudge_log: {
-        Row: {
-          company_id: string | null
-          id: string
-          sent_at: string
-          sent_to: string | null
-          status: string
-        }
-        Insert: {
-          company_id?: string | null
-          id?: string
-          sent_at?: string
-          sent_to?: string | null
-          status?: string
-        }
-        Update: {
-          company_id?: string | null
-          id?: string
-          sent_at?: string
-          sent_to?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_claim_nudge_log_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       company_favourites: {
         Row: {
           company_id: string
@@ -371,6 +389,45 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_skills: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          skill_id: string
+          sort_order: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          skill_id: string
+          sort_order?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          skill_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_skills_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
             referencedColumns: ["id"]
           },
         ]
@@ -833,6 +890,36 @@ export type Database = {
           },
         ]
       }
+      newsletter_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          source: string | null
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          source?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          source?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -1009,6 +1096,8 @@ export type Database = {
           id: string
           is_public: boolean
           location: string | null
+          notification_preferences: Json
+          notifications_browser: boolean
           notifications_email: boolean
           notifications_sms: boolean
           phone: string | null
@@ -1028,6 +1117,8 @@ export type Database = {
           id: string
           is_public?: boolean
           location?: string | null
+          notification_preferences?: Json
+          notifications_browser?: boolean
           notifications_email?: boolean
           notifications_sms?: boolean
           phone?: string | null
@@ -1047,12 +1138,44 @@ export type Database = {
           id?: string
           is_public?: boolean
           location?: string | null
+          notification_preferences?: Json
+          notifications_browser?: boolean
           notifications_email?: boolean
           notifications_sms?: boolean
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           slug?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1079,18 +1202,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_company: {
-        Args: { p_token: string; p_code: string }
-        Returns: { company_id: string; slug: string }[]
-      }
-      issue_company_claim_token: {
-        Args: { p_company_id: string }
-        Returns: { code: string; token: string }[]
-      }
-      verify_claim_code: {
-        Args: { p_token: string; p_code: string }
-        Returns: string
-      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -1146,6 +1257,13 @@ export type Database = {
         Args: { p_form_id: string; p_job_listing_id: string }
         Returns: boolean
       }
+      claim_company: {
+        Args: { p_code: string; p_token: string }
+        Returns: {
+          company_id: string
+          slug: string
+        }[]
+      }
       company_has_no_owner: { Args: { p_company_id: string }; Returns: boolean }
       increment_company_engages: {
         Args: { p_company_id: string }
@@ -1162,6 +1280,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      issue_company_claim_token: {
+        Args: { p_company_id: string }
+        Returns: {
+          code: string
+          token: string
+        }[]
+      }
       job_poster_recipient: {
         Args: { p_job_id: string }
         Returns: {
@@ -1173,6 +1298,10 @@ export type Database = {
       recompute_profile_completeness: {
         Args: { p_user_id: string }
         Returns: number
+      }
+      verify_claim_code: {
+        Args: { p_code: string; p_token: string }
+        Returns: string
       }
     }
     Enums: {
@@ -1328,4 +1457,4 @@ export const Constants = {
       user_role: ["user", "employer", "premium_employer", "admin"],
     },
   },
-} as const;
+} as const

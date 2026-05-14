@@ -20,6 +20,8 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
+import type { CompanySkillWithName } from "@/services/skills.service";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
@@ -29,6 +31,8 @@ import {
   getCompanyWithJobs,
   getAllCompanySlugs,
 } from "@/services/companies.service";
+import { getCompanySkills } from "@/services/skills.service";
+import appSettings from "@/config/app.settings.json";
 import { generateOrganizationJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import { CompanyDescription } from "@/components/companies/CompanyDescription";
@@ -135,6 +139,7 @@ export default async function CompanyPage({ params }: Props) {
   const supabase = await createClient();
 
   let company, jobs, totalJobCount: number;
+  let companySkills: CompanySkillWithName[] = [];
   try {
     const result = await getCompanyWithJobs(supabase, slug);
     company = result.company;
@@ -142,6 +147,11 @@ export default async function CompanyPage({ params }: Props) {
     totalJobCount = result.totalJobCount;
   } catch {
     notFound();
+  }
+
+  const matchmakingEnabled = (appSettings.features as { matchmaking?: { enabled?: boolean } }).matchmaking?.enabled ?? false;
+  if (matchmakingEnabled) {
+    companySkills = await getCompanySkills(supabase, company.id).catch(() => []);
   }
 
   const jsonLd = generateOrganizationJsonLd(company);
@@ -311,6 +321,31 @@ export default async function CompanyPage({ params }: Props) {
                   description={company.description}
                   companyId={company.id}
                 />
+              </Paper>
+            )}
+
+            {/* Competencies block */}
+            {companySkills.length > 0 && (
+              <Paper
+                sx={{ p: { xs: 2.5, md: 3 }, mt: 3, borderRadius: 2, border: "1px solid rgba(3, 23, 12, 0.1)" }}
+              >
+                <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1.5 }}>
+                  <PsychologyOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                  <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
+                    Competențe
+                  </Typography>
+                </Stack>
+                <Stack direction="row" flexWrap="wrap" gap={0.75}>
+                  {companySkills.map((cs) => (
+                    <Chip
+                      key={cs.id}
+                      label={cs.skill.name}
+                      size="small"
+                      variant="outlined"
+                      sx={{ height: 24, fontSize: "0.72rem", fontWeight: 600 }}
+                    />
+                  ))}
+                </Stack>
               </Paper>
             )}
           </Box>

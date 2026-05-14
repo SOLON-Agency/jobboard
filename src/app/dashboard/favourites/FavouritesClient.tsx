@@ -32,7 +32,6 @@ import {
 } from "@/services/favourites.service";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { formatSalary, timeAgo } from "@/lib/utils";
-import appSettings from "@/config/app.settings.json";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 
 function RowSkeleton() {
@@ -80,14 +79,6 @@ function EmptyState({
 }
 
 export function FavouritesClient() {
-  if (!appSettings.features.favourites) {
-    return (
-      <Typography variant="body1" color="text.secondary">
-        Funcționalitatea de favorite nu este activată.
-      </Typography>
-    );
-  }
-
   return <FavouritesContent />;
 }
 

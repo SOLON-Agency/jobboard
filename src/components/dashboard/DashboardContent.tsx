@@ -47,6 +47,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import appSettings from "@/config/app.settings.json";
+import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -545,7 +546,7 @@ export function DashboardContent({
   const { isAtLeastEmployer, isAdmin } = useRole();
 
   const formsEnabled = appSettings.features.forms;
-  const favEnabled = appSettings.features.favourites;
+  const favEnabled = useFavouritesFeature();
 
   // Role-based widget visibility
   // showCandidateWidgets: user role + admin (admin sees everything)

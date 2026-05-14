@@ -107,69 +107,109 @@ void supabase.functions
 **Shared utilities** live in `supabase/functions/_shared/`:
 - `cors.ts` — CORS headers and OPTIONS handler
 - `email-templates.ts` — `buildEmail`, `detailRow`, `infoTable` HTML helpers
+- `notification-types.ts` — Deno-compatible mirror of `src/lib/notifications/types.ts` (all type keys, groups, defaults)
+- `templates/index.ts` — per-notification-type template registry; exports `{ buildEmail, buildShort, buildInApp }` per type
 
 **Required Supabase secrets** (set with `supabase secrets set`):
 - `RESEND_API_KEY` — Resend API key
 - `RESEND_FROM` — verified sender, e.g. `"LegalJobs <noreply@yourdomain.com>"`
 - `NEXT_PUBLIC_SITE_URL` — canonical origin, e.g. `"https://legaljobs.ro"` (same value as the Next.js env var)
-- `RESEND_TEMPLATE_JOB_CREATOR` / `RESEND_TEMPLATE_JOB_CANDIDAT` — optional; default template aliases `job-creator` and `job-candidat` (must exist and be published in Resend)
+- `VAPID_PRIVATE_KEY` — VAPID private key for Web Push (generated with `web-push generate-vapid-keys`)
+- `VAPID_SUBJECT` — VAPID contact URI, e.g. `"mailto:noreply@legaljobs.ro"`
+
+> `RESEND_TEMPLATE_JOB_CREATOR` and `RESEND_TEMPLATE_JOB_CANDIDAT` have been **removed** — all HTML is now built internally via `_shared/templates/`.
 
 ### Edge Functions inventory
 
 | Function | Status | Auth | Notes |
 |----------|--------|------|-------|
 | `send-email` | **Active** | user JWT | Profile / company / custom transactional HTML emails under RLS. |
-| `job-application` | **Active** | user JWT (applicant) | Post-apply emails via `notifications` + Resend templates. |
-| `application-withdrawn` | **Active** | user JWT (applicant) | Notifies job poster when candidate withdraws. |
-| `application-rejected` | **Active** | user JWT (recruiter) | Notifies candidate when application is rejected. |
+| `send-browser` | **Active** | service-role key | Sends Web Push to all `push_subscriptions` of a user; deletes stale entries on 410/404. |
+| `send-sms` | **Active** (mock) | service-role key | Logs SMS and inserts an SMS-tagged `notifications` row; ready for Twilio swap. |
+| `job-application` | **Active** | user JWT (applicant) | Post-apply notification via typed dispatcher (`application_new`). |
+| `application-withdrawn` | **Active** | user JWT (applicant) | Notifies job poster when candidate withdraws (`application_withdrawn`). |
+| `application-rejected` | **Active** | user JWT (recruiter) | Notifies candidate when application is rejected (`application_rejected`). |
 | `company-followers-notify` | **Active** | user JWT (recruiter) | Notifies company followers on profile update or new job. |
 | `alerts-job-match` | **Active** | user JWT (recruiter) | Notifies alert owners when a matching job is published. |
-| `notifications` | **Active** | user JWT **or** service-role key | Dispatcher; HTML body or Resend `resend_template`; uses service role for `auth.admin` + preferences. |
+| `notifications` | **Active** | user JWT **or** service-role key | Central dispatcher: accepts `{ type, recipients, data, channels?, idempotency_key? }`, fans out to channel senders, always inserts `public.notifications` row. |
 | `jobs-lifecycle` | **Active** | `CRON_SECRET` bearer | Daily cron; auto-publishes drafts and expires overdue jobs; notifies poster. |
+| `notifications-daily-digest` | **Active** | `CRON_SECRET` bearer | Daily cron (05:00); dispatches `daily_digest` to all users. |
+| `notifications-profile-nudge` | **Active** | `CRON_SECRET` bearer | Daily cron (05:05); nudges users with `completeness < 90`. |
+| `notifications-job-expiry-tomorrow` | **Active** | `CRON_SECRET` bearer | Daily cron (06:00); notifies poster + favouriters + candidates of expiring jobs. |
+| `notifications-release-detect` | **Active** | `CRON_SECRET` bearer | Every 6 h; compares `package.json` version to `app_state.last_announced_version`; inserts draft `app_release_announcements` on bump. |
+| `notifications-matchmaking` | **Active** | `CRON_SECRET` bearer | Daily cron (05:15); compares companies + profiles edited in last 24h by approved competency overlap; inserts/updates `public.matches`; re-notifies both sides only when overlap set changes. |
 
 All functions use `verify_jwt = false` and validate auth inside the function.
 
-#### `notifications` edge function
+#### `notifications` edge function — new typed dispatcher
 
-Sends a notification to any user by `userId` through the specified channel. Respects the user's per-channel opt-in flags on `profiles`.
+All notification dispatch must go through this function. Resend templates are no longer used.
 
 **Body fields:**
 
 | Field | Type | Required | Default |
 |-------|------|----------|---------|
-| `recipient` | `string` (userId) | ✅ | — |
-| `channel` | `"email" \| "sms"` | ✅ | `"email"` |
-| `body` | `string` | ✅* | — |
-| `resend_template` | `{ id, variables }` | ✅* | — |
-| `subject` | `string` | — | site name (for HTML); overrides template default when using `resend_template` |
-| `idempotency_key` | `string` | — | Resend idempotency |
+| `type` | `NotificationTypeKey` | ✅ | — |
+| `recipients` | `string[]` (user IDs) | ✅ | — |
+| `data` | `Record<string, unknown>` | ✅ | — |
+| `channels` | `NotificationChannel[]` | — | all enabled |
+| `idempotency_key` | `string` | — | — |
 
-\* For email, provide either a non-empty `body` (HTML) or `resend_template` with a published template `id` and `variables` object.
-
-**From React:**
+**From React (via helper):**
 ```ts
-void supabase.functions
-  .invoke("notifications", {
-    body: { recipient: userId, channel: "email", subject: "Titlu", body: "Mesaj..." },
-  })
-  .catch(console.warn);
-```
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 
-**From another edge function (service-role call):**
-```ts
-await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notifications`, {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ recipient: userId, channel: "email", subject: "...", body: "..." }),
+await dispatchNotification(supabase, {
+  type: NOTIFICATION_TYPES.JOB_PUBLISHED,
+  recipients: [jobPosterId],
+  data: { job_title: "Avocat senior", job_id: "…" },
+  idempotencyKey: `job-published/${jobId}`,
 });
 ```
 
-**Profile preference columns** (added by migration `20260412000000`):
+**Profile preference columns** (migration `20260514190000_notifications_v2`):
 - `profiles.notifications_email boolean DEFAULT true`
-- `profiles.notifications_sms boolean DEFAULT false` (SMS provider TBD)
+- `profiles.notifications_sms boolean DEFAULT false`
+- `profiles.notifications_browser boolean DEFAULT false`
+- `profiles.notification_preferences jsonb DEFAULT '{}'` — shape: `{ "<type_key>": { "email": bool, "browser": bool, "sms": bool } }`. Missing keys fall back to `NOTIFICATION_DEFAULTS` in `src/lib/notifications/types.ts`.
+
+### Notification types & defaults
+
+Defined in `src/lib/notifications/types.ts` (mirrored in `supabase/functions/_shared/notification-types.ts`).
+
+| Type key | Group | Email | Browser | SMS |
+|----------|-------|-------|---------|-----|
+| `account_created` | Cont | ✅ | ✅ | ❌ |
+| `account_deletion_scheduled` | Cont | ✅ | ✅ | ❌ |
+| `password_reset_ok` | Cont | ✅ | ❌ | ❌ |
+| `profile_updated` | Profil | ✅ | ❌ | ❌ |
+| `daily_digest` | Profil | ✅ | ❌ | ❌ |
+| `profile_nudge` | Profil | ✅ | ✅ | ❌ |
+| `company_created` | Companie | ✅ | ✅ | ❌ |
+| `company_updated` | Companie | ✅ | ✅ | ❌ |
+| `company_archived` | Companie | ✅ | ✅ | ❌ |
+| `company_deleted` | Companie | ✅ | ✅ | ❌ |
+| `company_favorited` | Companie | ✅ | ✅ | ❌ |
+| `company_engagement_up` | Companie | ✅ | ❌ | ❌ |
+| `job_created` | Anunț | ✅ | ✅ | ❌ |
+| `job_published` | Anunț | ✅ | ✅ | ❌ |
+| `job_edited` | Anunț | ✅ | ❌ | ❌ |
+| `job_expires_tomorrow` | Anunț | ✅ | ✅ | ❌ |
+| `job_unpublished` | Anunț | ✅ | ✅ | ❌ |
+| `job_archived` | Anunț | ✅ | ✅ | ❌ |
+| `job_deleted` | Anunț | ✅ | ❌ | ❌ |
+| `form_created` | Formular | ✅ | ❌ | ❌ |
+| `form_archived` | Formular | ✅ | ❌ | ❌ |
+| `form_deleted` | Formular | ✅ | ❌ | ❌ |
+| `application_new` | Candidatură | ✅ | ✅ | ❌ |
+| `application_withdrawn` | Candidatură | ✅ | ✅ | ❌ |
+| `application_rejected` | Candidatură | ✅ | ✅ | ❌ |
+| `alert_job_match` | Alerte | ✅ | ✅ | ❌ |
+| `release_announcement` | Noutăți | ✅ | ✅ | ❌ |
+| `matchmaking` | Potriviri | ✅ | ✅ | ❌ |
+
+Users can override per type per channel via `profiles.notification_preferences`. The email channel can only be disabled if `features.allowEmailNotificationOptOut = true` in `app.settings.json`.
 
 ### Environment variables
 
@@ -178,10 +218,14 @@ await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notifications`, {
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel / `.env.local` | Supabase project URL (public) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env.local` | Browser + server anon client (public) |
 | `NEXT_PUBLIC_SITE_URL` | Vercel / `.env.local` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Vercel / `.env.local` | VAPID public key sent to browser for Web Push subscription |
 | `RESEND_API_KEY` | **Supabase Edge secrets only** | Transactional email via Resend (`send-email` function) |
 | `RESEND_FROM` | **Supabase Edge secrets only** | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | Internal calls from `notifications` / `job-application` and other notification fns; **never** add to Next.js / Vercel env |
-| `CRON_SECRET` | **Supabase Edge secrets only** | Bearer token required by `jobs-lifecycle` to reject unauthorised scheduler calls |
+| `VAPID_PRIVATE_KEY` | **Supabase Edge secrets only** | VAPID private key used by `send-browser` to sign push payloads |
+| `VAPID_SUBJECT` | **Supabase Edge secrets only** | VAPID contact URI, e.g. `"mailto:noreply@legaljobs.ro"` |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Supabase Edge secrets only** | Internal calls from `notifications` / `send-browser` / `send-sms` and cron fns; **never** add to Next.js / Vercel env |
+| `CRON_SECRET` | **Supabase Edge secrets only** | Bearer token required by cron edge functions to reject unauthorised calls |
+| `MATCHMAKING_MIN_OVERLAP` | **Supabase Edge secrets only** | Minimum number of shared approved competencies to trigger a match (integer, default `2`; overridable per-run via cron body `min_overlap`) |
 
 Never commit secrets. Add new server-only variables to `.env.example` with a placeholder value and document them in this table.
 

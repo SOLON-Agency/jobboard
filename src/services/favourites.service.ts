@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables } from "@/types/database";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 
 export type FavouriteJob = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;
@@ -89,6 +91,37 @@ export const toggleCompanyFavourite = async (
   await supabase
     .from("company_favourites")
     .insert({ user_id: userId, company_id: companyId });
+
+  // Notify company admins that a user has favourited their company
+  void (async () => {
+    try {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("name, slug")
+        .eq("id", companyId)
+        .maybeSingle();
+      const { data: companyUsers } = await supabase
+        .from("company_users")
+        .select("user_id")
+        .eq("company_id", companyId)
+        .not("accepted_at", "is", null);
+      const adminIds = (companyUsers ?? []).map((cu: { user_id: string }) => cu.user_id);
+      if (adminIds.length > 0 && company) {
+        await dispatchNotification(supabase, {
+          type: NOTIFICATION_TYPES.COMPANY_FAVORITED,
+          recipients: adminIds,
+          data: {
+            company_name: (company as { name: string; slug: string | null }).name,
+            company_id: companyId,
+          },
+          idempotencyKey: `company-favorited/${companyId}/${userId}`,
+        });
+      }
+    } catch (e) {
+      console.warn("toggleCompanyFavourite: notify failed:", e);
+    }
+  })();
+
   return true;
 };
 

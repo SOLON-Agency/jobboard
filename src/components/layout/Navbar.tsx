@@ -31,7 +31,6 @@ import ChatIcon from "@mui/icons-material/Chat";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import appSettings from "@/config/app.settings.json";
 
 const CREAM = "#F0EBD8";
@@ -183,9 +182,11 @@ export function Navbar() {
                   >
                     Dashboard
                   </Button>
-                  {appSettings.features.notifications && <IconButton aria-label="Notificări" sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}>
-                    <NotificationsOutlinedIcon />
-                  </IconButton>}  
+                  {appSettings.features.notifications && (
+                    <NotificationBell
+                      sx={{ color: CREAM_MUTED, "&:hover": { color: CREAM, bgcolor: CREAM_HOVER } }}
+                    />
+                  )}
                   {appSettings.features.messages && <IconButton
                     component={Link}
                     href="/dashboard/messages"

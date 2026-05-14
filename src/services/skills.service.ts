@@ -132,3 +132,102 @@ export const reorderProfileSkills = async (
     )
   );
 };
+
+// ── Company skills ────────────────────────────────────────────────────────────
+
+export type CompanySkillWithName = {
+  id: string;
+  sort_order: number;
+  skill: Skill;
+};
+
+/** Fetch a company's skills (joined with skill names), ordered by sort_order. */
+export const getCompanySkills = async (
+  supabase: SupabaseClient<Database>,
+  companyId: string
+): Promise<CompanySkillWithName[]> => {
+  const { data, error } = await supabase
+    .from("company_skills")
+    .select("id, sort_order, skills!skill_id(id, name, is_approved)")
+    .eq("company_id", companyId)
+    .eq("skills.is_approved", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? [])
+    .filter((row) => row.skills !== null)
+    .map((row) => ({
+      id: row.id,
+      sort_order: row.sort_order,
+      skill: row.skills as Skill,
+    }));
+};
+
+/**
+ * Find or create a skill by name, then add it to a company's skill list.
+ * Returns the new CompanySkillWithName row.
+ */
+export const addCompanySkill = async (
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  skillName: string,
+  sortOrder: number
+): Promise<CompanySkillWithName> => {
+  const trimmed = skillName.trim();
+
+  let skill: Skill | null = null;
+
+  const { data: existing } = await supabase
+    .from("skills")
+    .select("*")
+    .ilike("name", trimmed)
+    .maybeSingle();
+
+  if (existing) {
+    skill = existing;
+  } else {
+    const { data: created, error: createErr } = await supabase
+      .from("skills")
+      .insert({ name: trimmed, is_approved: false })
+      .select()
+      .single();
+    if (createErr) throw createErr;
+    skill = created;
+  }
+
+  const { data: cs, error: csErr } = await supabase
+    .from("company_skills")
+    .insert({ company_id: companyId, skill_id: skill!.id, sort_order: sortOrder })
+    .select()
+    .single();
+
+  if (csErr) throw csErr;
+
+  return { id: cs.id, sort_order: cs.sort_order, skill: skill! };
+};
+
+/** Remove a company skill row by its own id. */
+export const removeCompanySkill = async (
+  supabase: SupabaseClient<Database>,
+  companySkillId: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from("company_skills")
+    .delete()
+    .eq("id", companySkillId);
+
+  if (error) throw error;
+};
+
+/** Bulk-update sort_order for a set of company_skills rows. */
+export const reorderCompanySkills = async (
+  supabase: SupabaseClient<Database>,
+  items: { id: string; sort_order: number }[]
+): Promise<void> => {
+  await Promise.all(
+    items.map(({ id, sort_order }) =>
+      supabase.from("company_skills").update({ sort_order }).eq("id", id)
+    )
+  );
+};

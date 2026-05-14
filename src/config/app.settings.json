@@ -10,12 +10,14 @@
     "forms": true,
     "alerts": true,
     "messages": false,
-    "notifications": false,
+    "notifications": true,
+    "smsNotifications": false,
     "allowEmailNotificationOptOut": false,
     "favourites": false,
     "archiveJobs": true,
     "edgeFunctions": true,
-    "blog": true
+    "blog": true,
+    "matchmaking": { "enabled": true, "minOverlap": 2 }
   },
   "brand": {
     "primary": "#03170C",

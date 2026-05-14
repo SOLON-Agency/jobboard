@@ -30,6 +30,8 @@ import { AddEditJob } from "@/components/forms/AddEditJob";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useToast } from "@/contexts/ToastContext";
 import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/forms/AddEditJob";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 
 // ─── Scheduling helpers ────────────────────────────────────────────────────────
 
@@ -200,6 +202,14 @@ export function JobsClient() {
           });
           setMessage({ type: "success", text: "Anunț actualizat." });
           showToast("Anunț actualizat cu succes.");
+          if (user) {
+            void dispatchNotification(supabase, {
+              type: NOTIFICATION_TYPES.JOB_EDITED,
+              recipients: [user.id],
+              data: { job_title: data.title },
+              idempotencyKey: `job-edited/${editingJob.id}/${Date.now()}`,
+            }).catch((e: unknown) => console.warn("notify-job-edited:", e));
+          }
         } else {
           const companyName = companies.find((c) => c.id === data.company_id)?.name ?? "";
           const slug = companyName
@@ -318,11 +328,27 @@ export function JobsClient() {
   const handleDelete = async (job: JobWithCompany) => {
     if (!confirm(`Ștergi "${job.title}"? Această acțiune nu poate fi anulată.`)) return;
     await deleteJob(supabase, job.id);
+    if (user) {
+      void dispatchNotification(supabase, {
+        type: NOTIFICATION_TYPES.JOB_DELETED,
+        recipients: [user.id],
+        data: { job_title: job.title },
+        idempotencyKey: `job-deleted/${job.id}`,
+      }).catch((e: unknown) => console.warn("notify-job-deleted:", e));
+    }
     await loadJobs();
   };
 
   const handleArchive = async (job: JobWithCompany) => {
     await archiveJob(supabase, job.id, true);
+    if (user) {
+      void dispatchNotification(supabase, {
+        type: NOTIFICATION_TYPES.JOB_ARCHIVED,
+        recipients: [user.id],
+        data: { job_title: job.title },
+        idempotencyKey: `job-archived/${job.id}`,
+      }).catch((e: unknown) => console.warn("notify-job-archived:", e));
+    }
     await loadJobs();
   };
 
