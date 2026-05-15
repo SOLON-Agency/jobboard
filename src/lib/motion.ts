@@ -5,7 +5,7 @@ import type { Variants } from "framer-motion";
  * Supports a custom index (`i`) for staggered delays.
  *
  * @pattern SharedMotionVariant
- * @usedBy HeroSection, FeaturesSection, HowItWorksContent
+ * @usedBy HeroSection, WhySection, BannerSection, HowItWorksContent
  * @example
  * ```tsx
  * import { fadeUp } from "@/lib/motion";
@@ -25,7 +25,7 @@ export const fadeUp: Variants = {
  * Container variant that staggers its children.
  *
  * @pattern SharedMotionVariant
- * @usedBy FeaturesSection, HowItWorksContent
+ * @usedBy WhySection, BannerSection, HowItWorksContent
  * @example
  * ```tsx
  * import { stagger } from "@/lib/motion";

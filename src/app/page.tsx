@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/layout/HeroSection";
-import { FeaturesSection } from "@/components/layout/FeaturesSection";
+import { WhySection } from "@/components/layout/WhySection";
+import { BannerSection } from "@/components/layout/BannerSection";
 import { PlatformAdvantagesSection } from "@/components/marketing/PlatformAdvantagesSection";
 import { AudienceSection } from "@/components/marketing/AudienceSection";
 import { PricingSection } from "@/components/marketing/PricingSection";
-import { TestimonialsSection } from "@/components/marketing/TestimonialsSection";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { BlogPreviewSection } from "@/components/marketing/BlogPreviewSection";
 import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
@@ -65,13 +65,14 @@ export default async function HomePage() {
           users: users * 2,
         }}
       />
-      <FeaturesSection />
+      <WhySection />
       <PlatformAdvantagesSection />
       <AudienceSection />
       <PricingSection />
       {/* <TestimonialsSection /> */}
       <RecruitingAgenciesSection />
       <FaqSection />
+      <BannerSection />
       <BlogPreviewSection />
       <NewsletterSection />
     </>
