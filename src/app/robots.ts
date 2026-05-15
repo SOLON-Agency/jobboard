@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { canonicalSiteOrigin } from "@/lib/site-url";
 
 const publicDisallow = ["/dashboard/", "/auth/"];
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = canonicalSiteOrigin();
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: publicDisallow },
@@ -17,6 +17,6 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: "Googlebot-News", allow: "/", disallow: publicDisallow },
       { userAgent: "bingbot", allow: "/", disallow: publicDisallow },
     ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

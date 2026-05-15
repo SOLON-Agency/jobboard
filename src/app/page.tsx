@@ -21,7 +21,8 @@ const SEO_DESCRIPTION =
   `${appSettings.name} este platforma premium de recrutare dedicată exclusiv pieței juridice din România: avocați, juriști, departamente in-house și agenții de recrutare. Matchmaking inteligent, alerte personalizate, transparență salarială, candidați verificați și conformitate GDPR. Publici până la 5 anunțuri complet gratuit.`;
 
 export const metadata: Metadata = {
-  title: SEO_TITLE,
+  title: "[TEST] " + SEO_TITLE,
+  // title: SEO_TITLE,
   description: SEO_DESCRIPTION,
   keywords: [
     "joburi avocați România",
