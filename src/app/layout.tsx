@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Saira } from "next/font/google";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { ReduxStoreProvider } from "@/components/providers/ReduxStoreProvider";
 import { FavouritesFeatureRoot } from "@/components/providers/FavouritesFeatureRoot";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -80,6 +81,7 @@ export default function RootLayout({
       <body style={{ fontFamily: "var(--font-saira), sans-serif" }}>
         <FavouritesFeatureRoot>
           <ThemeRegistry>
+            <ReduxStoreProvider>
             <ToastProvider>
               {/* Skip navigation — visible only on keyboard focus via CSS */}
               <a href="#main-content" className="skip-nav">
@@ -92,6 +94,7 @@ export default function RootLayout({
               <Footer />
               {process.env.NODE_ENV === "development" ? <VercelToolbar /> : null}
             </ToastProvider>
+            </ReduxStoreProvider>
           </ThemeRegistry>
         </FavouritesFeatureRoot>
         <script

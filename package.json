@@ -16,6 +16,9 @@
     "e2e:full": "node e2e/full.js",
     "e2e": "node e2e/smoke.js && node e2e/full.js",
     "vercel:env": "npx --yes vercel@latest env pull .env.vercel.pull.tmp --yes && node scripts/merge-vercel-env.cjs .env.vercel.pull.tmp && rm -f .env.vercel.pull.tmp",
+    "codegen:types": "node scripts/codegen-supabase-types.mjs",
+    "codegen:zod": "supazod -i src/types/database.ts -o src/types/database.zod.ts -I -s public && node scripts/patch-database-zod-json.mjs",
+    "codegen": "npm run codegen:types && npm run codegen:zod",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
@@ -27,6 +30,7 @@
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "@radix-ui/react-slot": "^1.2.4",
+    "@reduxjs/toolkit": "^2.12.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.100.1",
     "@tiptap/extension-link": "^3.21.0",
@@ -47,6 +51,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.72.0",
     "react-markdown": "^10.1.0",
+    "react-redux": "^9.3.0",
     "recharts": "^3.8.1",
     "resend": "^6.10.0",
     "tailwind-merge": "^3.5.0",
@@ -66,6 +71,7 @@
     "eslint-config-next": "16.2.1",
     "jsdom": "^29.0.1",
     "supabase": "^2.89.1",
+    "supazod": "^4.5.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",

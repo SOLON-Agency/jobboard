@@ -30,6 +30,7 @@ import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import appSettings from "@/config/app.settings.json";
 import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
+import type { FaqPublicItem } from "@/services/faq.service";
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const BG = "#03170C";
@@ -129,37 +130,34 @@ const benefits = [
   },
 ];
 
-const faqs = [
-  {
-    q: "Este platforma gratuită pentru candidați?",
-    a: "Da, complet gratuit. Creezi cont, îți completezi profilul și aplici la oricâte posturi dorești fără nicio taxă.",
-  },
-  {
-    q: "Cum funcționează alertele de joburi?",
-    a: "Salvezi un set de filtre (locație, tip contract, nivel experiență, salariu, etc.) și primești un email sau SMS automat de fiecare dată când apare un post nou care se potrivește.",
-  },
-  {
-    q: "Pot urmări statusul aplicațiilor mele?",
-    a: "Da. Din dashboard-ul tău vezi toate candidaturile trimise, data aplicării și statusul fiecăreia.",
-  },
-  {
-    q: "Cum postez un anunț ca angajator?",
-    a: "Creezi un cont de companie, completezi profilul firmei și publici primul anunț gratuit. Planurile premium oferă vizibilitate crescută și funcții avansate.",
-  },
-  {
-    q: "Datele mele sunt în siguranță?",
-    a: "Folosim criptare end-to-end și nu vindem datele tale unor terți. Respectăm pe deplin GDPR.",
-  },
-];
-
 // ── Page ──────────────────────────────────────────────────────────────────────
-export function HowItWorksContent({ userCount }: { userCount: number }) {
+export function HowItWorksContent({
+  userCount,
+  faqItems,
+}: {
+  userCount: number;
+  faqItems: FaqPublicItem[];
+}) {
   const formattedUsers =
     userCount >= 1000
       ? `${(Math.floor(userCount / 100) / 10).toLocaleString("ro")}K`
       : userCount >= 100
         ? `${Math.floor(userCount / 100) * 100}`
         : `${Math.floor(userCount / 10) * 10}`;
+
+  const faqJsonLd =
+    faqItems.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqItems.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        }
+      : null;
+
   return (
     <Box component="main">
 
@@ -581,43 +579,57 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
             </Box>
           </motion.div>
 
-          <Stack spacing={1.5}>
-            {faqs.map((faq, i) => (
-              <motion.div
-                key={faq.q}
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-40px" }}
+          {faqItems.length === 0 ? (
+            <motion.div variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <Typography
+                sx={{ color: CREAM_55, textAlign: "center", py: 4, maxWidth: 480, mx: "auto", lineHeight: 1.75 }}
+                role="status"
               >
-                <Accordion sx={{
-                  bgcolor: "rgba(240,235,216,0.04)",
-                  border: "1px solid rgba(240,235,216,0.1)",
-                  borderRadius: "12px !important",
-                  "&:before": { display: "none" },
-                  "&.Mui-expanded": {
-                    border: "1px solid rgba(195,174,97,0.25)",
-                    bgcolor: "rgba(195,174,97,0.04)",
-                  },
-                  backdropFilter: "blur(8px)",
-                }}>
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: CREAM_45 }} />}
-                    sx={{ px: 3, py: 0.5 }}
-                  >
-                    <Typography sx={{ color: CREAM, fontWeight: 600, fontSize: "0.97rem" }}>
-                      {faq.q}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ px: 3, pb: 2.5 }}>
-                    <Typography sx={{ color: CREAM_55, lineHeight: 1.75 }}>{faq.a}</Typography>
-                  </AccordionDetails>
-                </Accordion>
-              </motion.div>
-            ))}
-          </Stack>
+                Întrebările frecvente vor apărea aici în curând.
+              </Typography>
+            </motion.div>
+          ) : (
+            <Stack spacing={1.5}>
+              {faqItems.map((faq, i) => (
+                <motion.div
+                  key={`${faq.question}-${i}`}
+                  custom={i}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-40px" }}
+                >
+                  <Accordion sx={{
+                    bgcolor: "rgba(240,235,216,0.04)",
+                    border: "1px solid rgba(240,235,216,0.1)",
+                    borderRadius: "12px !important",
+                    "&:before": { display: "none" },
+                    "&.Mui-expanded": {
+                      border: "1px solid rgba(195,174,97,0.25)",
+                      bgcolor: "rgba(195,174,97,0.04)",
+                    },
+                    backdropFilter: "blur(8px)",
+                  }}>
+                    <AccordionSummary
+                      expandIcon={<ExpandMoreIcon sx={{ color: CREAM_45 }} />}
+                      sx={{ px: 3, py: 0.5 }}
+                    >
+                      <Typography sx={{ color: CREAM, fontWeight: 600, fontSize: "0.97rem" }}>
+                        {faq.question}
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ px: 3, pb: 2.5 }}>
+                      <Typography sx={{ color: CREAM_55, lineHeight: 1.75 }}>{faq.answer}</Typography>
+                    </AccordionDetails>
+                  </Accordion>
+                </motion.div>
+              ))}
+            </Stack>
+          )}
         </Container>
+        {faqJsonLd ? (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        ) : null}
       </Box>
 
       {/* ── CTA ──────────────────────────────────────────────────────────────── */}

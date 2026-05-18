@@ -11,6 +11,7 @@ import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgen
 import { NewsletterSection } from "@/components/newsletter/NewsletterSection";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getPublicCounts } from "@/services/stats.service";
+import { getPublishedFaqs } from "@/services/faq.service";
 import appSettings from "@/config/app.settings.json";
 
 // Revalidate once per day so counts stay fresh without a full redeploy
@@ -54,7 +55,10 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const supabase = createStaticClient();
-  const { jobs, companies, users } = await getPublicCounts(supabase);
+  const [{ jobs, companies, users }, faqHomeItems] = await Promise.all([
+    getPublicCounts(supabase),
+    getPublishedFaqs(supabase, "home").catch(() => []),
+  ]);
 
   return (
     <>
@@ -71,7 +75,7 @@ export default async function HomePage() {
       <PricingSection />
       {/* <TestimonialsSection /> */}
       <RecruitingAgenciesSection />
-      <FaqSection />
+      <FaqSection items={faqHomeItems} />
       <BannerSection />
       <BlogPreviewSection />
       <NewsletterSection />

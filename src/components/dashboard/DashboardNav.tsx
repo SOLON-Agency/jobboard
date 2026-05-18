@@ -37,6 +37,7 @@ import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import ArticleIcon from "@mui/icons-material/Article";
 import DomainAddOutlinedIcon from "@mui/icons-material/DomainAddOutlined";
 import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
+import LiveHelpOutlinedIcon from "@mui/icons-material/LiveHelpOutlined";
 import appSettings from "@/config/app.settings.json";
 import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 import { useRole } from "@/hooks/useRole";
@@ -159,7 +160,8 @@ function useNavItems(): NavItem[] {
       { label: "Utilizatori", href: "/dashboard/admin/users", icon: <GroupOutlinedIcon /> },
       { label: "Competențe", href: "/dashboard/admin/skills", icon: <PsychologyOutlinedIcon /> },
       { label: "Companii nerevendicate", href: "/dashboard/admin/unclaimed", icon: <DomainAddOutlinedIcon /> },
-      { label: "Noutăți platformă", href: "/dashboard/admin/releases", icon: <CampaignOutlinedIcon /> }
+      { label: "Noutăți platformă", href: "/dashboard/admin/releases", icon: <CampaignOutlinedIcon /> },
+      { label: "Întrebări frecvente", href: "/dashboard/admin/faq", icon: <LiveHelpOutlinedIcon /> }
     );
     if (appSettings.features.blog) {
       items.push({ label: "Blog", href: "/dashboard/blog", icon: <ArticleIcon /> });
