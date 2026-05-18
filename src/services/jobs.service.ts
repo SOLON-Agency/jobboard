@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables } from "@/types/database";
 import type { JobSearchFilters, PaginatedResponse } from "@/types";
+import { getUserCompanies } from "@/services/companies.service";
 
 export const getPublishedJobs = async (
   supabase: SupabaseClient<Database>,
@@ -255,4 +256,41 @@ export const getUserFavorites = async (
 
   if (error) throw error;
   return new Set(data?.map((f) => f.job_id) ?? []);
+};
+
+/** Employer dashboard jobs page — companies + non-archived listings (RLS). */
+export type EmployerJobsDashboardData = {
+  companies: { id: string; name: string }[];
+  jobs: (Tables<"job_listings"> & { companies: Tables<"companies"> | null })[];
+};
+
+export const getEmployerJobsDashboard = async (
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<EmployerJobsDashboardData> => {
+  const rows = await getUserCompanies(supabase, userId);
+  const companies = rows.flatMap((cu) =>
+    cu.companies ? [{ id: cu.companies.id, name: cu.companies.name }] : []
+  );
+
+  if (companies.length === 0) {
+    return { companies: [], jobs: [] };
+  }
+
+  const { data, error } = await supabase
+    .from("job_listings")
+    .select("*, companies(*)")
+    .in(
+      "company_id",
+      companies.map((c) => c.id)
+    )
+    .eq("is_archived", false)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return {
+    companies,
+    jobs: (data ?? []) as EmployerJobsDashboardData["jobs"],
+  };
 };

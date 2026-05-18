@@ -33,7 +33,7 @@ export function BlogArticle({ post }: BlogArticleProps) {
         <Link href="/blog" style={{ color: "inherit", textDecoration: "none" }}>
           Blog
         </Link>
-        <Typography variant="body2" color="text.primary" noWrap sx={{ maxWidth: 240 }}>
+        <Typography variant="body2" color="text.primary" noWrap sx={{ maxWidth: "100%" }}>
           {post.title}
         </Typography>
       </Breadcrumbs>
@@ -41,7 +41,7 @@ export function BlogArticle({ post }: BlogArticleProps) {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: hasToc ? { xs: "1fr", lg: "1fr 260px" } : "1fr",
+          gridTemplateColumns: hasToc ? { xs: "1fr", lg: "1fr minmax(240px, 280px)" } : "1fr",
           gap: { xs: 0, lg: 6 },
           alignItems: "start",
         }}
@@ -65,7 +65,7 @@ export function BlogArticle({ post }: BlogArticleProps) {
               sx={{
                 fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.75rem" },
                 lineHeight: 1.25,
-                mb: 2,
+                mb: 3,
               }}
             >
               {post.title}
@@ -92,7 +92,8 @@ export function BlogArticle({ post }: BlogArticleProps) {
               <address style={{ fontStyle: "normal" }}>
                 <Typography variant="body2" fontWeight={600}>
                   De{" "}
-                  <span rel="author">{authorName}</span>
+                  {/* <span rel="author">{authorName}</span> */}
+                  <span rel="author">Admin</span>
                 </Typography>
               </address>
               {post.published_at && (
@@ -140,7 +141,7 @@ export function BlogArticle({ post }: BlogArticleProps) {
           {/* Table of contents on mobile */}
           {hasToc && (
             <Box sx={{ display: { xs: "block", lg: "none" }, mb: 4 }}>
-              <TableOfContents headings={headings} />
+              <TableOfContents headings={headings} variant="inline" />
             </Box>
           )}
 
@@ -167,8 +168,15 @@ export function BlogArticle({ post }: BlogArticleProps) {
 
         {/* Table of contents on desktop */}
         {hasToc && (
-          <Box sx={{ display: { xs: "none", lg: "block" } }}>
-            <TableOfContents headings={headings} />
+          <Box
+            sx={{
+              display: { xs: "none", lg: "flex" },
+              flexDirection: "column",
+              alignSelf: "stretch",
+              minHeight: 0,
+            }}
+          >
+            <TableOfContents headings={headings} variant="sidebar" />
           </Box>
         )}
       </Box>

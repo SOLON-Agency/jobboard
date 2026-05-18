@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -20,7 +19,6 @@ import {
   MenuItem,
   Paper,
   Skeleton,
-  Snackbar,
   Stack,
   Tooltip,
   Typography,
@@ -53,6 +51,7 @@ import type { Database, Json } from "@/types/database";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { WithdrawApplicationForm } from "@/components/forms/WithdrawApplicationForm";
 import type { WithdrawApplicationFormData } from "@/components/forms/validations/withdraw-application.schema";
+import { useToast } from "@/contexts/ToastContext";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 
@@ -256,6 +255,7 @@ function ApplicationActions({
 export function ApplicationsClient() {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [applications, setApplications] = useState<UserApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,10 +268,6 @@ export function ApplicationsClient() {
     null
   );
   const [archiveBusy, setArchiveBusy] = useState(false);
-  const [feedback, setFeedback] = useState<{
-    severity: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -279,11 +275,11 @@ export function ApplicationsClient() {
       const data = await getUserApplications(supabase, user.id);
       setApplications(data);
     } catch (err) {
-      setFeedback({ severity: "error", text: parseSupabaseError(err) });
+      showToast(parseSupabaseError(err), "error", 5000);
     } finally {
       setLoading(false);
     }
-  }, [user, supabase]);
+  }, [user, supabase, showToast]);
 
   useEffect(() => {
     void load();
@@ -337,13 +333,14 @@ export function ApplicationsClient() {
             : a
         )
       );
-      setFeedback({
-        severity: "success",
-        text: "Aplicația a fost retrasă și angajatorul a fost notificat.",
-      });
+      showToast(
+        "Aplicația a fost retrasă și angajatorul a fost notificat.",
+        "success",
+        5000
+      );
       setWithdrawTarget(null);
     } catch (err) {
-      setFeedback({ severity: "error", text: parseSupabaseError(err) });
+      showToast(parseSupabaseError(err), "error", 5000);
     }
   };
 
@@ -359,13 +356,14 @@ export function ApplicationsClient() {
       }
       await archiveApplication(supabase, archiveTarget.id);
       setApplications((prev) => prev.filter((a) => a.id !== archiveTarget.id));
-      setFeedback({
-        severity: "success",
-        text: "Aplicația a fost ștearsă din lista ta de aplicații active.",
-      });
+      showToast(
+        "Aplicația a fost ștearsă din lista ta de aplicații active.",
+        "success",
+        5000
+      );
       setArchiveTarget(null);
     } catch (err) {
-      setFeedback({ severity: "error", text: parseSupabaseError(err) });
+      showToast(parseSupabaseError(err), "error", 5000);
     } finally {
       setArchiveBusy(false);
     }
@@ -739,24 +737,6 @@ export function ApplicationsClient() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={feedback !== null}
-        autoHideDuration={5000}
-        onClose={() => setFeedback(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        {feedback ? (
-          <Alert
-            severity={feedback.severity}
-            onClose={() => setFeedback(null)}
-            variant="filled"
-            sx={{ width: "100%" }}
-          >
-            {feedback.text}
-          </Alert>
-        ) : undefined}
-      </Snackbar>
     </>
   );
 }

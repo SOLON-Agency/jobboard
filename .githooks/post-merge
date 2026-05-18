@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# After git pull (merge): refresh Supabase TypeScript types + database.zod.ts.
+#
+# Opt-out: SKIP_CODEGEN=1
+#
+set -e
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+if [ "${SKIP_CODEGEN:-0}" = "1" ]; then
+  echo "⚠️  SKIP_CODEGEN=1 — skipping post-merge codegen."
+  exit 0
+fi
+
+# shellcheck disable=SC1091
+. "$(dirname "$0")/ensure-npm.sh"
+ensure_npm_in_path
+
+echo ""
+echo "📦  post-merge: regenerating DB types + database.zod.ts..."
+echo ""
+
+npm run codegen
+
+exit 0

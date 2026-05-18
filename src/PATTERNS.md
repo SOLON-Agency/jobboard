@@ -1,28 +1,39 @@
 # Patterns Quick Reference — /src
 
-Human-facing companion to `src/AGENTS.md`. Use this for copy-paste examples.
+Human-facing companion to **`src/AGENTS.md`**. Copy-paste snippets must stay aligned with **`/AGENTS.md`** (product rules, notifications, secrets).
+
+**Documentation map:** `/AGENTS.md` (product + ops) · `/README.md` (onboarding) · **`src/AGENTS.md`** (conventions) · **`src/PATTERNS.md`** (this file).
 
 ---
 
 ## Pattern Index
 
-| Pattern | Look at | Copy from |
+Reference implementations — when introducing a new feature, prefer mirroring an existing row before inventing a new pattern.
+
+| Pattern | Reference implementation | Primary utilities |
 |---|---|---|
-| Data fetching in Server Component | `app/(public)/jobs/[slug]/page.tsx` | `src/services/jobs.service.ts` |
-| Data fetching in Client Component | `app/dashboard/applications/ApplicationsClient.tsx` | `src/hooks/useAsyncData.ts` |
-| Form with RHF + Zod | `components/auth/LoginForm.tsx` | `components/forms/validations/login.schema.ts` |
-| Auth in server component | `app/dashboard/page.tsx` | `lib/supabase/server.ts` |
+| Data fetching in Server Component | `app/(public)/jobs/[slug]/page.tsx` | `createClient` / `createStaticClient`, `src/services/*.service.ts` |
+| Data fetching in Client Component (RTK Query + cache) | `app/dashboard/jobs/JobsClient.tsx` | `src/store/jobBoardApi.ts`, **`jobBoardApi.util.invalidateTags`** after mutations |
+| Data fetching in Client Component (legacy `useEffect`) | _(remaining dashboard screens)_ | Migrate toward **`jobBoardApi`** endpoints |
+| Data fetching in Client Component (`useAsyncData` wrapper) | _(optional thin helper)_ | `src/hooks/useAsyncData.ts` — small screens without RTK yet |
+| Form with RHF + Zod | `components/auth/LoginForm.tsx` | `components/forms/validations/*.schema.ts` |
+| Postgres-aligned Zod (generated, optional compose with forms) | — | `types/database.zod.ts` via **`npm run codegen`** · **`src/AGENTS.md`** *DB-aligned Zod* |
+| Auth in server component | `app/dashboard/page.tsx` | `lib/supabase/server.ts`, `getUser()` |
 | Auth in client component | `components/jobs/ApplyButton.tsx` | `hooks/useAuth.ts` |
-| Notification/snackbar | `components/jobs/JobDetail.tsx` | `hooks/useNotification.ts` |
+| Ephemeral toast / snackbar | `app/dashboard/jobs/JobsClient.tsx` | `contexts/ToastContext.tsx` → **`useToast`** |
+| Persisted in-app notification feed | `components/notifications/NotificationBell.tsx` | `hooks/useNotifications.ts` |
 | Animation with reduced-motion | `components/jobs/JobsCarousel.tsx` | `lib/motion.ts` |
 | API route handler | `app/api/jobs/apply-internal-form/route.ts` | `lib/api.ts` |
-| Edge Function invocation | `components/jobs/ApplyButton.tsx` | AGENTS.md "Invoking Edge Functions" |
-| TipTap rich text editor | `components/editor/RichTextEditor.tsx` | — |
+| Typed notification dispatch | `lib/notifications/dispatch.ts` | `supabase.functions.invoke("notifications", …)` |
+| Edge Function invocation (direct) | `components/jobs/ApplyButton.tsx`, `app/api/jobs/apply-internal-form/route.ts` | `/AGENTS.md` → *Invoking Edge Functions* |
+| TipTap rich text | `components/editor/RichTextEditor.tsx` | — |
 | Recharts chart | `components/dashboard/DashboardContent.tsx` | — |
 | Empty state | `app/dashboard/forms/FormsClient.tsx` | `components/common/EmptyState.tsx` |
 | Bordered card | `components/dashboard/DashboardContent.tsx` | `components/common/BorderedCard.tsx` |
-| Page with responsive layout | `app/(public)/jobs/page.tsx` | `components/common/PageContainer.tsx` |
+| Page layout container | `app/(public)/jobs/page.tsx` | `components/common/PageContainer.tsx` |
 | Error boundary | `app/error.tsx` | `app/dashboard/error.tsx` |
+| Feature flag (static, JSON) | `lib/feature-flags.ts`, `middleware.ts` | `config/app.settings.json` |
+| Feature flag (Vercel Flags / Toolbar) | `flags.ts`, `components/providers/FavouritesFeatureRoot.tsx` | `flags/next`, `@flags-sdk/vercel` |
 
 ---
 
@@ -30,28 +41,66 @@ Human-facing companion to `src/AGENTS.md`. Use this for copy-paste examples.
 
 ### Server Component (default)
 
+Prefer fetching on the server when data can be resolved without browser-only APIs. Use **`src/services/*`** (not ad-hoc `.from()` scattered across pages — legacy pages may still violate this; consolidate when editing).
+
 ```tsx
-// src/app/dashboard/profile/page.tsx
-import type { Metadata } from "next";
+// Pattern from src/app/(public)/jobs/[slug]/page.tsx — metadata + body load
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { getMyProfile } from "@/services/profiles.service";
-import { ProfileClient } from "./ProfileClient";
+import { getJobBySlug } from "@/services/jobs.service";
+import { notFound } from "next/navigation";
 
-export const metadata: Metadata = { title: "Profilul meu", robots: { index: false } };
-
-export default async function ProfilePage() {
+export default async function JobPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  // Pass initial data to client component — avoids a second round-trip
-  const profile = await getMyProfile(supabase, user.id);
-  return <ProfileClient initialProfile={profile} />;
+  let job;
+  try {
+    job = await getJobBySlug(supabase, slug);
+  } catch {
+    notFound();
+  }
+  return <JobDetailWrapper job={job} />;
 }
 ```
 
-### Client Component with `useAsyncData`
+Pass **serializable** props into client components. For authenticated dashboard shells that still render a client-only body without server prefetch, see `src/app/dashboard/profile/page.tsx` → **`ProfileClient`** (loads in `useEffect` today).
+
+### Client Component — dominant legacy pattern
+
+Most dashboard `*Client.tsx` files today use **`useCallback` + `useEffect`** and manage **`loading` / `data`** with **`useState`**. Example shape (simplified from **`JobsClient`**):
+
+```tsx
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
+
+export function JobsClient() {
+  const { user } = useAuth();
+  const supabase = useSupabase();
+  const [rows, setRows] = useState<unknown[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from("job_listings").select("*").limit(20);
+    setRows(data ?? []);
+    setLoading(false);
+  }, [user, supabase]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) return null;
+  return /* … */;
+}
+```
+
+**Target state:** move `.from()` chains into **`src/services/*.service.ts`** and call those functions from the effect (see **`src/AGENTS.md`**). Optionally wrap the effect body with **`useAsyncData`** below.
+
+### Client Component — preferred `useAsyncData` wrapper
+
+Use when the whole screen depends on one async result (or compose multiple calls inside the fetcher). **`src/hooks/useAsyncData.ts`** is the shared helper (not React Query — not installed).
 
 ```tsx
 "use client";
@@ -59,20 +108,24 @@ import { useAsyncData } from "@/hooks/useAsyncData";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { getMyProfile } from "@/services/profiles.service";
+import { Alert, CircularProgress } from "@mui/material";
 
-export function ProfileClient() {
+export function ProfileExampleClient() {
   const supabase = useSupabase();
   const { user } = useAuth();
 
   const { data: profile, loading, error, reload } = useAsyncData(
-    () => getMyProfile(supabase, user!.id),
-    [user?.id] // re-fetch when userId changes
+    async () => {
+      if (!user) throw new Error("Neautentificat");
+      return getMyProfile(supabase, user.id);
+    },
+    [user?.id, supabase]
   );
 
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!profile) return null;
-  // ...
+  return null; /* … */
 }
 ```
 
@@ -150,38 +203,32 @@ export function AddEditWidget({ initial, onSave }: AddEditWidgetProps) {
 
 ---
 
-## Notification / Snackbar
+## Ephemeral feedback — `useToast` (not local Snackbar)
+
+There are **two** notification mechanisms — **`useToast`** for transient UI, **`useNotifications`** for the persisted DB bell feed. See **`/AGENTS.md`** → *UI notification patterns*. The old **`useNotification`** hook (singular) was removed.
 
 ```tsx
 "use client";
-import { useNotification } from "@/hooks/useNotification";
-import { Snackbar, Alert } from "@mui/material";
+import { useToast } from "@/contexts/ToastContext";
 
 export function MyComponent() {
-  const { notification, notify, clearNotification } = useNotification();
+  const { showToast } = useToast();
 
   const handleSave = async () => {
     try {
       await saveData();
-      notify("Salvat cu succes!", "success");
+      showToast("Salvat cu succes.");
+      showToast("Anunț arhivat.", "info");
     } catch {
-      notify("A apărut o eroare.", "error");
+      showToast("A apărut o eroare.", "error", 5000);
     }
   };
 
-  return (
-    <>
-      <Button onClick={handleSave}>Salvează</Button>
-
-      <Snackbar open={!!notification} autoHideDuration={4000} onClose={clearNotification}>
-        <Alert severity={notification?.severity ?? "info"} onClose={clearNotification}>
-          {notification?.message}
-        </Alert>
-      </Snackbar>
-    </>
-  );
+  return <button type="button" onClick={handleSave}>Salvează</button>;
 }
 ```
+
+**Exceptions:** **`EditSideDrawer`** accepts a **`message`** prop for errors that must stay visible until the drawer closes (persistent in-drawer feedback).
 
 ---
 
@@ -267,23 +314,26 @@ src/app/
 
 ## Vitest Test Template
 
+Uses packages already in **`package.json`** (`vitest`, `@testing-library/react`, `@testing-library/jest-dom`). Add **`@testing-library/user-event`** only if you need richer interaction simulation.
+
 ```ts
 // src/__tests__/widget.test.ts
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { AddEditWidget } from "@/components/forms/AddEditWidget";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { LoginForm } from "@/components/auth/LoginForm";
 
-describe("AddEditWidget", () => {
-  it("renders without crashing", () => {
-    render(<AddEditWidget onSave={vi.fn()} />);
-    expect(screen.getByRole("button", { name: /salvează/i })).toBeInTheDocument();
+describe("LoginForm", () => {
+  it("renders email field", () => {
+    render(<LoginForm />);
+    expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
   });
 
-  it("is keyboard navigable", async () => {
-    render(<AddEditWidget onSave={vi.fn()} />);
-    await userEvent.tab();
-    expect(document.activeElement?.tagName).not.toBe("BODY");
+  it("submit button is keyboard reachable", () => {
+    render(<LoginForm />);
+    const btn = screen.getByRole("button", { name: /conectare/i });
+    btn.focus();
+    expect(document.activeElement).toBe(btn);
+    fireEvent.click(btn);
   });
 });
 ```

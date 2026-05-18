@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import { HeroSection } from "@/components/layout/HeroSection";
-import { FeaturesSection } from "@/components/layout/FeaturesSection";
+import { WhySection } from "@/components/layout/WhySection";
+import { BannerSection } from "@/components/layout/BannerSection";
 import { PlatformAdvantagesSection } from "@/components/marketing/PlatformAdvantagesSection";
 import { AudienceSection } from "@/components/marketing/AudienceSection";
 import { PricingSection } from "@/components/marketing/PricingSection";
-import { TestimonialsSection } from "@/components/marketing/TestimonialsSection";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { BlogPreviewSection } from "@/components/marketing/BlogPreviewSection";
 import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
 import { NewsletterSection } from "@/components/newsletter/NewsletterSection";
 import { createStaticClient } from "@/lib/supabase/static";
 import { getPublicCounts } from "@/services/stats.service";
+import { getPublishedFaqs } from "@/services/faq.service";
 import appSettings from "@/config/app.settings.json";
 
 // Revalidate once per day so counts stay fresh without a full redeploy
@@ -21,7 +22,8 @@ const SEO_DESCRIPTION =
   `${appSettings.name} este platforma premium de recrutare dedicată exclusiv pieței juridice din România: avocați, juriști, departamente in-house și agenții de recrutare. Matchmaking inteligent, alerte personalizate, transparență salarială, candidați verificați și conformitate GDPR. Publici până la 5 anunțuri complet gratuit.`;
 
 export const metadata: Metadata = {
-  title: SEO_TITLE,
+  title: "[TEST] " + SEO_TITLE,
+  // title: SEO_TITLE,
   description: SEO_DESCRIPTION,
   keywords: [
     "joburi avocați România",
@@ -53,7 +55,10 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const supabase = createStaticClient();
-  const { jobs, companies, users } = await getPublicCounts(supabase);
+  const [{ jobs, companies, users }, faqHomeItems] = await Promise.all([
+    getPublicCounts(supabase),
+    getPublishedFaqs(supabase, "home").catch(() => []),
+  ]);
 
   return (
     <>
@@ -64,13 +69,14 @@ export default async function HomePage() {
           users: users * 2,
         }}
       />
-      <FeaturesSection />
+      <WhySection />
       <PlatformAdvantagesSection />
       <AudienceSection />
       <PricingSection />
       {/* <TestimonialsSection /> */}
       <RecruitingAgenciesSection />
-      <FaqSection />
+      <FaqSection items={faqHomeItems} />
+      <BannerSection />
       <BlogPreviewSection />
       <NewsletterSection />
     </>

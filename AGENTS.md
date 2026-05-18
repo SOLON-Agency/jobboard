@@ -20,7 +20,7 @@ Before changing routing, data fetching, or config:
 
 ## What this product is
 
-- **Name / brand:** `LegalJobs` (see `src/config/app.settings.json`).
+- **Name / brand:** Stored as **`name`** in `src/config/app.settings.json` (used in UI copy such as login subtitle). README may use a different trade name — **`app.settings.json` wins for in-app strings.**
 - **Domain:** Legal-career job board (Romanian copy in metadata and many UI strings).
 - **Locale / market defaults:** `locale: "ro"`, `currency: "RON"` in app settings; keep new user-facing copy consistent unless explicitly internationalizing.
 
@@ -31,6 +31,7 @@ Before changing routing, data fetching, or config:
 | Area | Choice |
 |------|--------|
 | Framework | Next.js (App Router), TypeScript **strict** |
+| Client server-state cache | Redux Toolkit + RTK Query (`src/store/`) |
 | UI | MUI v7 + Emotion (`sx`, `@emotion/styled` where used) |
 | Global CSS | Tailwind CSS v4 (`@import "tailwindcss"` in `src/app/globals.css`) |
 | Forms / validation | react-hook-form, `@hookform/resolvers`, Zod |
@@ -61,12 +62,21 @@ Before changing routing, data fetching, or config:
 - **`src/hooks/`** — Client hooks (`useAuth`, `useSupabase`, etc.).
 - **`src/lib/`** — Supabase factories (`client`, `server`, `middleware`, `static`), utilities, SEO helpers.
 - **`src/theme/`** — MUI theme, palette, `ThemeRegistry`.
-- **`src/types/`** — `database.ts` (generated/hand-maintained Supabase types), shared app types (`index.ts`).
+- **`src/types/`** — `database.ts` (Supabase TS types), **`database.zod.ts`** (generated Zod mirrors via `npm run codegen`), shared app types (`index.ts`).
 - **`src/config/app.settings.json`** — Product name, salary defaults, feature flags, brand colors.
 - **`supabase/`** — `migrations/`, `config.toml`, Edge Functions under `supabase/functions/`.
 - **`middleware.ts`** (repo root) — Session refresh and auth redirects.
 
 Path alias: **`@/*` → `./src/*`** (`tsconfig.json`).
+
+### Contributor documentation (`/src`)
+
+| File | Purpose |
+|------|---------|
+| **`src/AGENTS.md`** | `/src` conventions: Supabase client usage, forms, services boundary, hooks, animation |
+| **`src/PATTERNS.md`** | Copy-paste snippets and **Pattern Index** (reference implementations per concern) |
+
+Keep these aligned when patterns change; avoid documenting behaviour in only one place.
 
 ---
 
