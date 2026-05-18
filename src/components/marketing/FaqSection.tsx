@@ -69,15 +69,6 @@ export function FaqSection({ items }: FaqSectionProps) {
               recrutare juridică
             </Box>
           </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ lineHeight: 1.75, fontSize: { xs: "1rem", md: "1.1rem" } }}
-          >
-            Cele mai întâlnite întrebări de la candidați și angajatori care fac primii pași pe
-            platformă. Dacă ai o întrebare suplimentară, echipa noastră îți răspunde în mai
-            puțin de 24 de ore.
-          </Typography>
         </Box>
 
         {items.length === 0 ? (

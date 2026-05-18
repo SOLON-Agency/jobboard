@@ -302,7 +302,7 @@ export function HeroSection({ counts }: { counts?: HeroCounts }) {
                   transition: "all 0.2s",
                 }}
               >
-                Creează un anunț
+                Creează anunț
               </Button>
               <Button
                 component={Link}
