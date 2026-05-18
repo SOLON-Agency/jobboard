@@ -65,7 +65,7 @@ export function BlogArticle({ post }: BlogArticleProps) {
               sx={{
                 fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.75rem" },
                 lineHeight: 1.25,
-                mb: 2,
+                mb: 3,
               }}
             >
               {post.title}
