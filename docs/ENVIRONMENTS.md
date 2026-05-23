@@ -121,6 +121,15 @@ Do **not** set `NEXT_PUBLIC_TITLE_PREFIX`. Mirror values in **Vercel → Product
 
 Opt-outs: `SKIP_ENV_SYNC=1`, `SKIP_CODEGEN=1`, `SKIP_VERCEL_ENV_PULL=1`, `SKIP_BUILD=1`, `SKIP_DEPLOY=1`, `SKIP_MIGRATIONS=1`, or `git commit --no-verify`.
 
+**After merge / branch switch (git hooks):**
+
+| Hook | When | Action |
+|------|------|--------|
+| `post-merge` | `git pull` finishes a merge | `env:sync` → `npm run codegen` |
+| `post-checkout` | `git checkout` switches branches | `env:sync` |
+
+Hook opt-outs: `SKIP_ENV_SYNC=1`, `SKIP_CODEGEN=1`.
+
 ---
 
 ## Vercel dashboard checklist

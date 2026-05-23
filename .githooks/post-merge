@@ -1,13 +1,25 @@
 #!/bin/sh
 #
-# After git pull (merge): refresh Supabase TypeScript types + database.zod.ts.
+# After git pull (merge): re-compose `.env` for the active branch, then refresh
+# Supabase TypeScript types + database.zod.ts.
 #
-# Opt-out: SKIP_CODEGEN=1
+# Opt-outs:
+#   SKIP_ENV_SYNC=1
+#   SKIP_CODEGEN=1
 #
 set -e
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
+
+ENV_SYNC_SCRIPT="scripts/sync-branch-environment.js"
+
+if [ "${SKIP_ENV_SYNC:-0}" != "1" ]; then
+  echo ""
+  echo "🌿  post-merge: syncing .env to current git branch..."
+  echo ""
+  node "$ENV_SYNC_SCRIPT" || true
+fi
 
 if [ "${SKIP_CODEGEN:-0}" = "1" ]; then
   echo "⚠️  SKIP_CODEGEN=1 — skipping post-merge codegen."

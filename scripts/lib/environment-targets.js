@@ -62,8 +62,7 @@ function resolveSupabaseProjectRef(branch) {
 }
 
 function resolveSupabaseProjectId(branch) {
-  const override = process.env.SUPABASE_PROJECT_ID?.trim();
-  if (override && !process.env.SUPABASE_ENV) return override;
+  // Always derive from git branch — never trust a stale SUPABASE_PROJECT_ID in `.env`.
   return resolveSupabaseProjectRef(branch);
 }
 

@@ -10,15 +10,22 @@
  * match other CLI scripts. Skips the write when output has no public tables (empty
  * schema from API/CLI bugs would break `Tables<"…">` across the app).
  */
+import { createRequire } from "node:module";
 import dotenv from "dotenv";
 import { spawnSync } from "node:child_process";
 import { existsSync, renameSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const require = createRequire(import.meta.url);
+const { getCurrentBranch, resolveSupabaseProjectId } = require("./lib/environment-targets.js");
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 dotenv.config({ path: path.join(root, ".env.local") });
 dotenv.config({ path: path.join(root, ".env") });
+
+const branchProjectId = resolveSupabaseProjectId(getCurrentBranch());
+process.env.SUPABASE_PROJECT_ID = branchProjectId;
 
 const out = path.join(root, "src/types/database.ts");
 const tmp = `${out}.tmp`;
