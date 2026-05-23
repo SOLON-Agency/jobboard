@@ -41,6 +41,7 @@ import { CompanyFavouriteButton } from "@/components/companies/CompanyFavouriteB
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import { jobTypeLabels, jobTypeChipSx, experienceLevelLabels } from "@/lib/utils";
 import type { Tables } from "@/types/database";
+import { withTitlePrefix } from "@/lib/page-title";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -116,7 +117,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       company.description?.slice(0, 160) ??
       `${company.name} — profilul companiei și anunțuri de angajare.`;
     const url = `${SITE_URL}/companies/${slug}`;
-    return {
+    return withTitlePrefix({
       title,
       description,
       alternates: { canonical: `/companies/${slug}` },
@@ -128,9 +129,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "max-snippet": -1,
         "max-image-preview": "large",
       },
-    };
+    });
   } catch {
-    return { title: "Companie negăsită" };
+    return withTitlePrefix({ title: "Companie negăsită" });
   }
 }
 

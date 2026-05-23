@@ -2,7 +2,7 @@
 
 Human-facing companion to **`src/AGENTS.md`**. Copy-paste snippets must stay aligned with **`/AGENTS.md`** (product rules, notifications, secrets).
 
-**Documentation map:** `/AGENTS.md` (product + ops) · `/README.md` (onboarding) · **`src/AGENTS.md`** (conventions) · **`src/PATTERNS.md`** (this file).
+**Documentation map:** `/AGENTS.md` (product + ops) · `/docs/ENVIRONMENTS.md` (TEST vs PROD branches) · `/README.md` (onboarding) · **`src/AGENTS.md`** (conventions) · **`src/PATTERNS.md`** (this file).
 
 ---
 
@@ -34,6 +34,7 @@ Reference implementations — when introducing a new feature, prefer mirroring a
 | Error boundary | `app/error.tsx` | `app/dashboard/error.tsx` |
 | Feature flag (static, JSON) | `lib/feature-flags.ts`, `middleware.ts` | `config/app.settings.json` |
 | Feature flag (Vercel Flags / Toolbar) | `flags.ts`, `components/providers/FavouritesFeatureRoot.tsx` | `flags/next`, `@flags-sdk/vercel` |
+| Page title prefix (TEST env) | `lib/page-title.ts`, `app/layout.tsx` | `NEXT_PUBLIC_TITLE_PREFIX`, `docs/ENVIRONMENTS.md` |
 
 ---
 
@@ -337,3 +338,35 @@ describe("LoginForm", () => {
   });
 });
 ```
+
+---
+
+## Page title prefix (TEST environment)
+
+Use `src/lib/page-title.ts` — never hardcode `[TEST]` in metadata exports.
+
+```tsx
+import { formatPageTitle, buildTitleTemplate, withTitlePrefix } from "@/lib/page-title";
+import appSettings from "@/config/app.settings.json";
+
+// Root layout — template covers short page titles
+export const metadata: Metadata = {
+  title: {
+    default: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
+    template: buildTitleTemplate(appSettings.name),
+  },
+  openGraph: {
+    title: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
+  },
+};
+
+// generateMetadata — wrap the return value
+export async function generateMetadata(): Promise<Metadata> {
+  return withTitlePrefix({
+    title: "Anunț negăsit",
+    description: "...",
+  });
+}
+```
+
+Set `NEXT_PUBLIC_TITLE_PREFIX=[TEST]` on Vercel Preview and via `npm run env:sync` on branch `test`. See `docs/ENVIRONMENTS.md`.

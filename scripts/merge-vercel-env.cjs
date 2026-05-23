@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Merges a `vercel env pull` output file into `.env` without removing
+ * Merges a `vercel env pull` output file into `.env.local` without removing
  * keys that only exist locally (e.g. SUPABASE_ACCESS_TOKEN).
  *
  * Usage: node scripts/merge-vercel-env.cjs <pull-output-file>
@@ -11,8 +11,10 @@
 const fs = require("fs");
 const path = require("path");
 
+const { FILES } = require("./lib/compose-env");
+
 const root = path.resolve(__dirname, "..");
-const envPath = path.join(root, ".env");
+const envPath = FILES.local;
 const pullPath = path.resolve(process.argv[2] || path.join(root, ".env.vercel.pull.tmp"));
 
 function parseEnvLines(content) {

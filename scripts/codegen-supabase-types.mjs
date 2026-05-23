@@ -3,22 +3,33 @@
  * Always exits 0 so `npm run codegen:zod` still runs against the existing file.
  *
  * Tries, in order:
- *   1. `supabase gen types --linked`
- *   2. `SUPABASE_PROJECT_ID` → `supabase gen types --project-id …`
+ *   1. `SUPABASE_PROJECT_ID` → `supabase gen types --project-id … --schema public`
+ *   2. `supabase gen types --linked --schema public`
  *
- * Loads repo-root `.env` so `SUPABASE_PROJECT_ID` matches other CLI scripts.
+ * Loads `.env.local` + `.env` so `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID`
+ * match other CLI scripts. Skips the write when output has no public tables (empty
+ * schema from API/CLI bugs would break `Tables<"…">` across the app).
  */
 import dotenv from "dotenv";
 import { spawnSync } from "node:child_process";
-import { existsSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, renameSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+dotenv.config({ path: path.join(root, ".env.local") });
 dotenv.config({ path: path.join(root, ".env") });
+
 const out = path.join(root, "src/types/database.ts");
 const tmp = `${out}.tmp`;
 const supabaseBin = path.join(root, "node_modules/.bin/supabase");
+
+/** True when generated types include at least one public table Row definition. */
+function hasPublicTableTypes(body) {
+  return /public:\s*\{[\s\S]*?Tables:\s*\{[\s\S]*?\n\s+[a-z][a-z0-9_]*:\s*\{\s*\n\s+Row:/.test(
+    body,
+  );
+}
 
 function runSupabase(args) {
   if (!existsSync(supabaseBin)) {
@@ -29,6 +40,7 @@ function runSupabase(args) {
     cwd: root,
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
+    env: process.env,
   });
   if (r.status !== 0) {
     return null;
@@ -37,14 +49,22 @@ function runSupabase(args) {
   if (!stdout.includes("export type Database")) {
     return null;
   }
+  if (!hasPublicTableTypes(stdout)) {
+    console.warn(
+      `codegen:types — rejected empty schema (supabase ${args.join(" ")}). Keeping existing database.ts.`,
+    );
+    return null;
+  }
   return stdout;
 }
 
-const attempts = [["gen", "types", "--linked"]];
+const schemaArgs = ["--schema", "public"];
+const attempts = [];
 const projectId = process.env.SUPABASE_PROJECT_ID?.trim();
 if (projectId) {
-  attempts.push(["gen", "types", "--project-id", projectId]);
+  attempts.push(["gen", "types", "--project-id", projectId, ...schemaArgs]);
 }
+attempts.push(["gen", "types", "--linked", ...schemaArgs]);
 
 let body = null;
 for (const args of attempts) {
@@ -61,9 +81,22 @@ if (!body) {
   } catch {
     /* noop */
   }
-  console.warn(
-    "codegen:types — skipped (supabase link your project or set SUPABASE_PROJECT_ID in .env).",
-  );
+  if (existsSync(out)) {
+    const existing = readFileSync(out, "utf8");
+    if (hasPublicTableTypes(existing)) {
+      console.warn(
+        "codegen:types — skipped (could not fetch schema; keeping committed database.ts).",
+      );
+    } else {
+      console.warn(
+        "codegen:types — skipped and database.ts has no public tables — restore from git or fix Supabase CLI link/token.",
+      );
+    }
+  } else {
+    console.warn(
+      "codegen:types — skipped (supabase link your project or set SUPABASE_PROJECT_ID in .env).",
+    );
+  }
   process.exit(0);
 }
 

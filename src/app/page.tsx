@@ -13,6 +13,7 @@ import { createStaticClient } from "@/lib/supabase/static";
 import { getPublicCounts } from "@/services/stats.service";
 import { getPublishedFaqs } from "@/services/faq.service";
 import appSettings from "@/config/app.settings.json";
+import { formatPageTitle } from "@/lib/page-title";
 
 // Revalidate once per day so counts stay fresh without a full redeploy
 export const revalidate = 86400;
@@ -22,8 +23,7 @@ const SEO_DESCRIPTION =
   `${appSettings.name} este platforma premium de recrutare dedicată exclusiv pieței juridice din România: avocați, juriști, departamente in-house și agenții de recrutare. Matchmaking inteligent, alerte personalizate, transparență salarială, candidați verificați și conformitate GDPR. Publici până la 5 anunțuri complet gratuit.`;
 
 export const metadata: Metadata = {
-  title: "[TEST] " + SEO_TITLE,
-  // title: SEO_TITLE,
+  title: formatPageTitle(SEO_TITLE),
   description: SEO_DESCRIPTION,
   keywords: [
     "joburi avocați România",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: "/" },
   openGraph: {
-    title: SEO_TITLE,
+    title: formatPageTitle(SEO_TITLE),
     description:
       "Platforma premium de carieră juridică din România. Matchmaking inteligent, transparență salarială și candidați verificați. Publici până la 5 anunțuri gratuit.",
     url: "/",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: SEO_TITLE,
+    title: formatPageTitle(SEO_TITLE),
     description:
       "Recrutare juridică inteligentă pentru avocați, juriști și echipe in-house. Matchmaking AI, alerte personalizate și 5 anunțuri gratuite.",
   },

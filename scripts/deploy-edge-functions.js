@@ -9,6 +9,7 @@
  *   node scripts/deploy-edge-functions.js fn-a fn-b        # deploy multiple functions
  *
  * Requires SUPABASE_ACCESS_TOKEN in the environment or in .env.
+ * Deploy target follows git branch — see docs/ENVIRONMENTS.md.
  */
 
 const { execFileSync } = require('child_process');
@@ -18,7 +19,8 @@ const fs = require('fs');
 // ---- Load .env --------------------------------------------------------------
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const PROJECT_REF = 'uccivcdtfpevtykirkuw';
+const { resolveSupabaseProjectRef } = require('./lib/environment-targets');
+const PROJECT_REF = resolveSupabaseProjectRef();
 const CLI = path.resolve(__dirname, '../node_modules/.bin/supabase');
 const FUNCTIONS_DIR = path.resolve(__dirname, '../supabase/functions');
 

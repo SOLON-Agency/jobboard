@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { withTitlePrefix } from "@/lib/page-title";
 import type { Metadata } from "next";
 import { assertFeatureEnabled, isFeatureEnabled } from "@/lib/feature-flags";
 import { createStaticClient } from "@/lib/supabase/static";
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const absoluteCanonical = post.canonical_url ?? `${SITE_URL}/blog/${slug}`;
     const authorName = post.profiles?.full_name ?? appSettings.name;
 
-    return {
+    return withTitlePrefix({
       title,
       description,
       alternates: { canonical: canonicalUrl },
@@ -70,9 +71,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "max-snippet": -1,
         "max-image-preview": "large",
       },
-    };
+    });
   } catch {
-    return { title: "Articol negăsit" };
+    return withTitlePrefix({ title: "Articol negăsit" });
   }
 }
 

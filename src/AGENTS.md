@@ -9,7 +9,8 @@ Companion to `/AGENTS.md` at the repo root. Use this file for code-level pattern
 
 | Doc | Audience | Purpose |
 |-----|----------|---------|
-| `/AGENTS.md` | Everyone | Product context, WCAG, notifications UX rules, Edge Functions inventory, env/secrets |
+| `/AGENTS.md` | Everyone | Product context, branch environments, WCAG, notifications UX rules, Edge Functions inventory, env/secrets |
+| `/docs/ENVIRONMENTS.md` | Everyone | TEST vs PROD branch mapping (Vercel, Supabase, flags, pre-commit) |
 | `/README.md` | Humans onboarding | Setup, scripts, high-level structure |
 | **`src/AGENTS.md`** (this file) | Implementors | `/src` conventions, services/forms/server-client split |
 | **`src/PATTERNS.md`** | Implementors | Copy-paste snippets; must match patterns declared here and in `/AGENTS.md` |

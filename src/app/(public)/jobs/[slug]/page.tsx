@@ -8,6 +8,7 @@ import { generateJobPostingJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { JobDetailWrapper } from "@/components/jobs/JobDetailWrapper";
 import { JobsCarousel } from "@/components/jobs/JobsCarousel";
 import { JobCtaBanner } from "@/components/layout/JobCtaBanner";
+import { withTitlePrefix } from "@/lib/page-title";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       job.description?.slice(0, 160) ?? `Aplică la ${job.title} — ${company}`;
     const url = `${SITE_URL}/jobs/${slug}`;
 
-    return {
+    return withTitlePrefix({
       title,
       description,
       alternates: { canonical: `/jobs/${slug}` },
@@ -61,9 +62,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         "max-snippet": -1,
         "max-image-preview": "large",
       },
-    };
+    });
   } catch {
-    return { title: "Anunț negăsit" };
+    return withTitlePrefix({ title: "Anunț negăsit" });
   }
 }
 

@@ -30,9 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Local env — keep secrets in `.env`; committed template is `.env.example`
+# Local env — layered files; committed templates are *.example
 .env*
 !.env.example
+!.env.local.example
+!.env.test.example
+!.env.prod.example
 
 # vercel
 .vercel

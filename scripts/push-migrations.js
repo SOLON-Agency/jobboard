@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Push Supabase migrations to the linked project.
+ * Push Supabase migrations to the branch-matched remote project.
  *
- * Wraps `supabase db push --project-ref <ref>` with non-interactive auth so it
- * can run inside CI and the pre-commit hook without prompting.
+ * Writes `supabase/.temp/project-ref` then runs `supabase db push --linked`.
+ * (`db push` has no `--project-ref` flag in the current CLI.)
  *
  * Usage:
  *   node scripts/push-migrations.js            # push all un-applied migrations
@@ -12,9 +12,10 @@
  *
  * Required env vars (loaded from .env if present):
  *   SUPABASE_ACCESS_TOKEN  — personal access token
- *                            https://supabase.com/dashboard/account/tokens
- *   SUPABASE_DB_PASSWORD   — database password for the linked project
- *                            (Dashboard → Project Settings → Database)
+ *   SUPABASE_DB_PASSWORD   — active DB password (set by npm run env:sync from TEST/MAIN keys)
+ *   Branch `test` → project aofjdbonfqjkosbgzsbx
+ *   Branch `main` → project uccivcdtfpevtykirkuw
+ *   @see docs/ENVIRONMENTS.md
  *
  * Opt-outs:
  *   SKIP_MIGRATIONS=1  — exit 0 without doing anything
@@ -26,7 +27,8 @@ const fs = require('fs');
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const PROJECT_REF = 'uccivcdtfpevtykirkuw';
+const { resolveSupabaseProjectRef } = require('./lib/environment-targets');
+const PROJECT_REF = resolveSupabaseProjectRef();
 const CLI = path.resolve(__dirname, '../node_modules/.bin/supabase');
 
 if (process.env.SKIP_MIGRATIONS === '1') {
@@ -67,9 +69,30 @@ if (!dbPassword) {
 }
 
 const extraArgs = process.argv.slice(2);
-// `supabase db push` targets the linked project by default (stored in
-// supabase/.temp/project-ref). `-p` passes the DB password non-interactively.
-// `--yes` skips the "do you want to push" confirmation prompt.
+
+// `db push` has no `--project-ref`; it uses the linked project in supabase/.temp/.
+// Link first so the ref matches the current branch and the CLI uses the IPv4 pooler.
+console.log(`Linking CLI to project ${PROJECT_REF}…\n`);
+const linkResult = spawnSync(
+  CLI,
+  ['link', '--project-ref', PROJECT_REF, '--yes', '-p', dbPassword],
+  {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      SUPABASE_ACCESS_TOKEN: accessToken,
+      SUPABASE_DB_PASSWORD: dbPassword,
+    },
+  }
+);
+
+if (linkResult.status !== 0) {
+  console.error('\n❌ supabase link failed.\n');
+  process.exit(linkResult.status ?? 1);
+}
+
+// `db push --linked` reads supabase/.temp/project-ref. `-p` passes the DB password.
+// `--yes` skips the confirmation prompt.
 const args = [
   'db',
   'push',

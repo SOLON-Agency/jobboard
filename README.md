@@ -51,25 +51,32 @@ npm install
 
 ### 2 — Configure environment variables
 
-Use a **single local file**: **`.env`** (gitignored). Remove any legacy **`.env.vercel.flags`** (merge is into `.env` only).
+Use **layered env files** (all gitignored). Copy the three templates, fill in values, then compose:
 
-1. Copy the template:
+```bash
+cp .env.local.example .env.local
+cp .env.test.example   .env.test
+cp .env.prod.example   .env.prod
+npm run env:sync    # writes .env for Next.js + scripts (branch-aware)
+```
 
-   ```bash
-   cp .env.example .env
-   ```
+See [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md) for the full checklist of what to fill in per file.
 
-2. Fill in Supabase URL, anon key, site URL, and (for CLI scripts) `SUPABASE_ACCESS_TOKEN` / `SUPABASE_DB_PASSWORD`.
+1. **`.env.local`** — `SUPABASE_ACCESS_TOKEN`, Development `FLAGS` / `FLAGS_SECRET` (via `npm run vercel:env`), `NEXT_PUBLIC_SITE_URL=http://localhost:3000`
 
-3. If the project is linked to Vercel (`npx vercel link`), merge dashboard env into `.env` **without** overwriting the keys above:
+2. **`.env.test`** — TEST Supabase URL, anon key, DB password, `NEXT_PUBLIC_TITLE_PREFIX=[TEST]`
+
+3. **`.env.prod`** — PROD Supabase URL, anon key, DB password (no title prefix)
+
+4. If the project is linked to Vercel (`npx vercel link`):
 
    ```bash
    npm run vercel:env
    ```
 
-   This runs `vercel env pull` to a temp file, then merges into `.env`. The pre-commit hook uses the same merge when you commit.
+   Pulls Development-scoped flags into `.env.local`, then re-composes `.env`.
 
-`dotenv` in **scripts** and **E2E** loads **`.env`**.
+`dotenv` in **scripts** and **E2E** loads the composed **`.env`**.
 
 > **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is **not** used by the Next.js app. It lives exclusively in Supabase Edge Function secrets. Never add it to `.env` or Vercel environment variables for the web app.
 
@@ -324,11 +331,26 @@ npm run lint                  # ESLint
 npm test                      # Vitest (single run)
 npm run test:watch            # Vitest watch mode
 npm run supabase:deploy:all   # Deploy all Edge Functions
+npm run env:sync              # Sync .env to current git branch (TEST vs PROD Supabase)
+npm run vercel:env            # Pull Development FLAGS into .env (then run env:sync)
 ```
 
 ---
 
 ## Deployment
+
+### Branch environments (TEST vs PROD)
+
+Git branches map to Vercel scopes, Supabase projects, and title prefixes:
+
+| Branch | Vercel | URL | Supabase |
+|--------|--------|-----|----------|
+| `test` | Preview | `https://jobboard-sand.vercel.app/` | `aofjdbonfqjkosbgzsbx` |
+| `main` | Production | Production domain | `uccivcdtfpevtykirkuw` |
+
+Local development uses **Development** Vercel Flags (`npm run vercel:env`) and branch-aware Supabase credentials (`npm run env:sync`).
+
+**Full reference:** [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md)
 
 ### Vercel (recommended)
 
@@ -343,7 +365,9 @@ Set environment variables in the Vercel dashboard (web app):
 | `NEXT_PUBLIC_SUPABASE_URL` | Public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public |
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin for metadata and auth redirects |
-| `FLAGS` / `FLAGS_SECRET` | Optional — Vercel Flags / Toolbar (`npm run vercel:env` merges into `.env`) |
+| `FLAGS` / `FLAGS_SECRET` | Optional — Vercel Flags / Toolbar (Development scope via `npm run vercel:env`; Preview/Production on Vercel dashboard) |
+| `NEXT_PUBLIC_TITLE_PREFIX` | Preview only — set to `[TEST]` for sandbox deployments |
+| `SUPABASE_TEST_*` / `SUPABASE_MAIN_*` | Local `.env.test` / `.env.prod` — see `docs/ENVIRONMENTS.md` |
 
 **Do not add `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, or `RESEND_FROM` to Vercel** for this project — they belong in **Supabase Edge Function secrets** (see **`AGENTS.md`** environment table).
 

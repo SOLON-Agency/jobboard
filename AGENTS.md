@@ -80,6 +80,22 @@ Keep these aligned when patterns change; avoid documenting behaviour in only one
 
 ---
 
+## Branch environments (TEST vs PROD)
+
+**Canonical reference:** [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md)
+
+| Git branch | Vercel scope | URL | Supabase project | Title prefix |
+|------------|--------------|-----|------------------|--------------|
+| `test` | Preview | `https://jobboard-sand.vercel.app/` | `aofjdbonfqjkosbgzsbx` | `[TEST] ` via `NEXT_PUBLIC_TITLE_PREFIX` |
+| `main` | Production | Production domain | `uccivcdtfpevtykirkuw` | none |
+| Local (either branch) | Development (flags only) | `http://localhost:3000` | Active branch via `npm run env:sync` | `[TEST] ` on `test` only |
+
+- Pre-commit runs `env:sync`, pulls **Development** flags, then deploys migrations/Edge Functions to the **branch-matched** Supabase project.
+- Do **not** hardcode `[TEST]` in page metadata — use `src/lib/page-title.ts`.
+- Cursor MCP (`.cursor/mcp.json`) targets the **TEST** project ref.
+
+---
+
 ## Supabase usage (project rules)
 
 1. **Browser client:** `createClient` from `src/lib/supabase/client.ts` — use only in `"use client"` components.
@@ -223,15 +239,19 @@ Users can override per type per channel via `profiles.notification_preferences`.
 
 ### Environment variables
 
-Local development uses **one file**: **`.env`** (gitignored). Copy **`.env.example`** → `.env` and run **`npm run vercel:env`** when the repo is linked to Vercel to merge `FLAGS` / `FLAGS_SECRET` (and other pulled keys) without erasing local-only variables. See README “Getting started”. Do not use `.env.vercel.flags`.
+Local development uses **layered env files** (all gitignored except `*.example` templates). **`npm run env:sync`** composes **`.env`** for Next.js and scripts from **`.env.local`** + **`.env.test`** or **`.env.prod`** (by git branch). Run **`npm run vercel:env`** when linked to Vercel to merge Development `FLAGS` / `FLAGS_SECRET` into **`.env.local`**. See **`docs/ENVIRONMENTS.md`** and README “Getting started”.
 
 | Variable | Where set | Purpose |
 |----------|-----------|---------|
-| `FLAGS` | Vercel → merged into **`.env`** via `npm run vercel:env` | Vercel Flags SDK (`vercelAdapter`) |
-| `FLAGS_SECRET` | Vercel → **`.env`** (same) | Flags SDK signing / Toolbar |
-| `NEXT_PUBLIC_SUPABASE_URL` | Vercel / `.env` | Supabase project URL (public) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel / `.env` | Browser + server anon client (public) |
-| `NEXT_PUBLIC_SITE_URL` | Vercel / `.env` + **Supabase Edge secrets** | Canonical origin for metadata, sitemap, auth redirects, and email links |
+| `FLAGS` | Vercel **Development** → merged into **`.env.local`** via `npm run vercel:env` | Vercel Flags SDK — local dev always uses Development scope |
+| `FLAGS_SECRET` | Vercel **Development** → **`.env.local`** (same) | Flags SDK signing / Toolbar — separate values per Vercel scope (see `docs/ENVIRONMENTS.md`) |
+| `.env.test` / `.env.prod` | **Local only** (gitignored) | Per-environment Supabase URL, anon key, DB password; composed into `.env` by `env:sync` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Vercel Preview/Production + composed **`.env`** | TEST: `aofjdbonfqjkosbgzsbx`, PROD: `uccivcdtfpevtykirkuw` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel Preview/Production + composed **`.env`** | Browser + server anon client (public) |
+| `NEXT_PUBLIC_TITLE_PREFIX` | Vercel **Preview** + **`.env.test`** | Optional prefix for `<title>` / OG / Twitter (e.g. `[TEST]`) — omit on Production |
+| `NEXT_PUBLIC_SITE_URL` | **`.env.local`** (localhost) / Vercel scopes / Edge secrets | Canonical origin for metadata, sitemap, auth redirects, and email links |
+| `SUPABASE_PROJECT_ID` | Composed **`.env`** (via `env:sync`) | Cloud project ref for `npm run codegen:types` |
+| `SUPABASE_ACCESS_TOKEN` | **`.env.local`** | Supabase CLI — deploy edge functions & db push |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Vercel / `.env` | VAPID public key sent to browser for Web Push subscription |
 | `RESEND_API_KEY` | **Supabase Edge secrets only** | Transactional email via Resend (`send-email` function) |
 | `RESEND_FROM` | **Supabase Edge secrets only** | Verified sender address, e.g. `"LegalJobs <noreply@yourdomain.com>"` |

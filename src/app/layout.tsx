@@ -10,6 +10,7 @@ import { VercelToolbar } from "@vercel/toolbar/next";
 import { generateWebSiteJsonLd } from "@/lib/seo";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import "./globals.css";
+import { formatPageTitle, buildTitleTemplate } from "@/lib/page-title";
 import appSettings from "@/config/app.settings.json";
 
 const saira = Saira({
@@ -25,8 +26,8 @@ const SITE_URL_META = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000
 
 export const metadata: Metadata = {
   title: {
-    default: `${appSettings.name} — Platformă de carieră juridică`,
-    template: `%s | ${appSettings.name}`,
+    default: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
+    template: buildTitleTemplate(appSettings.name),
   },
   ...(isFeatureEnabled("blog")
     ? {
@@ -46,13 +47,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: appSettings.name,
     locale: "ro_RO",
-    title: `${appSettings.name} — Platformă de carieră juridică`,
+    title: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
     description:
       "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură.",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${appSettings.name} — Platformă de carieră juridică`,
+    title: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
     description:
       "Găsește-ți următoarea oportunitate în cariera juridică. Răsfoiește locuri de muncă de la cele mai bune firme de avocatură.",
   },
