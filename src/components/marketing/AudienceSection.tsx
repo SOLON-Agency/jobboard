@@ -37,14 +37,14 @@ const audiences: readonly AudienceCard[] = [
     icon: <GavelOutlinedIcon sx={{ fontSize: 30 }} />,
     title: "Avocați definitivi",
     description:
-      "Profesioniștii cu experiență își prezintă cu eleganță parcursul, specializările și obiectivele de carieră — și descoperă oportunități pe măsura ambițiilor lor.",
+      "Profesioniștii cu experiență își prezintă cu eleganță parcursul, specializările și obiectivele de carieră - și descoperă oportunități pe măsura ambițiilor lor.",
     outcome: "Aplici doar la roluri aliniate cu seniorul tău profesional.",
   },
   {
     icon: <SchoolOutlinedIcon sx={{ fontSize: 30 }} />,
     title: "Avocați stagiari & juniori",
     description:
-      "Începutul de carieră contează enorm. Pe platformă găsești programe de internship, stagiatură și poziții entry-level la firme care investesc în noua generație juridică.",
+      "Începutul de carieră contează enorm. Pe platformă găsești programe de internship, stagiatură și poziții junior la firme care investesc în noua generație juridică.",
     outcome: "Pornești cariera de la o firmă care îți este într-adevăr potrivită.",
   },
   {
@@ -56,10 +56,10 @@ const audiences: readonly AudienceCard[] = [
   },
   {
     icon: <GroupsOutlinedIcon sx={{ fontSize: 30 }} />,
-    title: "Recrutori și agenții de profil",
+    title: "Recrutori juridici și agenții",
     description:
-      "Echipele de recrutare specializate au la dispoziție o audiență calificată, dashboard-uri dedicate și fluxuri optimizate pentru selecție rapidă.",
-    outcome: "Livrezi clienților potriviri de calitate într-un timp scurt.",
+      "Echipele de recrutare specializate au la dispoziție o audiență calificată, dashboards dedicate și fluxuri de lucru optimizate pentru selecție rapidă.",
+    outcome: "Livrezi clienților tăi candidați de calitate într-un timp scurt.",
   },
 ] as const;
 
@@ -129,7 +129,7 @@ export function AudienceSection() {
               fontSize: { xs: "1.85rem", sm: "2.2rem", md: "2.6rem", lg: "3rem" },
             }}
           >
-            Recrutare modernă pentru{" "}
+            Recrutare modernă <br/>pentru{" "}
             <Box
               component="span"
               sx={{
