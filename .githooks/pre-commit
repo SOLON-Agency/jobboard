@@ -6,16 +6,25 @@
 #   git config core.hooksPath .githooks
 #
 # Steps:
-#   0. `vercel env pull` → merge into `.env` — sync FLAGS / FLAGS_SECRET (and
-#      other Vercel development env vars) without removing locally-only keys.
-#      Requires `vercel link` and a logged-in CLI. Use the same flow manually:
-#      `npm run vercel:env`.
-#   1. `next build` — fail fast on TypeScript / build errors.
-#   2. Deploy Supabase Edge Functions that changed under `supabase/functions/`.
-#      If `_shared/` changed, redeploy everything.
-#   3. Push Supabase migrations when any `supabase/migrations/*.sql` is staged.
+#   0. Compose `.env` from `.env.local` + `.env.test` | `.env.prod` (current branch).
+#   1. Regenerate `src/types/database.ts` (when linked / SUPABASE_PROJECT_ID) +
+#      `src/types/database.zod.ts` (supazod) — then stage both paths.
+#   2. `vercel env pull --environment=development` → merge into `.env.local` — sync
+#      Development FLAGS / FLAGS_SECRET without removing locally-only keys.
+#      Requires `vercel link` and a logged-in CLI. Manual flow: `npm run vercel:env`.
+#   3. Re-compose `.env` (after Vercel merge into `.env.local`).
+#   4. `next build` — fail fast on TypeScript / build errors.
+#   5. Deploy Supabase Edge Functions that changed under `supabase/functions/`.
+#      If `_shared/` changed, redeploy everything. Target project matches branch.
+#   6. Push Supabase migrations when any `supabase/migrations/*.sql` is staged.
+#
+# Branch → Supabase: see docs/ENVIRONMENTS.md
+#   test → aofjdbonfqjkosbgzsbx (Vercel Preview)
+#   main → uccivcdtfpevtykirkuw (Vercel Production)
 #
 # Opt-outs (set to 1 to skip individual steps):
+#   SKIP_ENV_SYNC=1         bypass branch env sync
+#   SKIP_CODEGEN=1          bypass Supabase types + database.zod.ts regeneration
 #   SKIP_VERCEL_ENV_PULL=1  bypass Vercel `env pull`
 #   SKIP_BUILD=1            bypass the Next.js build
 #   SKIP_DEPLOY=1           bypass edge-function deployment
@@ -25,48 +34,44 @@
 #   git commit --no-verify -m "wip"
 #
 # Offline / no Vercel CLI login: use SKIP_VERCEL_ENV_PULL=1 (pull step warns and continues).
+# Offline types pull: codegen:types skips when not linked; supazod still refreshes Zod from committed types.
 
 set -e
 
-# ── Ensure npm/node are available ───────────────────────────────────────────
-# Git hooks run outside the user's interactive shell, so version managers
-# (nvm, fnm, Volta, Homebrew) are not automatically sourced. We try each in
-# order of popularity; the first that succeeds makes npm available.
-if ! command -v npm >/dev/null 2>&1; then
-  # nvm
-  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-  # shellcheck disable=SC1090,SC1091
-  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" --no-use 2>/dev/null || true
-
-  # fnm
-  if ! command -v npm >/dev/null 2>&1 && command -v fnm >/dev/null 2>&1; then
-    eval "$(fnm env --use-on-cd 2>/dev/null)" 2>/dev/null || true
-  fi
-  if ! command -v npm >/dev/null 2>&1 && [ -s "$HOME/.fnm/fnm" ]; then
-    eval "$($HOME/.fnm/fnm env 2>/dev/null)" 2>/dev/null || true
-  fi
-
-  # Volta
-  export PATH="$HOME/.volta/bin:$PATH"
-
-  # Homebrew (Apple Silicon + Intel)
-  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:$PATH"
-fi
-
-if ! command -v npm >/dev/null 2>&1; then
-  echo ""
-  echo "❌  npm not found. Make sure Node.js is installed and on your PATH."
-  echo "   To bypass all checks: SKIP_BUILD=1 SKIP_DEPLOY=1 SKIP_MIGRATIONS=1 git commit ..."
-  echo ""
-  exit 1
-fi
+# shellcheck disable=SC1091
+. "$(dirname "$0")/ensure-npm.sh"
+ensure_npm_in_path
 
 FUNCTIONS_DIR="supabase/functions"
 MIGRATIONS_DIR="supabase/migrations"
 DEPLOY_SCRIPT="scripts/deploy-edge-functions.js"
 MIGRATE_SCRIPT="scripts/push-migrations.js"
+ENV_SYNC_SCRIPT="scripts/sync-branch-environment.js"
 
-# ── 0. Vercel env pull → .env (merge) ────────────────────────────────────────
+# ── 0. Branch env sync (Supabase + title prefix) ─────────────────────────────
+
+if [ "${SKIP_ENV_SYNC:-0}" = "1" ]; then
+  echo "⚠️  SKIP_ENV_SYNC=1 — skipping branch env sync."
+else
+  echo ""
+  echo "🌿  Syncing .env to current git branch (TEST vs PROD)..."
+  echo ""
+  node "$ENV_SYNC_SCRIPT"
+fi
+
+# ── 1. Supabase TypeScript types + Zod (supazod) ─────────────────────────────
+
+if [ "${SKIP_CODEGEN:-0}" = "1" ]; then
+  echo "⚠️  SKIP_CODEGEN=1 — skipping DB types + database.zod.ts codegen."
+else
+  echo ""
+  echo "📦  Regenerating DB types + database.zod.ts..."
+  echo ""
+  npm run codegen
+  git add src/types/database.ts src/types/database.zod.ts
+fi
+
+# ── 2. Vercel env pull → .env (Development scope — flags only) ────────────────
 
 if [ "${SKIP_VERCEL_ENV_PULL:-0}" = "1" ]; then
   echo "⚠️  SKIP_VERCEL_ENV_PULL=1 — skipping Vercel env pull."
@@ -75,15 +80,15 @@ else
     echo "ℹ️  No .vercel/project.json — skipping Vercel env pull (run: npx vercel link)."
   else
     echo ""
-    echo "🚩  Pulling Vercel development env → merging into .env ..."
+    echo "🚩  Pulling Vercel Development env → merging into .env.local ..."
     echo ""
     tmp_env=".env.vercel.pull.tmp"
     rm -f "$tmp_env"
-    if npx --yes vercel@latest env pull "$tmp_env" --yes; then
+    if npx --yes vercel@latest env pull "$tmp_env" --environment=development --yes; then
       node scripts/merge-vercel-env.cjs "$tmp_env"
       rm -f "$tmp_env"
       echo ""
-      echo "✅ Vercel env merged into .env."
+      echo "✅ Vercel Development env merged into .env.local."
       echo ""
     else
       rm -f "$tmp_env"
@@ -95,7 +100,15 @@ else
   fi
 fi
 
-# ── 1. Next.js build check ──────────────────────────────────────────────────
+# ── 3. Re-sync branch env (restore Supabase + title prefix after Vercel merge) ─
+
+if [ "${SKIP_ENV_SYNC:-0}" = "1" ]; then
+  echo "⚠️  SKIP_ENV_SYNC=1 — skipping post-merge branch env sync."
+else
+  node "$ENV_SYNC_SCRIPT"
+fi
+
+# ── 4. Next.js build check ──────────────────────────────────────────────────
 
 if [ "${SKIP_BUILD:-0}" = "1" ]; then
   echo "⚠️  SKIP_BUILD=1 — skipping build check."
@@ -117,7 +130,7 @@ else
   fi
 fi
 
-# ── 2. Supabase Edge Functions deployment ───────────────────────────────────
+# ── 5. Supabase Edge Functions deployment ───────────────────────────────────
 
 if [ "${SKIP_DEPLOY:-0}" = "1" ]; then
   echo "⚠️  SKIP_DEPLOY=1 — skipping edge-function deployment."
@@ -149,7 +162,7 @@ else
   fi
 fi
 
-# ── 3. Supabase migrations push ─────────────────────────────────────────────
+# ── 6. Supabase migrations push ─────────────────────────────────────────────
 
 if [ "${SKIP_MIGRATIONS:-0}" = "1" ]; then
   echo "⚠️  SKIP_MIGRATIONS=1 — skipping migration push."
@@ -158,7 +171,7 @@ else
 
   if [ -n "$staged_migrations" ]; then
     echo ""
-    echo "🗄️  Supabase migrations changed — pushing to the linked project..."
+    echo "🗄️  Supabase migrations changed — pushing to the branch-matched project..."
     echo ""
     node "$MIGRATE_SCRIPT"
   fi

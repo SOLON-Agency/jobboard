@@ -10,12 +10,12 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import appSettings from "@/config/app.settings.json";
 
 const includedFeatures: readonly string[] = [
-  "Până la 5 anunțuri active gratuite, fără card de credit",
-  "Profil de companie complet, cu logo, descriere și beneficii",
-  "Acces la candidați verificați și la dashboard-ul de aplicații",
-  "Anunțuri afișate cu interval salarial și pachet de beneficii",
-  "Notificări instant când candidații aplică sau își retrag aplicația",
-  "Asistență la onboarding pentru primul tău anunț publicat",
+  "Până la 5 anunțuri de angajare active simultan",
+  "Profil de companie complet: logo, descriere și domenii de practică",
+  "Control total asupra vizibilității profilului companiei",
+  "Acces la dashboard-ul de anunțuri și aplicații în timp real",
+  "Filtrare și triere a candidaților care aplică la anunțurile tale",
+  "Notificari pe email în momente cheie ale procesului de recrutare",
 ] as const;
 
 export function PricingSection() {
@@ -37,7 +37,7 @@ export function PricingSection() {
               mb: 1.5,
             }}
           >
-            Acces gratuit pentru angajatori
+            Acces gratuit pentru societăți juridice
           </Typography>
           <Typography
             id="pricing-section-heading"
@@ -45,7 +45,7 @@ export function PricingSection() {
             component="h2"
             sx={{ mb: 2, fontSize: { xs: "1.85rem", sm: "2.2rem", md: "2.6rem", lg: "3rem" } }}
           >
-            Publici{" "}
+            Publică{" "}
             <Box
               component="span"
               sx={{
@@ -57,15 +57,14 @@ export function PricingSection() {
             >
               până la 5 anunțuri
             </Box>{" "}
-            complet gratuit
+            {/* complet gratuit */}
           </Typography>
           <Typography
             variant="body1"
             color="text.secondary"
             sx={{ lineHeight: 1.75, fontSize: { xs: "1rem", md: "1.1rem" } }}
           >
-            Începi într-un singur minut, fără card de credit și fără angajament. Testezi
-            calitatea audienței noastre direct pe rolurile pe care le ai deschise astăzi.
+            Începi într-un singur minut, fără card de credit și fără angajament permanent.
           </Typography>
         </Box>
 
@@ -92,7 +91,7 @@ export function PricingSection() {
               aria-hidden
               sx={{
                 position: "absolute",
-                top: 18,
+                top: 10,
                 right: -25,
                 transform: "rotate(35deg)",
                 bgcolor: "rgba(195,174,97,0.9)",
@@ -101,7 +100,8 @@ export function PricingSection() {
                 fontWeight: 800,
                 letterSpacing: "0.18em",
                 textTransform: "uppercase",
-                px: 5,
+                pl: 8,
+                pr: 6,
                 py: 0.5,
               }}
             >
@@ -157,14 +157,14 @@ export function PricingSection() {
                   color="text.secondary"
                   sx={{ lineHeight: 1.75, mb: 2.5 }}
                 >
-                  Publicarea anunțurilor pe {appSettings.name} este gratuită până la 5 roluri
-                  active simultan. Suficient pentru a testa platforma pe pozițiile tale cheie
-                  înainte de a explora opțiunile premium.
+                  Publică până la 5 anunțuri active simultan pe {appSettings.name} și
+                  începe să primești candidaturi de la profesioniști din domeniul juridic. 
+                  <br/>
+                  Fără costuri ascunse.
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontStyle: "italic" }}>
-                  Fără reclame, fără spam, fără perioade limitate. Doar acces complet la audiența
-                  juridică pe care o construim zi de zi.
+                  Fără reclame, fără spam, fără paywalls. Control total asupra notificărilor.
                 </Typography>
 
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>

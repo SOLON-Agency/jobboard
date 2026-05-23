@@ -4,7 +4,7 @@
 --
 -- Also backfills expires_at for any existing published jobs that have none.
 --
--- After applying: run `supabase gen types typescript --project-id <ref> > src/types/database.ts`
+-- After applying: run `npm run codegen` (or `supabase gen types --linked` → `npm run codegen:zod`)
 
 -- ── RPC: job poster contact for lifecycle notifications ───────────────────────
 CREATE OR REPLACE FUNCTION public.job_poster_recipient(p_job_id uuid)

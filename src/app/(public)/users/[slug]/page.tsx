@@ -22,6 +22,7 @@ import { generatePersonJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { EducationTimeline } from "@/components/profile/EducationTimeline";
 import { ExperienceTimeline } from "@/components/profile/ExperienceTimeline";
 import { ProfileActions } from "./ProfileActions";
+import { withTitlePrefix } from "@/lib/page-title";
 import type { Metadata } from "next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -63,17 +64,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single();
 
   if (!data?.is_public) {
-    return {
+    return withTitlePrefix({
       title: "Profil privat",
       robots: { index: false, follow: false },
-    };
+    });
   }
 
   const title = data.full_name ?? "Profil utilizator";
   const description = data.headline ?? undefined;
   const url = `${SITE_URL}/users/${slug}`;
 
-  return {
+  return withTitlePrefix({
     title,
     description,
     alternates: { canonical: `/users/${slug}` },
@@ -85,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       "max-snippet": -1,
       "max-image-preview": "large",
     },
-  };
+  });
 }
 
 export default async function PublicProfilePage({ params }: Props) {

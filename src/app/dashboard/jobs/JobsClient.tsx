@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { skipToken } from "@reduxjs/toolkit/query";
 import {
   Typography,
   Button,
   Paper,
-  Stack,
   FormControl,
   Select,
   MenuItem,
   Tooltip,
+  Alert,
   type SelectChangeEvent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -20,7 +21,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useRole } from "@/hooks/useRole";
 import { MAX_ACTIVE_JOBS } from "@/lib/roles";
-import { getUserCompanies } from "@/services/companies.service";
 import { createJob, updateJob, deleteJob, archiveJob } from "@/services/jobs.service";
 import { createBenefit } from "@/services/benefits.service";
 import { slugify, parseSupabaseError } from "@/lib/utils";
@@ -29,9 +29,11 @@ import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { AddEditJob } from "@/components/forms/AddEditJob";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useToast } from "@/contexts/ToastContext";
-import type { JobFormData, CompanyOption, JobWithCompany, BenefitDraft } from "@/components/forms/AddEditJob";
+import type { JobFormData, JobWithCompany, BenefitDraft } from "@/components/forms/AddEditJob";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
+import { jobBoardApi, useEmployerJobsDashboardQuery } from "@/store/jobBoardApi";
+import { useAppDispatch } from "@/store/hooks";
 
 // ─── Scheduling helpers ────────────────────────────────────────────────────────
 
@@ -58,13 +60,29 @@ function deriveStatus(publishedAtDate: string): "published" | "draft" {
 export function JobsClient() {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const { role } = useRole();
   const { showToast } = useToast();
 
-  const [jobs, setJobs] = useState<JobWithCompany[]>([]);
-  const [companies, setCompanies] = useState<CompanyOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: dashboardData,
+    isLoading,
+    isError,
+    refetch,
+  } = useEmployerJobsDashboardQuery(user?.id ?? skipToken);
+
+  const jobs = useMemo(() => dashboardData?.jobs ?? [], [dashboardData?.jobs]);
+  const companies = useMemo(() => dashboardData?.companies ?? [], [dashboardData?.companies]);
+
+  const activeJobCount = jobs.filter((j) => j.status === "published").length;
+  const maxJobs = MAX_ACTIVE_JOBS[role];
+  const atJobLimit = maxJobs !== null && activeJobCount >= maxJobs;
+
+  const invalidateEmployerJobs = useCallback(() => {
+    if (!user?.id) return;
+    dispatch(jobBoardApi.util.invalidateTags([{ type: "EmployerDashboard", id: user.id }]));
+  }, [dispatch, user]);
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("all");
 
@@ -72,32 +90,6 @@ export function JobsClient() {
   const [editingJob, setEditingJob] = useState<JobWithCompany | null>(null);
   const [formDefaults, setFormDefaults] = useState<JobFormData | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  const loadJobs = useCallback(async () => {
-    if (!user) return;
-    const rows = await getUserCompanies(supabase, user.id);
-    const opts: CompanyOption[] = rows
-      .flatMap((cu) => (cu.companies ? [{ id: cu.companies.id, name: cu.companies.name }] : []));
-
-    setCompanies(opts);
-
-    if (opts.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    const { data } = await supabase
-      .from("job_listings")
-      .select("*, companies(*)")
-      .in("company_id", opts.map((c) => c.id))
-      .eq("is_archived", false)
-      .order("created_at", { ascending: false });
-
-    setJobs((data as JobWithCompany[]) ?? []);
-    setLoading(false);
-  }, [user, supabase]);
-
-  useEffect(() => { loadJobs(); }, [loadJobs]);
 
   const openCreate = () => {
     setEditingJob(null);
@@ -268,13 +260,22 @@ export function JobsClient() {
           setMessage({ type: "success", text: successMsg });
           showToast(successMsg);
         }
-        await loadJobs();
+        await invalidateEmployerJobs();
         setTimeout(closeDrawer, 900);
       } catch (err) {
         setMessage({ type: "error", text: parseSupabaseError(err) });
       }
     },
-    [supabase, editingJob, companies, loadJobs]
+    [
+      supabase,
+      editingJob,
+      companies,
+      invalidateEmployerJobs,
+      user,
+      showToast,
+      atJobLimit,
+      maxJobs,
+    ]
   );
 
   const handleStatusChange = async (jobId: string, status: "published" | "archived" | "draft") => {
@@ -303,7 +304,7 @@ export function JobsClient() {
           .catch((e: unknown) => console.warn("alerts-job-match:", e));
       }
     }
-    await loadJobs();
+    await invalidateEmployerJobs();
   };
 
   const handleDuplicate = async (job: JobWithCompany) => {
@@ -322,7 +323,7 @@ export function JobsClient() {
       application_url: job.application_url,
       status: "draft",
     });
-    await loadJobs();
+    await invalidateEmployerJobs();
   };
 
   const handleDelete = async (job: JobWithCompany) => {
@@ -336,7 +337,7 @@ export function JobsClient() {
         idempotencyKey: `job-deleted/${job.id}`,
       }).catch((e: unknown) => console.warn("notify-job-deleted:", e));
     }
-    await loadJobs();
+    await invalidateEmployerJobs();
   };
 
   const handleArchive = async (job: JobWithCompany) => {
@@ -349,7 +350,7 @@ export function JobsClient() {
         idempotencyKey: `job-archived/${job.id}`,
       }).catch((e: unknown) => console.warn("notify-job-archived:", e));
     }
-    await loadJobs();
+    await invalidateEmployerJobs();
   };
 
   const handlePreviewCandidates = (job: JobWithCompany) => {
@@ -361,11 +362,20 @@ export function JobsClient() {
       ? jobs
       : jobs.filter((j) => j.company_id === selectedCompanyId);
 
-  const activeJobCount = jobs.filter((j) => j.status === "published").length;
-  const maxJobs = MAX_ACTIVE_JOBS[role];
-  const atJobLimit = maxJobs !== null && activeJobCount >= maxJobs;
+  if (isLoading) return null;
 
-  if (loading) return null;
+  if (isError) {
+    return (
+      <Paper sx={{ p: 4, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Nu s-au putut încărca anunțurile. Te rugăm să încerci din nou.
+        </Alert>
+        <Button type="button" variant="contained" onClick={() => void refetch()}>
+          Reîncearcă
+        </Button>
+      </Paper>
+    );
+  }
 
   return (
     <>

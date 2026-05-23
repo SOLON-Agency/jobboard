@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import {
@@ -12,7 +12,6 @@ import {
   Paper,
   Divider,
   IconButton,
-  Snackbar,
   Tooltip,
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
@@ -37,6 +36,7 @@ import {
 import { JobTags } from "@/components/jobs/JobTags";
 import { ApplyButton } from "@/components/jobs/ApplyButton";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
+import { useToast } from "@/contexts/ToastContext";
 import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
@@ -91,13 +91,11 @@ export function JobDetail({
   onToggleFavorite,
 }: JobDetailProps) {
   const favouritesEnabled = useFavouritesFeature();
-  const [snackOpen, setSnackOpen] = useState(false);
-  const [snackMsg, setSnackMsg] = useState("");
+  const { showToast } = useToast();
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
-    setSnackMsg("Link copiat în clipboard");
-    setSnackOpen(true);
+    showToast("Link copiat în clipboard.", "success", 2500);
   };
 
   const handleShare = async () => {
@@ -489,15 +487,6 @@ export function JobDetail({
           </Box>
         </Paper>
       </Box>
-
-      <Snackbar
-        open={snackOpen}
-        autoHideDuration={2500}
-        onClose={() => setSnackOpen(false)}
-        message={snackMsg}
-        // role="status" so screen readers announce the copy confirmation politely
-        ContentProps={{ role: "status" } as object}
-      />
     </Box>
   );
 };

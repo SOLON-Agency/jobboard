@@ -1,3 +1,4 @@
+import { withTitlePrefix } from "@/lib/page-title";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Typography } from "@mui/material";
@@ -19,9 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const supabase = await createClient();
     const post = await getPostById(supabase, id);
-    return { title: `Editează: ${post.title}` };
+    return withTitlePrefix({ title: `Editează: ${post.title}` });
   } catch {
-    return { title: "Editare articol" };
+    return withTitlePrefix({ title: "Editare articol" });
   }
 }
 

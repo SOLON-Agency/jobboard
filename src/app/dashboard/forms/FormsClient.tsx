@@ -167,7 +167,7 @@ function FormActionsRow({ form, onEdit, onArchive, onDelete }: FormActionsRowPro
             <ListItemIcon sx={{ minWidth: 0, color: "error.main" }}>
               <ArchiveIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText primary="Arhivează" primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }} />
+            <ListItemText primary="Arhivează" primaryTypographyProps={{ variant: "body2", color: "error.main", fontWeight: 500 }} />
           </MuiMenuItem>
         )}
 

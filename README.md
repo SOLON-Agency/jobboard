@@ -14,7 +14,7 @@ A production-grade job board for the Romanian legal industry built with **Next.j
 | Forms | react-hook-form v7 + Zod + `@hookform/resolvers` |
 | Rich text | TipTap |
 | Auth & data | Supabase (`@supabase/supabase-js`, `@supabase/ssr`) |
-| Email | Resend (via Next.js Route Handlers) |
+| Email | Resend (Supabase **Edge Functions** — `send-email`, `notifications`, `job-application`, … — see **`AGENTS.md`**) |
 | Charts | Recharts |
 | Motion | Framer Motion |
 | Markdown | react-markdown |
@@ -25,20 +25,11 @@ A production-grade job board for the Romanian legal industry built with **Next.j
 
 ## Feature flags
 
-Controlled in `src/config/app.settings.json`:
+**Static product gates** — `src/config/app.settings.json` → `features` (blog, alerts, messages, notifications, archive, matchmaking, etc.). Use **`src/lib/feature-flags.ts`** (`isFeatureEnabled`, `assertFeatureEnabled`) in code; middleware may duplicate guards for sensitive routes (e.g. blog).
 
-| Feature | Status |
-|---------|--------|
-| Job listings (CRUD, search, SSG) | ✅ Enabled |
-| Company profiles (SSG) | ✅ Enabled |
-| Application forms (custom form builder) | ✅ Enabled |
-| Job archive | ✅ Enabled |
-| Public wizard (`/anunt`) for new employers | ✅ Enabled |
-| Favourite jobs / companies | ✅ Enabled |
-| User roles (user / employer / premium_employer / admin) | ✅ Enabled |
-| Job alerts | ⛔ Disabled |
-| Real-time messaging | ⛔ Disabled |
-| In-app notifications (DB feed) | ⛔ Disabled |
+**Runtime experimentation** — Job and company **favourites** use the Flags SDK (`src/flags.ts`, `favouritesFlag`) with `FLAGS` / `FLAGS_SECRET` from Vercel when configured — see **`/AGENTS.md`** and `.agents/skills/flags-sdk/SKILL.md`.
+
+Canonical brand name and numeric defaults live in the same JSON file (`name`, `brand`, `config`). UI copy remains Romanian in source.
 
 ---
 
@@ -60,25 +51,32 @@ npm install
 
 ### 2 — Configure environment variables
 
-Use a **single local file**: **`.env`** (gitignored). Remove any legacy **`.env.vercel.flags`** (merge is into `.env` only).
+Use **layered env files** (all gitignored). Copy the three templates, fill in values, then compose:
 
-1. Copy the template:
+```bash
+cp .env.local.example .env.local
+cp .env.test.example   .env.test
+cp .env.prod.example   .env.prod
+npm run env:sync    # writes .env for Next.js + scripts (branch-aware)
+```
 
-   ```bash
-   cp .env.example .env
-   ```
+See [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md) for the full checklist of what to fill in per file.
 
-2. Fill in Supabase URL, anon key, site URL, and (for CLI scripts) `SUPABASE_ACCESS_TOKEN` / `SUPABASE_DB_PASSWORD`.
+1. **`.env.local`** — `SUPABASE_ACCESS_TOKEN`, Development `FLAGS` / `FLAGS_SECRET` (via `npm run vercel:env`), `NEXT_PUBLIC_SITE_URL=http://localhost:3000`
 
-3. If the project is linked to Vercel (`npx vercel link`), merge dashboard env into `.env` **without** overwriting the keys above:
+2. **`.env.test`** — TEST Supabase URL, anon key, DB password, `NEXT_PUBLIC_TITLE_PREFIX=[TEST]`
+
+3. **`.env.prod`** — PROD Supabase URL, anon key, DB password (no title prefix)
+
+4. If the project is linked to Vercel (`npx vercel link`):
 
    ```bash
    npm run vercel:env
    ```
 
-   This runs `vercel env pull` to a temp file, then merges into `.env`. The pre-commit hook uses the same merge when you commit.
+   Pulls Development-scoped flags into `.env.local`, then re-composes `.env`.
 
-`dotenv` in **scripts** and **E2E** loads **`.env`**.
+`dotenv` in **scripts** and **E2E** loads the composed **`.env`**.
 
 > **Security note:** `SUPABASE_SERVICE_ROLE_KEY` is **not** used by the Next.js app. It lives exclusively in Supabase Edge Function secrets. Never add it to `.env` or Vercel environment variables for the web app.
 
@@ -89,6 +87,14 @@ supabase db push
 ```
 
 Or paste the files in `supabase/migrations/` into the Supabase Dashboard SQL Editor in chronological order.
+
+After schema changes, refresh TypeScript + Zod mirrors (also runs on **`git pull`** / **`git commit`** via hooks unless `SKIP_CODEGEN=1`):
+
+```bash
+npm run codegen
+```
+
+Uses `supabase gen types --linked` when the directory is linked, or set **`SUPABASE_PROJECT_ID`** in `.env` (see `.env.example`). If remote generation skips, `database.ts` is left as-is and **supazod** still updates **`src/types/database.zod.ts`**.
 
 ### 4 — Start the dev server
 
@@ -105,103 +111,31 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 src/
 ├── app/
-│   ├── (public)/               # Unauthenticated pages
-│   │   ├── page.tsx            # Homepage
-│   │   ├── jobs/               # Job listing + detail ([slug])
-│   │   ├── companies/[slug]/   # Company public profile
-│   │   ├── users/[slug]/       # Candidate public profile
-│   │   ├── anunt/              # Multi-step job-posting wizard
-│   │   ├── how-it-works/
-│   │   └── policy/
-│   ├── (auth)/                 # Login, register, OAuth callback
-│   ├── (dashboard)/            # Protected — requires authentication
-│   │   └── dashboard/
-│   │       ├── page.tsx        # Overview
-│   │       ├── jobs/           # Job CRUD
-│   │       ├── company/        # Company CRUD
-│   │       ├── profile/        # Candidate profile
-│   │       ├── applications/   # Received / sent applications
-│   │       ├── forms/          # Custom application form builder
-│   │       ├── archive/        # Archived jobs & companies
-│   │       ├── alerts/         # Saved search alerts (flag-guarded)
-│   │       └── messages/       # Messaging (flag-guarded)
-│   └── api/
-│       ├── jobs/notify-application/    # POST — send application emails
-│       ├── jobs/apply-internal-form/   # POST — submit form application
-│       ├── profile/notify-updated/     # POST — send profile-update email
-│       └── companies/notify-created/  # POST — send company-created email
-├── components/
-│   ├── auth/           # LoginForm, SocialButtons
-│   ├── chat/           # ChatWindow
-│   ├── companies/      # CompanyDescription, CompanyJobList, CompanyPageTracker
-│   ├── dashboard/      # DashboardNav, DashboardPageHeader, DashboardContent,
-│   │                   # EmailVerificationBanner
-│   ├── editor/         # RichTextEditor (TipTap)
-│   ├── forms/          # All form components (dashboard CRUD + application flow)
-│   │   ├── AddEditCompany.tsx
-│   │   ├── AddEditForm.tsx   # Form-builder UI (custom application forms)
-│   │   ├── AddEditJob.tsx
-│   │   ├── ApplicationForm.tsx
-│   │   └── validations/      # Zod schemas + TS types, one file per form domain
-│   │       ├── company.schema.ts
-│   │       ├── job.schema.ts
-│   │       └── form-builder.schema.ts
-│   ├── jobs/           # JobCard, JobRow, JobList, JobDetail, JobDetailWrapper,
-│   │                   # JobFilters, JobTags, JobsCarousel, ApplyButton
-│   ├── layout/         # Navbar, Footer, HeroSection, FeaturesSection,
-│   │                   # JobCtaBanner, EditSideDrawer
-│   ├── notifications/  # NotificationBell
-│   └── profile/        # EditEducation, EditExperience, EditSkills,
-│                        # EducationTimeline, ExperienceTimeline, SkillsDisplay
-├── hooks/
-│   ├── useAuth.ts            # Session, signIn, signUp, signOut, resendVerification
-│   ├── useSupabase.ts        # Browser Supabase client singleton
-│   ├── useFavourites.ts      # Job + company favourite state (requires ToastProvider)
-│   ├── useRole.ts            # User role + derived flags (isAtLeastEmployer, isAdmin…)
-│   ├── useMessages.ts
-│   └── useNotifications.ts   # Persisted DB notification feed (bell icon)
-├── contexts/
-│   └── ToastContext.tsx      # ToastProvider + useToast — global ephemeral toasts
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts       # Browser client ("use client" only)
-│   │   ├── server.ts       # Server Components / Route Handlers / Actions
-│   │   ├── static.ts       # Anon client for ISR/SSG pages
-│   │   └── middleware.ts   # Session refresh + auth redirects
-│   ├── email/
-│   │   ├── resend.ts                           # HTML template builder + Resend transport
-│   │   ├── send-application-notification.ts
-│   │   ├── send-company-created-notification.ts
-│   │   └── send-profile-updated-notification.ts
-│   ├── utils.ts            # slugify, formatSalary, formatDate, timeAgo, label maps
-│   └── seo.ts
-├── services/               # Data-access layer — each function receives a SupabaseClient
-│   ├── jobs.service.ts
-│   ├── companies.service.ts
-│   ├── applications.service.ts
-│   ├── forms.service.ts
-│   ├── benefits.service.ts
-│   ├── experience.service.ts
-│   ├── education.service.ts
-│   ├── skills.service.ts
-│   ├── alerts.service.ts
-│   ├── messages.service.ts
-│   └── notifications.service.ts
-├── theme/                  # MUI ThemeRegistry, palette, component overrides
+│   ├── (public)/             # Marketing + job board (unauthenticated)
+│   ├── (auth)/               # login, register, verify-email, OAuth consent
+│   ├── dashboard/            # Protected app shell (middleware enforces session)
+│   ├── api/                  # Route handlers — currently jobs/apply-internal-form
+│   ├── layout.tsx            # Root layout: ThemeRegistry, ToastProvider, Navbar, Footer
+│   ├── page.tsx              # Homepage
+│   └── …                     # sitemap, robots, error boundaries, flags discovery route
+├── components/               # Feature UI — see src/AGENTS.md Architecture Overview
+├── hooks/                    # useAuth, useSupabase, useAsyncData, useRole, useFavourites, …
+├── contexts/                 # ToastContext (global ephemeral feedback)
+├── lib/                      # Supabase factories, SEO, feature-flags, notifications helpers
+├── services/                 # *.service.ts — preferred home for .from / .rpc / storage (see src/AGENTS.md)
+├── theme/
 ├── types/
-│   ├── database.ts         # Supabase-generated types + hand-maintained RPCs
-│   └── index.ts            # Shared app types (JobSearchFilters, PaginatedResponse…)
-└── config/
-    └── app.settings.json   # Brand colors, feature flags, salary defaults
+├── config/
+│   └── app.settings.json
+├── AGENTS.md                 # /src patterns (companion to repo-root AGENTS.md)
+└── PATTERNS.md               # Pattern Index + snippets
 
 supabase/
-├── config.toml
 ├── migrations/
-│   ├── 20260406180000_applicant_form_application_rls.sql
-│   └── 20260409120000_secure_applicant_reads_and_notify_rpc.sql
-└── functions/
-    └── hello-worlds/       # test edge function
+└── functions/                # Edge Functions (email, notifications, cron — see AGENTS.md)
 ```
+
+**Implementor docs:** **`src/AGENTS.md`** (rules) · **`src/PATTERNS.md`** (examples + reference file paths per pattern).
 
 ---
 
@@ -228,7 +162,7 @@ Key tables (see Supabase Dashboard → Table Editor for the full schema):
 
 | Function | Purpose |
 |----------|---------|
-| `application_notification_recipient(p_job_id)` | Returns the first company contact email/name for a job the calling user has applied to — used by the notification API route instead of a service-role client |
+| `application_notification_recipient(p_job_id)` | Returns the first company contact email/name for a job the calling user has applied to — used by Edge / server paths instead of a service-role client in the browser |
 | `is_company_member(p_company_id, p_min_role?)` | Checks company membership in RLS policies |
 | `company_has_no_owner(p_company_id)` | Guard for company creation |
 | `increment_company_visits(p_company_id)` | Fire-and-forget view counter |
@@ -247,15 +181,19 @@ Key tables (see Supabase Dashboard → Table Editor for the full schema):
 
 ## Email notifications
 
-All transactional emails are sent from **Next.js Route Handlers** using [Resend](https://resend.com). There is no service-role key in the web app.
+Transactional email is delivered through **[Resend](https://resend.com)** from **Supabase Edge Functions** (`supabase/functions/` — shared HTML in `_shared/templates/`). Callers use **`supabase.functions.invoke(...)`** with the **user JWT** (or cron secrets for scheduled jobs). **`SUPABASE_SERVICE_ROLE_KEY`** and **`RESEND_*`** live **only** in Supabase Edge secrets — never in the Next.js env.
 
-| Event | API route | Helper |
-|-------|-----------|--------|
-| Job application submitted | `POST /api/jobs/notify-application` | `send-application-notification.ts` |
-| Candidate profile updated | `POST /api/profile/notify-updated` | `send-profile-updated-notification.ts` |
-| Company created | `POST /api/companies/notify-created` | `send-company-created-notification.ts` |
+**Examples:**
 
-Poster email resolution uses a `SECURITY DEFINER` Postgres RPC (`application_notification_recipient`) so the app never needs a service-role client.
+| Flow | Typical caller |
+|------|----------------|
+| Job application emails | `job-application` Edge Function after apply · `POST /api/jobs/apply-internal-form` may invoke it |
+| Typed user notifications | `notifications` Edge Function — prefer **`dispatchNotification`** from `src/lib/notifications/dispatch.ts` |
+| Profile / company transactional | `send-email` Edge Function (`profile_updated`, `company_created`, …) |
+
+Privileged reads (e.g. resolving the poster's contact for mail) use **`SECURITY DEFINER`** RPCs such as **`application_notification_recipient`** — not a service-role client in Next.js.
+
+Full inventory and payloads: **`AGENTS.md`** → *Transactional email* and *Edge Functions inventory*.
 
 ---
 
@@ -275,6 +213,8 @@ On publish: company → logo upload → job → benefits → email notification 
 ---
 
 ## UI notifications
+
+Canonical rules live in **`AGENTS.md`** → *UI notification patterns*. Quick snippets: **`src/PATTERNS.md`** → *Ephemeral feedback — `useToast`*.
 
 There are **two distinct notification mechanisms**. Use the right one for the job.
 
@@ -386,15 +326,31 @@ All components must render without horizontal scroll at 360 px and be tested at 
 ```bash
 npm run dev                   # Next.js dev server (http://localhost:3000)
 npm run build                 # Production build
+npm run codegen               # database.ts (CLI) + database.zod.ts (supazod)
 npm run lint                  # ESLint
 npm test                      # Vitest (single run)
 npm run test:watch            # Vitest watch mode
 npm run supabase:deploy:all   # Deploy all Edge Functions
+npm run env:sync              # Sync .env to current git branch (TEST vs PROD Supabase)
+npm run vercel:env            # Pull Development FLAGS into .env (then run env:sync)
 ```
 
 ---
 
 ## Deployment
+
+### Branch environments (TEST vs PROD)
+
+Git branches map to Vercel scopes, Supabase projects, and title prefixes:
+
+| Branch | Vercel | URL | Supabase |
+|--------|--------|-----|----------|
+| `test` | Preview | `https://jobboard-sand.vercel.app/` | `aofjdbonfqjkosbgzsbx` |
+| `main` | Production | Production domain | `uccivcdtfpevtykirkuw` |
+
+Local development uses **Development** Vercel Flags (`npm run vercel:env`) and branch-aware Supabase credentials (`npm run env:sync`).
+
+**Full reference:** [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md)
 
 ### Vercel (recommended)
 
@@ -402,17 +358,18 @@ npm run supabase:deploy:all   # Deploy all Edge Functions
 npx vercel
 ```
 
-Set **server-side** environment variables in the Vercel dashboard:
+Set environment variables in the Vercel dashboard (web app):
 
 | Variable | Notes |
 |----------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Public |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public |
-| `NEXT_PUBLIC_SITE_URL` | e.g. `https://jobboard-sand.vercel.app/` |
-| `RESEND_API_KEY` | Server only |
-| `RESEND_FROM` | Server only, e.g. `"LegalJobs <legaljobs@solon.agency>"` |
+| `NEXT_PUBLIC_SITE_URL` | Canonical origin for metadata and auth redirects |
+| `FLAGS` / `FLAGS_SECRET` | Optional — Vercel Flags / Toolbar (Development scope via `npm run vercel:env`; Preview/Production on Vercel dashboard) |
+| `NEXT_PUBLIC_TITLE_PREFIX` | Preview only — set to `[TEST]` for sandbox deployments |
+| `SUPABASE_TEST_*` / `SUPABASE_MAIN_*` | Local `.env.test` / `.env.prod` — see `docs/ENVIRONMENTS.md` |
 
-**Do not add `SUPABASE_SERVICE_ROLE_KEY` to Vercel.** It belongs only in Supabase Edge Function secrets.
+**Do not add `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, or `RESEND_FROM` to Vercel** for this project — they belong in **Supabase Edge Function secrets** (see **`AGENTS.md`** environment table).
 
 ### Edge Functions
 
@@ -446,7 +403,7 @@ Fișiere cheie pentru copy-ul de interfață:
 | `src/components/auth/` | LoginForm, SocialButtons |
 | `src/app/(auth)/register/page.tsx` | Înregistrare |
 | `src/app/(public)/anunt/AnuntWizard.tsx` | Wizard publicare anunț |
-| `src/app/(dashboard)/dashboard/` | Toate paginile din tabloul de bord |
+| `src/app/dashboard/` | Paginile din tabloul de bord (segment protejat de middleware) |
 
 ---
 

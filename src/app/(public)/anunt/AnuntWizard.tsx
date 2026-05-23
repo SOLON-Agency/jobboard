@@ -21,6 +21,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { PasswordField } from "@/components/common/PasswordField";
 import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
@@ -150,10 +151,9 @@ function LoginInline({ supabase, onError }: {
           error={!!errors.email}
           helperText={errors.email?.message}
         />
-        <TextField
+        <PasswordField
           {...register("password")}
           label="Parolă"
-          type="password"
           fullWidth
           error={!!errors.password}
           helperText={errors.password?.message}
@@ -211,18 +211,16 @@ function RegisterInline({ supabase, emailRedirectTo, onError, onSuccess }: {
           error={!!errors.email}
           helperText={errors.email?.message}
         />
-        <TextField
+        <PasswordField
           {...register("password")}
           label="Parolă"
-          type="password"
           fullWidth
           error={!!errors.password}
           helperText={errors.password?.message}
         />
-        <TextField
+        <PasswordField
           {...register("confirmPassword")}
           label="Confirmă parola"
-          type="password"
           fullWidth
           error={!!errors.confirmPassword}
           helperText={errors.confirmPassword?.message}

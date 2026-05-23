@@ -28,7 +28,7 @@ export function JobCtaBanner() {
             fontWeight={800}
             sx={{ lineHeight: 1.1, mb: 1 }}
           >
-            Cel mai complet portal de joburi în juridic.
+            Portal de joburi juridice.
           </Typography>
           {/* <Typography variant="body1" color="text.secondary">
             Înregistrează-te și găsește-ți următorul loc de muncă sau talent de top.

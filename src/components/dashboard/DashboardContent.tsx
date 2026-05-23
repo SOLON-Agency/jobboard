@@ -361,7 +361,7 @@ function ProfileProgress({
     { visibleLabel: "Companie",              visible: true, label: "Companie creată",          done: hasCompanies },
     { visibleLabel: "Formular",              visible: true, label: "Formular creat",           done: formsTotal > 0 },
     { visibleLabel: "Creare anunț",          visible: true, label: "Anunț creat",              done: publishedJobs + draftJobs > 0 },
-    { visibleLabel: "Gestioneaza anunțuri",  visible: true, label: "Anunț creat",              done: publishedJobs + draftJobs > 0 },
+    { visibleLabel: "Gestionează anunțuri",  visible: true, label: "Anunț publicat",              done: publishedJobs + draftJobs > 0 },
     { visibleLabel: "Primul candidat",       visible: true, label: "Primul candidat aplicat",  done: applicationsReceived > 0 },
     { visibleLabel: "Gestionare candidați",  visible: true, label: "Candidați acceptat",       done: hasShortlistedCandidate },
     { visibleLabel: "Arhivare",              visible: true, label: "Arhivare",                 done: hasArchived },

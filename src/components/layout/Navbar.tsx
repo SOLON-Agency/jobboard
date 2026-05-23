@@ -304,7 +304,7 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <Button
+                  {/* <Button
                     component={Link}
                     href="/login"
                     sx={{
@@ -316,7 +316,7 @@ export function Navbar() {
                     }}
                   >
                     Conectare
-                  </Button>
+                  </Button> */}
                   <Button
                     component={Link}
                     href="/register"
@@ -337,7 +337,7 @@ export function Navbar() {
                       },
                     }}
                   >
-                    Începe acum
+                    Înregistrare
                   </Button>
                 </>
               )}

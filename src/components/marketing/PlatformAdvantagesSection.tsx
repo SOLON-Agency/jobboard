@@ -26,13 +26,13 @@ const advantages: readonly Advantage[] = [
   {
     icon: <AutoAwesomeIcon sx={{ fontSize: 30 }} />,
     badge: "Matchmaking inteligent",
-    title: "Matchmaking inteligent automat pentru oportunități juridice",
+    title: "Numai potriviri relevante, fără zgomot inutil",
     description:
-      "Algoritmii noștri analizează experiența, specializarea și aspirațiile fiecărui profesionist juridic și le confruntă cu cerințele reale ale fiecărui anunț. Rezultatul: mai puțin zgomot, mai multe potriviri relevante.",
+      "Experiența, specializarea și cerințele fiecărui rol sunt analizate automat. Profesioniștii juridici descoperă oportunități aliniate profilului lor, iar angajatorii primesc aplicații mai bine calibrate, cu mai puțin timp pierdut de ambele părți.",
     bullets: [
-      "Recomandări calibrate pe practică, vechime și jurisdicție",
-      "Formulare personalizate și transparente pentru aplicații",
-      "Reducere semnificativă a timpului petrecut cu trierea CV-urilor",
+      "Recomandări bazate pe practică, vechime și jurisdicție",
+      "Formulare de aplicare clare și adaptate fiecărui anunț",
+      "Triere mai eficientă pentru recrutori și candidați",
     ],
     color: "#c3ae61",
     lightBg: "rgba(195,174,97,0.06)",
@@ -41,14 +41,14 @@ const advantages: readonly Advantage[] = [
   {
     icon: <NotificationsActiveOutlinedIcon sx={{ fontSize: 30 }} />,
     badge: "Alerte personalizate",
-    title: "Alerte care lucrează 24/7 pentru cariera ta",
+    title: "Notificări email și SMS, la momentul potrivit",
     description:
-      "Salvează căutările și competențele tale, iar platforma îți trimite notificări în timp real când apar oportunități relevante: posturi de avocat definitiv, stagiar, jurist sau in-house counsel.",
+      "Salvează căutările și criteriile preferate, iar platforma trimite alerte când apar anunțuri sau oportunități relevante - de la posturi de avocat definitiv și stagiar, până la roluri de jurist sau consilier juridic in-house.",
     bullets: [
-      "Notificări în timp real pe SMS, e-mail și în browser",
-      "Filtre fine pe specializare, locație și nivel de experiență",
-      "Posibilitatea de a aplica înainte ca anunțul să devină viral",
-      "Pune alertele pe pauză în orice moment din panoul de control",
+      "Notificări în timp real pe e-mail și în browser",
+      "Filtre pe specializare, locație și nivel de experiență",
+      "Reacție rapidă la anunțuri noi, înainte să se umple pipeline-ul",
+      "Alertele pot fi activate sau oprite oricând din panoul de control",
     ],
     color: "#3E5C76",
     lightBg: "rgba(62,92,118,0.06)",
@@ -57,13 +57,13 @@ const advantages: readonly Advantage[] = [
   {
     icon: <PaymentsOutlinedIcon sx={{ fontSize: 30 }} />,
     badge: "Transparență salarială",
-    title: "Salarii afișate clar, fără ghicitori",
+    title: "Salarii și beneficii vizibile pentru fiecare anunț",
     description:
-      "Încurajăm angajatorii să publice intervale salariale reale și pachete de beneficii detaliate. Tu vezi din primul minut dacă oportunitatea se aliniază așteptărilor tale profesionale.",
+      "Intervalele salariale și pachetele de beneficii sunt afișate direct în anunțuri. Candidații evaluează rapid dacă rolul se potrivește, iar angajatorii atrag persoane cu așteptări realiste și interes real.",
     bullets: [
       "Interval salarial brut afișat în RON pe fiecare anunț",
       "Beneficii și bonusuri descrise explicit",
-      "Conversații mai sincere între candidați și angajatori",
+      "Așteptări aliniate între candidați și angajatori",
     ],
     color: "#2d6a4f",
     lightBg: "rgba(45,106,79,0.06)",
@@ -71,13 +71,13 @@ const advantages: readonly Advantage[] = [
   },
   {
     icon: <BusinessOutlinedIcon sx={{ fontSize: 30 }} />,
-    badge: "Profile companii",
-    title: "Cele mai relevante firme juridice din România",
+    badge: "Portal societate juridică",
+    title: "Profil complet pentru societățile juridice relevante",
     description:
-      "Fiecărei companii îi dedicăm o pagină completă în ecosistem: identitate vizuală, domenii de practică, cultură de firmă și toate pozițiile active într-un singur loc — ca să alegi angajatori care sunt pe măsura reputației tale profesionale.",
+      "Fiecare companie are o pagină dedicată: identitate vizuală, domenii de practică și toate pozițiile active într-un singur loc. Angajatorii își consolidează brandul juridic, iar profesioniștii juridici pot evalua oferta generală înainte de a aplica.",
     bullets: [
-      "Firme consolidate din piața juridică românească, prezentate transparent pe profile dedicate",
-      "Înțelegi în avans cultura de lucru, specializările firmei și natura mandatelor, înainte să aplici"
+      "Profile dedicate pentru firme din piața juridică românească",
+      "Context despre specializări, cultură de lucru și tipul mandatelor",
     ],
     color: "#415a77",
     lightBg: "rgba(65,90,119,0.07)",
@@ -86,13 +86,13 @@ const advantages: readonly Advantage[] = [
   {
     icon: <VerifiedOutlinedIcon sx={{ fontSize: 30 }} />,
     badge: "Candidați verificați",
-    title: "O comunitate profesională, nu un trafic anonim",
+    title: "O comunitate profesională, nu trafic anonim",
     description:
-      "Profilurile candidaților sunt completate cu experiența reală, formarea juridică și competențele probate. Recrutorii primesc aplicații serioase, candidații primesc atenție pe măsură.",
+      "Profilurile includ experiență, formare juridică și competențe verificate. Candidații își prezintă parcursul cu claritate, iar recrutorii evaluează aplicațiile prin răspunsurile candidaților la întrebări uniforme - un standard comun care ridică calitatea întregului proces.",
     bullets: [
       "Profil structurat cu experiență, educație și competențe",
-      "Standard ridicat de calitate pentru aplicații",
-      "Mai puține CV-uri irelevante pentru echipele de recrutare",
+      "Aplicații mai relevante pentru echipele de recrutare",
+      "Vizibilitate echitabilă pentru profesioniștii activi pe platformă",
     ],
     color: "#748CAB",
     lightBg: "rgba(116,140,171,0.08)",
@@ -100,14 +100,14 @@ const advantages: readonly Advantage[] = [
   },
   {
     icon: <GppGoodOutlinedIcon sx={{ fontSize: 30 }} />,
-    badge: "Conformitate GDPR",
-    title: "Conformitate GDPR la standard european",
+    badge: "Securitate & GDPR",
+    title: "Protecția datelor, la standarde europene",
     description:
-      "Datele sensibile ale profesioniștilor juridici merită tratate ca atare. Procesăm informațiile strict pentru scopurile recrutării, cu drepturi clare de acces, rectificare și ștergere.",
+      "Informațiile sensibile sunt procesate strict în scopul recrutării, cu drepturi clare de acces, rectificare și ștergere. Fiecare utilizator controlează ce date partajează, cu cine le partajează și în ce condiții. Datele nu sunt vândute către terți.",
     bullets: [
       "Stocare securizată în infrastructură conformă cu GDPR",
-      "Control complet al candidatului asupra vizibilității profilului",
-      "Politici clare de retenție și ștergere a datelor",
+      "Control asupra vizibilității profilului și a notificărilor",
+      "Politici transparente de retenție și ștergere a datelor",
     ],
     color: "#03170C",
     lightBg: "rgba(3,23,12,0.04)",
@@ -160,9 +160,8 @@ export function PlatformAdvantagesSection() {
             color="text.secondary"
             sx={{ lineHeight: 1.75, fontSize: { xs: "1rem", md: "1.1rem" } }}
           >
-            Cinci avantaje care diferențiază {appSettings.name} de platformele generaliste de
-            recrutare și care transformă fiecare interacțiune într-un pas concret spre o
-            potrivire profesională relevantă.
+              Câteva avantaje care diferențiază {appSettings.name} de platformele generaliste de
+            recrutare.
           </Typography>
         </Box>
 
@@ -249,7 +248,7 @@ export function PlatformAdvantagesSection() {
                   {adv.description}
                 </Typography>
 
-                <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
+                {/* <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
                   {adv.bullets.map((bullet) => (
                     <Box
                       component="li"
@@ -280,7 +279,7 @@ export function PlatformAdvantagesSection() {
                       </Typography>
                     </Box>
                   ))}
-                </Box>
+                </Box> */}
               </Paper>
             </motion.div>
           ))}

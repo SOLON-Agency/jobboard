@@ -42,7 +42,7 @@ export function NewsletterSection() {
               fontWeight={800}
               sx={{ fontSize: { xs: "1.5rem", sm: "1.875rem", md: "2.25rem" } }}
             >
-              Rămâi la curent cu noutățile juridice
+              Rămâi la curent
             </Typography>
           </Box>
 

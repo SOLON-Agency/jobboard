@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { createStaticClient } from "@/lib/supabase/static";
 import { HowItWorksContent } from "./HowItWorksContent";
-import { getUserCount } from "@/services/stats.service";
+import { getPublishedFaqs } from "@/services/faq.service";
 import appSettings from "@/config/app.settings.json";
 
 export const revalidate = 86400;
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default async function HowItWorksPage() {
   const supabase = createStaticClient();
-  const userCount = await getUserCount(supabase);
+  const faqItems = await getPublishedFaqs(supabase, "how_it_works").catch(() => []);
 
-  return <HowItWorksContent userCount={userCount} />;
+  return <HowItWorksContent faqItems={faqItems} />;
 }

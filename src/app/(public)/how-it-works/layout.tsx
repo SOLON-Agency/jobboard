@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { formatPageTitle, buildTitleTemplate } from "@/lib/page-title";
 import appSettings from "@/config/app.settings.json";
 
 export const metadata: Metadata = {
   title: {
-    default: `${appSettings.name} — Cum funcționează`,
-    template: `%s | ${appSettings.name}`,
+    default: formatPageTitle(`${appSettings.name} — Cum funcționează`),
+    template: buildTitleTemplate(appSettings.name),
   },
   description:
     `Află cum să folosești ${appSettings.name} pentru a-ți găsi următoarea oportunitate în cariera juridică.`,
@@ -14,13 +15,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: appSettings.name,
-    title: `${appSettings.name} — Platformă de carieră juridică`,
+    title: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
     description:
       `Află cum să folosești ${appSettings.name} pentru a-ți găsi următoarea oportunitate în cariera juridică.`,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${appSettings.name} — Platformă de carieră juridică`,
+    title: formatPageTitle(`${appSettings.name} — Platformă de carieră juridică`),
   },
 };
 

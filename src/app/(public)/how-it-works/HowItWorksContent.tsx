@@ -9,9 +9,6 @@ import {
   Paper,
   Stack,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { fadeUp, stagger } from "@/lib/motion";
@@ -23,13 +20,14 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelIcon from "@mui/icons-material/Gavel";
+import { BannerSection } from "@/components/layout/BannerSection";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import appSettings from "@/config/app.settings.json";
+import { FaqSection } from "@/components/marketing/FaqSection";
 import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
+import type { FaqPublicItem } from "@/services/faq.service";
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const BG = "#03170C";
@@ -37,7 +35,6 @@ const GOLD = "rgba(195,174,97,0.9)";
 const GOLD_FULL = "rgba(195,174,97,1)";
 const CREAM = "#F0EBD8";
 const CREAM_55 = "rgba(240,235,216,0.55)";
-const CREAM_45 = "rgba(240,235,216,0.45)";
 const STEEL = "rgba(62,92,118,0.85)";
 
 // ── Framer variants ───────────────────────────────────────────────────────────
@@ -55,7 +52,7 @@ const candidateSteps = [
   {
     number: "02",
     icon: <SearchIcon sx={{ fontSize: 26 }} />,
-    title: "Caută și explorează",
+    title: "Explorează",
     body: "Filtrează după locație, salariu, tip de contract și nivel de experiență. Descoperă cabinete și firme de avocatură de top din toată țara.",
     color: "rgba(195,174,97,0.9)",
     border: "rgba(195,174,97,0.2)",
@@ -129,37 +126,8 @@ const benefits = [
   },
 ];
 
-const faqs = [
-  {
-    q: "Este platforma gratuită pentru candidați?",
-    a: "Da, complet gratuit. Creezi cont, îți completezi profilul și aplici la oricâte posturi dorești fără nicio taxă.",
-  },
-  {
-    q: "Cum funcționează alertele de joburi?",
-    a: "Salvezi un set de filtre (locație, tip contract, nivel experiență, salariu, etc.) și primești un email sau SMS automat de fiecare dată când apare un post nou care se potrivește.",
-  },
-  {
-    q: "Pot urmări statusul aplicațiilor mele?",
-    a: "Da. Din dashboard-ul tău vezi toate candidaturile trimise, data aplicării și statusul fiecăreia.",
-  },
-  {
-    q: "Cum postez un anunț ca angajator?",
-    a: "Creezi un cont de companie, completezi profilul firmei și publici primul anunț gratuit. Planurile premium oferă vizibilitate crescută și funcții avansate.",
-  },
-  {
-    q: "Datele mele sunt în siguranță?",
-    a: "Folosim criptare end-to-end și nu vindem datele tale unor terți. Respectăm pe deplin GDPR.",
-  },
-];
-
 // ── Page ──────────────────────────────────────────────────────────────────────
-export function HowItWorksContent({ userCount }: { userCount: number }) {
-  const formattedUsers =
-    userCount >= 1000
-      ? `${(Math.floor(userCount / 100) / 10).toLocaleString("ro")}K`
-      : userCount >= 100
-        ? `${Math.floor(userCount / 100) * 100}`
-        : `${Math.floor(userCount / 10) * 10}`;
+export function HowItWorksContent({ faqItems }: { faqItems: FaqPublicItem[] }) {
   return (
     <Box component="main">
 
@@ -397,9 +365,9 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   4 pași
                 </Box>
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 500, mx: "auto" }}>
+              {/* <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 500, mx: "auto" }}>
                 Iar totul este complet gratuit.
-              </Typography>
+              </Typography> */}
             </Box>
           </motion.div>
 
@@ -447,14 +415,14 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                   </Box>
 
                   {/* Icon */}
-                  <Box sx={{
+                  {/* <Box sx={{
                     width: 52, height: 52, borderRadius: 2.5,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     bgcolor: step.bg, border: `1px solid ${step.border}`,
                     color: step.color, mb: 2.5,
                   }}>
                     {step.icon}
-                  </Box>
+                  </Box> */}
 
                   <Typography variant="h5" component="h3" sx={{ mb: 1 }}>{step.title}</Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
@@ -502,10 +470,11 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
                 }}>
                   excelente
                 </Box>
+                {" "}în 3 pași
               </Typography>
-              <Typography sx={{ color: CREAM_55, maxWidth: 480, mx: "auto" }}>
+              {/* <Typography sx={{ color: CREAM_55, maxWidth: 480, mx: "auto" }}>
                 Conectează-te cu cei mai buni profesioniști juridici din România.
-              </Typography>
+              </Typography> */}
             </Box>
           </motion.div>
 
@@ -556,134 +525,10 @@ export function HowItWorksContent({ userCount }: { userCount: number }) {
         ctaHref="/anunt"
       />
 
-      {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
-      <Box component="section" sx={{ bgcolor: BG, py: { xs: 10, md: 14 }, position: "relative", overflow: "hidden" }}>
-        <Box aria-hidden sx={{
-          position: "absolute", inset: 0,
-          backgroundImage: "radial-gradient(rgba(195,174,97,0.05) 1px, transparent 1px)",
-          backgroundSize: "40px 40px", pointerEvents: "none",
-        }} />
+      <FaqSection items={faqItems} variant="dark" />
 
-        <Container maxWidth="md" sx={{ position: "relative" }}>
-          <motion.div variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-            <Box sx={{ textAlign: "center", mb: 8 }}>
-              <Typography variant="overline" sx={{
-                color: GOLD, fontWeight: 700, letterSpacing: "0.2em", display: "block", mb: 1.5,
-              }}>
-                Întrebări frecvente
-              </Typography>
-              <Typography variant="h2" sx={{ color: CREAM, mb: 2 }}>
-                Ai întrebări?
-              </Typography>
-              <Typography sx={{ color: CREAM_55, maxWidth: 400, mx: "auto" }}>
-                Răspunsuri la cele mai comune nelămuriri.
-              </Typography>
-            </Box>
-          </motion.div>
-
-          <Stack spacing={1.5}>
-            {faqs.map((faq, i) => (
-              <motion.div
-                key={faq.q}
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-40px" }}
-              >
-                <Accordion sx={{
-                  bgcolor: "rgba(240,235,216,0.04)",
-                  border: "1px solid rgba(240,235,216,0.1)",
-                  borderRadius: "12px !important",
-                  "&:before": { display: "none" },
-                  "&.Mui-expanded": {
-                    border: "1px solid rgba(195,174,97,0.25)",
-                    bgcolor: "rgba(195,174,97,0.04)",
-                  },
-                  backdropFilter: "blur(8px)",
-                }}>
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: CREAM_45 }} />}
-                    sx={{ px: 3, py: 0.5 }}
-                  >
-                    <Typography sx={{ color: CREAM, fontWeight: 600, fontSize: "0.97rem" }}>
-                      {faq.q}
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ px: 3, pb: 2.5 }}>
-                    <Typography sx={{ color: CREAM_55, lineHeight: 1.75 }}>{faq.a}</Typography>
-                  </AccordionDetails>
-                </Accordion>
-              </motion.div>
-            ))}
-          </Stack>
-        </Container>
-      </Box>
-
-      {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <Box component="section" sx={{ bgcolor: BG, pb: { xs: 10, md: 14 } }}>
-        <Container maxWidth="lg">
-          <motion.div variants={fadeUp} custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            <Box sx={{
-              borderRadius: 4,
-              border: "1px solid rgba(195,174,97,0.2)",
-              bgcolor: "rgba(195,174,97,0.04)",
-              backdropFilter: "blur(8px)",
-              p: { xs: 4, md: 6 },
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 3,
-            }}>
-              <Box>
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                  <CheckCircleOutlineIcon sx={{ fontSize: 18, color: GOLD }} />
-                  <Typography variant="caption" sx={{
-                    color: GOLD, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
-                  }}>
-                    Înregistrare gratuită
-                  </Typography>
-                </Stack>
-                <Typography variant="h3" sx={{ color: CREAM, mb: 0.5 }}>
-                  Gata să faci primul pas?
-                </Typography>
-                <Typography sx={{ color: CREAM_55 }}>
-                  Alătură-te celor peste {formattedUsers} de profesioniști juridici activi pe platformă.
-                </Typography>
-              </Box>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ flexShrink: 0 }}>
-                <Button
-                  component={Link}
-                  href="/register"
-                  variant="contained"
-                  size="large"
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{
-                    px: 4, py: 1.5, borderRadius: 99, fontWeight: 700,
-                    bgcolor: GOLD, color: "white",
-                    "&:hover": { bgcolor: GOLD_FULL, boxShadow: "0 6px 24px rgba(195,174,97,0.3)" },
-                  }}
-                >
-                  Creează cont gratuit
-                </Button>
-                <Button
-                  component={Link}
-                  href="/jobs"
-                  variant="outlined"
-                  size="large"
-                  sx={{
-                    px: 4, py: 1.5, borderRadius: 99, fontWeight: 600,
-                    borderColor: "rgba(240,235,216,0.2)", color: "rgba(240,235,216,0.7)",
-                    "&:hover": { borderColor: "rgba(240,235,216,0.4)", bgcolor: "rgba(240,235,216,0.05)" },
-                  }}
-                >
-                  Explorează anunțuri
-                </Button>
-              </Stack>
-            </Box>
-          </motion.div>
-        </Container>
+      <Box>
+        <BannerSection />
       </Box>
 
     </Box>

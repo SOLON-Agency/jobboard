@@ -7,7 +7,7 @@ export const RECRUITING_AGENCY_HIGHLIGHTS = [
   {
     title: "Viteză în procesul de recrutare",
     description:
-      "Anunțuri clare, filtre pe experiență și locație și fluxuri de aplicare structurate, astfel încât să prezinți clienților tăi talente relevante mai repede.",
+      "Anunțuri clare, filtre pe experiență și locație și fluxuri de lucru structurate, astfel încât să prezinți clienților tăi talente relevante mai repede.",
   },
   {
     title: "Credibilitate pe o piață de nișă",

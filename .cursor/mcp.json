@@ -2,6 +2,9 @@
   "mcpServers": {
     "resend": {
       "url": "https://resend.com/docs/mcp"
+    },
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=aofjdbonfqjkosbgzsbx"
     }
   }
 }
