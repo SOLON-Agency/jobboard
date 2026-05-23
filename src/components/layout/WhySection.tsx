@@ -13,7 +13,7 @@ import appSettings from "@/config/app.settings.json";
 const features = [
   {
     icon: <ArticleOutlinedIcon sx={{ fontSize: 28 }} />,
-    title: "Gestionare profil",
+    title: "Profile candidați",
     description:
       `Gestionează profilul tău și toate aplicațiile tale la toate joburile juridice - direct prin platforma ${appSettings.name}.`,
     color: "#2d6a4f",
@@ -22,7 +22,7 @@ const features = [
   },
   {
     icon: <BusinessIcon sx={{ fontSize: 28 }} />,
-    title: "Profiluri de companii",
+    title: "Portale companii",
     description:
       "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile ale unei companii într-un singur loc.",
     color: "#c3ae61",
@@ -110,6 +110,7 @@ export function WhySection() {
                   borderRadius: 3,
                   borderColor: f.border,
                   bgcolor: f.lightBg,
+                  textAlign: "center",
                   transition: "all 0.25s",
                   "&:hover": {
                     borderColor: f.color,
@@ -130,6 +131,7 @@ export function WhySection() {
                     border: `1px solid ${f.border}`,
                     color: f.color,
                     mb: 2.5,
+                    mx: "auto",
                   }}
                 >
                   {f.icon}
@@ -137,9 +139,9 @@ export function WhySection() {
                 <Typography variant="h5" component="h3" sx={{ mb: 1, color: "text.primary" }}>
                   {f.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                {/* <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                   {f.description}
-                </Typography>
+                </Typography> */}
               </Paper>
             </motion.div>
           ))}

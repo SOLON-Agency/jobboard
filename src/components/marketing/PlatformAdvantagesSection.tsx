@@ -249,7 +249,7 @@ export function PlatformAdvantagesSection() {
                   {adv.description}
                 </Typography>
 
-                <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
+                {/* <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
                   {adv.bullets.map((bullet) => (
                     <Box
                       component="li"
@@ -280,7 +280,7 @@ export function PlatformAdvantagesSection() {
                       </Typography>
                     </Box>
                   ))}
-                </Box>
+                </Box> */}
               </Paper>
             </motion.div>
           ))}
