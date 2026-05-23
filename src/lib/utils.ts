@@ -10,9 +10,9 @@ interface SupabaseErrorLike {
 }
 
 const CONSTRAINT_MESSAGES: Record<string, string> = {
-  companies_slug_key: "O companie cu acest nume există deja. Te rugăm să alegi un alt nume.",
-  companies_pkey: "Această companie există deja.",
-  company_users_pkey: "Acest utilizator este deja membru al companiei.",
+  companies_slug_key: "O societate cu acest nume există deja. Te rugăm să alegi un alt nume.",
+  companies_pkey: "Această societate există deja.",
+  company_users_pkey: "Acest utilizator este deja membru al societății.",
   job_listings_pkey: "Acest anunț de muncă există deja.",
 };
 

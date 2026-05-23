@@ -30,7 +30,7 @@ const audiences: readonly AudienceCard[] = [
     icon: <ApartmentOutlinedIcon sx={{ fontSize: 30 }} />,
     title: "Departamente juridice in-house",
     description:
-      "Companiile naționale și multinaționale își construiesc echipele juridice interne cu acces la candidați care înțeleg contextul de business.",
+      "Societățile naționale și multinaționale își construiesc echipele juridice interne cu acces la candidați care înțeleg contextul de business.",
     outcome: "Atragi juriști pregătiți pentru un rol corporativ exigent.",
   },
   {
@@ -51,7 +51,7 @@ const audiences: readonly AudienceCard[] = [
     icon: <BalanceOutlinedIcon sx={{ fontSize: 30 }} />,
     title: "Consilieri juridici & juriști",
     description:
-      "Pentru juriștii din instituții publice, ONG-uri sau companii private, publicăm roluri cu domenii clare de practică, de la GDPR la dreptul muncii și compliance.",
+      "Pentru juriștii din instituții publice, ONG-uri sau societăți private, publicăm roluri cu domenii clare de practică, de la GDPR la dreptul muncii și compliance.",
     outcome: "Îți alegi următoarea misiune cu informații transparente și complete.",
   },
   {

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const jobSchema = z.object({
-  company_id: z.string().min(1, "Selectează o companie"),
+  company_id: z.string().min(1, "Selectează o societate"),
   title: z.string().min(3, "Titlul este obligatoriu"),
   description: z
     .string()

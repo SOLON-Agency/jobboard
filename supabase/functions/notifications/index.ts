@@ -43,7 +43,6 @@ import { corsHeaders, handleCors } from "../_shared/cors.ts";
 import { sendResendEmail, isResendConfigured } from "../_shared/resend.ts";
 import { buildEmail } from "../_shared/email-templates.ts";
 import {
-  NOTIFICATION_DEFAULTS,
   isChannelEnabled,
   type NotificationChannel,
   type NotificationTypeKey,

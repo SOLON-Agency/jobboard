@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
@@ -24,7 +24,6 @@ import { jobTypeLabels, experienceLevelLabels } from "@/lib/utils";
 import appSettings from "@/config/app.settings.json";
 import type { JobType, ExperienceLevel } from "@/types";
 
-const SALARY_MIN = appSettings.config.salaryMin ?? 5000;
 const SALARY_MAX = appSettings.config.salaryMax ?? 30000;
 const SALARY_STEP = 5_000;
 
@@ -52,7 +51,6 @@ export function AlertForm({
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<AlertFormData>({
@@ -69,12 +67,12 @@ export function AlertForm({
     },
   });
 
-  const salaryMin = watch("salaryMin");
-  const salaryMax = watch("salaryMax");
-  const minBenefits = watch("minBenefits") ?? 0;
-  const selectedType = watch("type");
-  const selectedExp = watch("experience");
-  const remote = watch("remote");
+  const salaryMin = useWatch({ control, name: "salaryMin" });
+  const salaryMax = useWatch({ control, name: "salaryMax" });
+  const minBenefits = useWatch({ control, name: "minBenefits" }) ?? 0;
+  const selectedType = useWatch({ control, name: "type" });
+  const selectedExp = useWatch({ control, name: "experience" });
+  const remote = useWatch({ control, name: "remote" });
 
   const sliderValue: [number, number] = [salaryMin ?? 0, salaryMax ?? SALARY_MAX];
 

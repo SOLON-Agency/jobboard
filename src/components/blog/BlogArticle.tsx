@@ -15,7 +15,6 @@ interface BlogArticleProps {
 }
 
 export function BlogArticle({ post }: BlogArticleProps) {
-  const authorName = post.profiles?.full_name ?? "Echipa JurisJobs";
   const headings = extractHeadings(post.content_markdown);
   const hasToc = headings.length >= 2;
 

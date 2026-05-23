@@ -4,16 +4,11 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { motion } from "framer-motion";
-import { heroContainer, heroItem, statsContainer } from "@/lib/motion";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import { heroContainer, heroItem } from "@/lib/motion";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import GavelIcon from "@mui/icons-material/Gavel";
-import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
-import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
-
-// ── Brand colors (from palette.ts) ───────────────────────────────────────────
 
 const BG = "#03170C";
+
 const WAVES = [
   { offset: 0,              amplitude: 70, frequency: 0.003,  color: "rgba(195,174,97,0.9)",  opacity: 0.55 },
   { offset: Math.PI / 2,   amplitude: 90, frequency: 0.0026, color: "rgba(62,92,118,0.85)",   opacity: 0.45 },
@@ -21,18 +16,6 @@ const WAVES = [
   { offset: Math.PI * 1.5, amplitude: 80, frequency: 0.0022, color: "rgba(15,64,36,0.9)",     opacity: 0.35 },
   { offset: Math.PI * 2,   amplitude: 55, frequency: 0.004,  color: "rgba(240,235,216,0.5)",  opacity: 0.25 },
 ];
-
-// ── Stats helpers ─────────────────────────────────────────────────────────────
-
-function formatCount(n: number): string {
-  if (n >= 1000) return `${(Math.floor(n / 100) / 10).toLocaleString("ro")}K+`;
-  if (n >= 100)  return `${Math.floor(n / 100) * 100}+`;
-  if (n >= 50)   return `${Math.floor(n / 50) * 50}+`;
-  if (n >= 30)   return `${Math.floor(n / 30) * 30}+`;
-  if (n >= 20)   return `${Math.floor(n / 20) * 20}+`;
-  if (n >= 10)   return `${Math.floor(n / 10) * 10}+`;
-  return `${n}`;
-}
 
 export interface HeroCounts {
   jobs: number;
@@ -44,13 +27,7 @@ export interface HeroCounts {
 const pills = ["Matchmaking inteligent", "Alerte personalizate", "Transparență salarială", "Candidați verificați"] as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function HeroSection({ counts }: { counts?: HeroCounts }) {
-  const stats = [
-    { icon: <BusinessCenterIcon sx={{ fontSize: 20, color: "rgba(195,174,97,0.9)" }} />, label: "Anunțuri", value: counts ? formatCount(counts.jobs) : "100+" },
-    { icon: <GavelIcon sx={{ fontSize: 20, color: "rgba(116,140,171,0.9)" }} />, label: "Firme", value: counts ? formatCount(counts.companies) : "10+" },
-    { icon: <PeopleOutlineIcon sx={{ fontSize: 20, color: "rgba(240,235,216,0.8)" }} />, label: "Candidați", value: counts ? formatCount(counts.users) : "900+" },
-  ];
-  console.log(counts);
+export function HeroSection({ }: { counts?: HeroCounts }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const targetRef = useRef({ x: 0, y: 0 });

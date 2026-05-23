@@ -86,7 +86,7 @@ Keep these aligned when patterns change; avoid documenting behaviour in only one
 
 | Git branch | Vercel scope | URL | Supabase project | Title prefix |
 |------------|--------------|-----|------------------|--------------|
-| `test` | Preview | `https://jobboard-sand.vercel.app/` | `aofjdbonfqjkosbgzsbx` | `[TEST] ` via `NEXT_PUBLIC_TITLE_PREFIX` |
+| `test` | Preview | `https://jobboard-sand.vercel.app/` | `uccivcdtfpevtykirkuw` | `[TEST] ` via `NEXT_PUBLIC_TITLE_PREFIX` |
 | `main` | Production | Production domain | `uccivcdtfpevtykirkuw` | none |
 | Local (either branch) | Development (flags only) | `http://localhost:3000` | Active branch via `npm run env:sync` | `[TEST] ` on `test` only |
 
@@ -246,7 +246,7 @@ Local development uses **layered env files** (all gitignored except `*.example` 
 | `FLAGS` | Vercel **Development** → merged into **`.env.local`** via `npm run vercel:env` | Vercel Flags SDK — local dev always uses Development scope |
 | `FLAGS_SECRET` | Vercel **Development** → **`.env.local`** (same) | Flags SDK signing / Toolbar — separate values per Vercel scope (see `docs/ENVIRONMENTS.md`) |
 | `.env.test` / `.env.prod` | **Local only** (gitignored) | Per-environment Supabase URL, anon key, DB password; composed into `.env` by `env:sync` |
-| `NEXT_PUBLIC_SUPABASE_URL` | Vercel Preview/Production + composed **`.env`** | TEST: `aofjdbonfqjkosbgzsbx`, PROD: `uccivcdtfpevtykirkuw` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Vercel Preview/Production + composed **`.env`** | `uccivcdtfpevtykirkuw` (test + prod) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel Preview/Production + composed **`.env`** | Browser + server anon client (public) |
 | `NEXT_PUBLIC_TITLE_PREFIX` | Vercel **Preview** + **`.env.test`** | Optional prefix for `<title>` / OG / Twitter (e.g. `[TEST]`) — omit on Production |
 | `NEXT_PUBLIC_SITE_URL` | **`.env.local`** (localhost) / Vercel scopes / Edge secrets | Canonical origin for metadata, sitemap, auth redirects, and email links |

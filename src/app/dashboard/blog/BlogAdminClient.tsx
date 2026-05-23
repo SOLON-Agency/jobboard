@@ -15,12 +15,6 @@ import {
   DialogTitle,
   IconButton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -34,6 +28,10 @@ import { useToast } from "@/contexts/ToastContext";
 import { togglePublish, deletePost } from "@/app/dashboard/blog/actions";
 import { formatDate } from "@/lib/blog/markdown";
 import type { BlogPost } from "@/services/blog.service";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 
 const STATUS_LABELS: Record<string, { label: string; color: "default" | "success" | "warning" | "error" }> = {
   published: { label: "Publicat", color: "success" },
@@ -92,6 +90,129 @@ export function BlogAdminClient({ initialPosts, subscriberCount }: Props) {
     });
   };
 
+  const columns: DashboardTableColumn<BlogPost>[] = [
+      {
+        id: "title",
+        header: "Titlu",
+        headerSx: { fontWeight: 700 },
+        cell: (post) => (
+          <Stack spacing={0.25}>
+            <Typography variant="body2" fontWeight={600}>
+              {post.title}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              /blog/{post.slug}
+            </Typography>
+          </Stack>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        hideBelow: "sm",
+        headerSx: { fontWeight: 700 },
+        cell: (post) => {
+          const statusCfg = STATUS_LABELS[post.status] ?? STATUS_LABELS.draft;
+          return (
+            <Chip
+              label={statusCfg.label}
+              color={statusCfg.color}
+              size="small"
+              variant="outlined"
+            />
+          );
+        },
+      },
+      {
+        id: "published_at",
+        header: "Publicat",
+        hideBelow: "md",
+        headerSx: { fontWeight: 700 },
+        cell: (post) => (
+          <Typography variant="body2" color="text.secondary">
+            {post.published_at ? formatDate(post.published_at) : "—"}
+          </Typography>
+        ),
+      },
+      {
+        id: "reading_time",
+        header: "Lectură",
+        hideBelow: "lg",
+        headerSx: { fontWeight: 700 },
+        cell: (post) => (
+          <Typography variant="body2" color="text.secondary">
+            {post.reading_time_minutes ? `${post.reading_time_minutes} min` : "—"}
+          </Typography>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Acțiuni",
+        headerAlign: "right",
+        align: "right",
+        headerSx: { fontWeight: 700 },
+        cell: (post) => (
+          <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
+            {post.status === "published" && (
+              <Tooltip title="Vizualizează pe site">
+                <IconButton
+                  component="a"
+                  href={`/blog/${post.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="small"
+                  aria-label={`Vizualizează ${post.title}`}
+                >
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+            <Tooltip title={post.status === "published" ? "Trece la ciornă" : "Publică"}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => handleTogglePublish(post)}
+                  disabled={isPending || post.status === "archived"}
+                  aria-label={
+                    post.status === "published"
+                      ? `Trece ${post.title} la ciornă`
+                      : `Publică ${post.title}`
+                  }
+                >
+                  {post.status === "published" ? (
+                    <UnpublishedIcon fontSize="small" />
+                  ) : (
+                    <PublishIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Editează">
+              <IconButton
+                component={Link}
+                href={`/dashboard/blog/${post.id}/edit`}
+                size="small"
+                aria-label={`Editează ${post.title}`}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Șterge">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleDelete(post)}
+                disabled={isPending}
+                aria-label={`Șterge ${post.title}`}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        ),
+      },
+  ];
+
   return (
     <Box>
       <Stack
@@ -125,124 +246,14 @@ export function BlogAdminClient({ initialPosts, subscriberCount }: Props) {
           Nu există articole. Creează primul articol folosind butonul de mai sus.
         </Alert>
       ) : (
-        <TableContainer
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-            overflow: "hidden",
-          }}
-        >
-          <Table aria-label="Tabel articole blog">
-            <TableHead>
-              <TableRow sx={{ bgcolor: "background.default" }}>
-                <TableCell sx={{ fontWeight: 700 }}>Titlu</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Publicat</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Lectură</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700 }}>Acțiuni</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {posts.map((post) => {
-                const statusCfg = STATUS_LABELS[post.status] ?? STATUS_LABELS.draft;
-                return (
-                  <TableRow key={post.id} hover>
-                    <TableCell>
-                      <Stack spacing={0.25}>
-                        <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 280 }}>
-                          {post.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" noWrap>
-                          /blog/{post.slug}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={statusCfg.label}
-                        color={statusCfg.color}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {post.published_at ? formatDate(post.published_at) : "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {post.reading_time_minutes ? `${post.reading_time_minutes} min` : "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" justifyContent="flex-end" spacing={0.5}>
-                        {post.status === "published" && (
-                          <Tooltip title="Vizualizează pe site">
-                            <IconButton
-                              component="a"
-                              href={`/blog/${post.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              size="small"
-                              aria-label={`Vizualizează ${post.title}`}
-                            >
-                              <OpenInNewIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        <Tooltip
-                          title={post.status === "published" ? "Trece la ciornă" : "Publică"}
-                        >
-                          <span>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleTogglePublish(post)}
-                              disabled={isPending || post.status === "archived"}
-                              aria-label={
-                                post.status === "published"
-                                  ? `Trece ${post.title} la ciornă`
-                                  : `Publică ${post.title}`
-                              }
-                            >
-                              {post.status === "published" ? (
-                                <UnpublishedIcon fontSize="small" />
-                              ) : (
-                                <PublishIcon fontSize="small" />
-                              )}
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title="Editează">
-                          <IconButton
-                            component={Link}
-                            href={`/dashboard/blog/${post.id}/edit`}
-                            size="small"
-                            aria-label={`Editează ${post.title}`}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Șterge">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDelete(post)}
-                            disabled={isPending}
-                            aria-label={`Șterge ${post.title}`}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <ResponsiveDashboardTable
+          rows={posts}
+          columns={columns}
+          getRowId={(post) => post.id}
+          ariaLabel="Tabel articole blog"
+          size="medium"
+          headerRowSx={{ bgcolor: "background.default" }}
+        />
       )}
 
       {isPending && (

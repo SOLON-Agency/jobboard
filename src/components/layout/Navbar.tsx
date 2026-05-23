@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import {
   AppBar,
   Toolbar,
-  Typography,
   Button,
   Box,
   IconButton,
@@ -53,30 +52,26 @@ export function Navbar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { user, loading: authLoading, signOut } = useAuth();
   const supabase = useSupabase();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  // On the homepage, the hero section spans 100vh — keep the primary nav links
-  // hidden until the user has scrolled ~90vh so the hero isn't competing with
-  // duplicate CTAs in the header. On every other page, always show them.
-  const [showNavLinks, setShowNavLinks] = useState(!isHomepage);
+  const [fetchedAvatarUrl, setFetchedAvatarUrl] = useState<string | null>(null);
+  const avatarUrl = user ? fetchedAvatarUrl : null;
+  const [scrollShowNavLinks, setScrollShowNavLinks] = useState(false);
+  const showNavLinks = !isHomepage || scrollShowNavLinks;
 
   useEffect(() => {
-    if (!user) { setAvatarUrl(null); return; }
+    if (!user) return;
     supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", user.id)
       .single()
-      .then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
+      .then(({ data }) => setFetchedAvatarUrl(data?.avatar_url ?? null));
   }, [user, supabase]);
 
   useEffect(() => {
-    if (!isHomepage) {
-      setShowNavLinks(true);
-      return;
-    }
+    if (!isHomepage) return;
 
     const threshold = () => window.innerHeight * 0.9;
-    const evaluate = () => setShowNavLinks(window.scrollY > threshold());
+    const evaluate = () => setScrollShowNavLinks(window.scrollY > threshold());
 
     evaluate();
 

@@ -18,7 +18,8 @@ import BookmarkRemoveIcon from "@mui/icons-material/BookmarkRemove";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import InboxIcon from "@mui/icons-material/Inbox";
+
+
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -159,7 +160,7 @@ function FavouritesContent() {
           label={
             <Stack direction="row" alignItems="center" spacing={0.75}>
               <BusinessIcon fontSize="small" />
-              <span>Companii</span>
+              <span>Societăți</span>
               {companies.length > 0 && (
                 <Chip
                   label={companies.length}
@@ -266,15 +267,15 @@ function FavouritesContent() {
           </Stack>
         ))}
 
-      {/* ── Companies tab ─────────────────────────────────────────────────────── */}
+      {/* ── Societates tab ─────────────────────────────────────────────────────── */}
       {tab === 1 &&
         (loading ? (
           <RowSkeleton />
         ) : companies.length === 0 ? (
           <EmptyState
             icon={<BusinessIcon sx={{ fontSize: 48 }} />}
-            title="Nicio companie salvată"
-            description="Apasă iconița de bookmark pe o pagină de companie pentru a o salva aici."
+            title="Nicio societate salvată"
+            description="Apasă iconița de bookmark pe o pagină de societate pentru a o salva aici."
           />
         ) : (
           <Stack spacing={1.5}>
@@ -307,7 +308,7 @@ function FavouritesContent() {
                 {/* Info */}
                 <Box
                   component={Link}
-                  href={`/companies/${company.slug}`}
+                  href={`/societate/${company.slug}`}
                   sx={{ flex: 1, minWidth: 0, textDecoration: "none", color: "inherit" }}
                 >
                   <Typography variant="subtitle2" fontWeight={700}>
@@ -328,13 +329,13 @@ function FavouritesContent() {
                 >
                   <Button
                     component={Link}
-                    href={`/companies/${company.slug}`}
+                    href={`/societate/${company.slug}`}
                     size="small"
                     variant="outlined"
                     endIcon={<OpenInNewIcon fontSize="small" />}
                     sx={{ whiteSpace: "nowrap" }}
                   >
-                    Vezi compania
+                    Vezi societatea
                   </Button>
                   <Tooltip title="Elimină din favorite">
                     <Button

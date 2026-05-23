@@ -7,22 +7,17 @@ import {
   Paper,
   Stack,
   Chip,
-  Divider,
   Button,
   Tooltip,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import type { CompanySkillWithName } from "@/services/skills.service";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import { createClient } from "@/lib/supabase/server";
@@ -115,12 +110,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const title = company.name;
     const description =
       company.description?.slice(0, 160) ??
-      `${company.name} — profilul companiei și anunțuri de angajare.`;
-    const url = `${SITE_URL}/companies/${slug}`;
+      `${company.name} — profilul societății și anunțuri de angajare.`;
+    const url = `${SITE_URL}/societate/${slug}`;
     return withTitlePrefix({
       title,
       description,
-      alternates: { canonical: `/companies/${slug}` },
+      alternates: { canonical: `/societate/${slug}` },
       openGraph: { title, description, url, type: "website" },
       twitter: { card: "summary_large_image", title, description },
       robots: {
@@ -131,7 +126,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     });
   } catch {
-    return withTitlePrefix({ title: "Companie negăsită" });
+    return withTitlePrefix({ title: "Societate negăsită" });
   }
 }
 
@@ -158,8 +153,8 @@ export default async function CompanyPage({ params }: Props) {
   const jsonLd = generateOrganizationJsonLd(company);
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
     { name: "Acasă", url: SITE_URL },
-    { name: "Companii", url: `${SITE_URL}/companies` },
-    { name: company.name, url: `${SITE_URL}/companies/${company.slug}` },
+    { name: "Societăți", url: `${SITE_URL}/jobs` },
+    { name: company.name, url: `${SITE_URL}/societate/${company.slug}` },
   ]);
   const jobChips = deriveJobChips(jobs);
 
@@ -477,7 +472,7 @@ export default async function CompanyPage({ params }: Props) {
           >
             <InboxIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
             <Typography variant="body2" color="text.disabled">
-              Momentan nu există posturi disponibile la această companie.
+              Momentan nu există posturi disponibile la această societate.
             </Typography>
           </Box>
         )}

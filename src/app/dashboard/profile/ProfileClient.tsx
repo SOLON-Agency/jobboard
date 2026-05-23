@@ -43,7 +43,6 @@ import type { Tables } from "@/types/database";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
-import appSettings from "@/config/app.settings.json";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 import { NotificationsSettings } from "./NotificationsSettings";

@@ -5,7 +5,7 @@ export default function CompanyDetailLoading() {
     <Box
       sx={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}
       role="status"
-      aria-label="Se încarcă profilul companiei..."
+      aria-label="Se încarcă profilul societății..."
     >
       <CircularProgress />
     </Box>

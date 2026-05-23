@@ -99,7 +99,7 @@ export function JobCard({
           {job.companies?.slug ? (
             <Typography
               component={Link}
-              href={`/companies/${job.companies.slug}`}
+              href={`/societate/${job.companies.slug}`}
               variant="body2"
               color="text.secondary"
               sx={{

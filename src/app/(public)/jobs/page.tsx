@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Container, Box, Typography, CircularProgress } from "@mui/material";
+import { Container, Box, CircularProgress } from "@mui/material";
 import { JobFilters } from "@/components/jobs/JobFilters";
 import { JobList } from "@/components/jobs/JobList";
 import appSettings from "@/config/app.settings.json";

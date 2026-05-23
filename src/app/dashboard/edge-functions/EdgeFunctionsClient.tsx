@@ -638,7 +638,7 @@ export function EdgeFunctionsClient() {
             {sendEvent === "company_created" ? (
               <Stack spacing={2}>
                 <Typography variant="body2" color="text.secondary">
-                  Parametru: <code>company_id</code> — trebuie să fii membru al companiei.
+                  Parametru: <code>company_id</code> — trebuie să fii membru al societății.
                 </Typography>
                 <FormLabel id="send-co-src-label">Sursă company_id</FormLabel>
                 <ToggleButtonGroup
@@ -654,7 +654,7 @@ export function EdgeFunctionsClient() {
                 </ToggleButtonGroup>
                 {sendCompanySource === "list" ? (
                   companies.length === 0 ? (
-                    <Alert severity="warning">Nu ai companii — folosește UUID manual.</Alert>
+                    <Alert severity="warning">Nu ai societăți — folosește UUID manual.</Alert>
                   ) : (
                     <FormControl fullWidth>
                       <InputLabel id="send-co-label">company_id</InputLabel>

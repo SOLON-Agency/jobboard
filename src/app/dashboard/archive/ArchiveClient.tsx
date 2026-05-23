@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, startTransition } from "react";
 import {
   Box,
   Button,
@@ -12,6 +12,8 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material/styles";
+import type { SvgIconComponent } from "@mui/icons-material";
 import BusinessIcon from "@mui/icons-material/Business";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
@@ -24,7 +26,6 @@ import { useSupabase } from "@/hooks/useSupabase";
 import {
   getArchivedCompanies,
   archiveCompany,
-  type CompanyWithJobCount,
 } from "@/services/companies.service";
 import { getArchivedJobs, archiveJob } from "@/services/jobs.service";
 import { getArchivedForms, archiveForm } from "@/services/forms.service";
@@ -66,16 +67,45 @@ const applicationStatusColor: Record<
   withdrawn: "default",
 };
 
-const jobStatusLabels: Record<string, string> = {
-  draft: "Ciornă",
-  published: "Publicat",
-  archived: "Arhivat",
+const archiveRowPaperSx: SxProps<Theme> = {
+  display: "flex",
+  alignItems: { xs: "flex-start", sm: "center" },
+  flexDirection: { xs: "column", sm: "row" },
+  gap: { xs: 1.5, sm: 2 },
+  px: { xs: 2, sm: 3 },
+  py: 2,
+  border: "1px solid rgba(3, 23, 12, 0.1)",
+  borderRadius: 2,
+  overflow: "hidden",
 };
 
-const jobStatusColor: Record<string, "default" | "success" | "warning"> = {
-  draft: "warning",
-  published: "success",
-  archived: "default",
+const archiveRowMainSx: SxProps<Theme> = {
+  display: "flex",
+  gap: { xs: 1.5, sm: 2 },
+  flex: 1,
+  minWidth: 0,
+  width: "100%",
+  alignItems: "flex-start",
+};
+
+const archiveRowTextSx: SxProps<Theme> = {
+  flex: 1,
+  minWidth: 0,
+};
+
+const archiveTitleSx: SxProps<Theme> = {
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+};
+
+const archiveMetaSx: SxProps<Theme> = {
+  display: "block",
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+};
+
+const archiveRestoreButtonSx: SxProps<Theme> = {
+  alignSelf: { xs: "flex-end", sm: "center" },
 };
 
 function EmptyArchive({ title = "Niciun element arhivat", description = "Elementele pe care le arhivezi vor apărea aici." }: { title?: string; description?: string }) {
@@ -106,6 +136,57 @@ function RowSkeleton() {
         <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2 }} />
       ))}
     </Stack>
+  );
+}
+
+type ArchiveTabItem = {
+  label: string;
+  icon: SvgIconComponent;
+  count: number;
+};
+
+function ArchiveTabLabel({ label, icon: Icon, count }: ArchiveTabItem) {
+  return (
+    <Stack direction="row" alignItems="center" spacing={0.75} component="span">
+      <Icon fontSize="small" aria-hidden />
+      <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+        {label}
+      </Box>
+      {count > 0 && (
+        <Chip label={count} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+      )}
+    </Stack>
+  );
+}
+
+function RestoreButton({ onClick, sx }: { onClick: () => void; sx?: SxProps<Theme> }) {
+  return (
+    <Button
+      size="small"
+      variant="outlined"
+      onClick={onClick}
+      aria-label="Restaurează"
+      sx={{
+        flexShrink: 0,
+        minWidth: { xs: 44, sm: "auto" },
+        minHeight: 44,
+        px: { xs: 1, sm: 2 },
+        ...sx,
+      }}
+    >
+      <UnarchiveIcon fontSize="small" sx={{ display: { xs: "block", sm: "none" } }} />
+      <Box
+        component="span"
+        sx={{
+          display: { xs: "none", sm: "inline-flex" },
+          alignItems: "center",
+          gap: 0.75,
+        }}
+      >
+        <UnarchiveIcon fontSize="small" />
+        Restaurează
+      </Box>
+    </Button>
   );
 }
 
@@ -155,7 +236,11 @@ function ArchiveContent() {
     setLoading(false);
   }, [user, supabase]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    startTransition(() => {
+      void load();
+    });
+  }, [load]);
 
   const restoreCompany = async (id: string) => {
     await archiveCompany(supabase, id, false);
@@ -182,112 +267,87 @@ function ArchiveContent() {
     await load();
   };
 
+  const archiveTabs = useMemo<ArchiveTabItem[]>(() => {
+    const items: ArchiveTabItem[] = [
+      { label: "Societăți", icon: BusinessIcon, count: companies.length },
+      { label: "Anunțuri", icon: WorkOutlineIcon, count: jobs.length },
+      { label: "Formulare", icon: ArticleOutlinedIcon, count: forms.length },
+      { label: "Aplicații", icon: SendOutlinedIcon, count: applications.length },
+    ];
+    if (appSettings.features.alerts) {
+      items.push({
+        label: "Alerte",
+        icon: NotificationsOffIcon,
+        count: archivedAlerts.length,
+      });
+    }
+    return items;
+  }, [companies.length, jobs.length, forms.length, applications.length, archivedAlerts.length]);
+
   return (
     <>
       <DashboardPageHeader
         title={<Typography variant="h3">Arhivă</Typography>}
       />
 
-      <Tabs
-        value={tab}
-        onChange={(_, v) => setTab(v)}
-        sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+      <Box
+        sx={{
+          mb: 3,
+          mx: { xs: -1, sm: 0 },
+          borderBottom: 1,
+          borderColor: "divider",
+        }}
       >
-        <Tab
-          label={
-            <Stack direction="row" alignItems="center" spacing={0.75}>
-              <BusinessIcon fontSize="small" />
-              <span>Companii</span>
-              {companies.length > 0 && (
-                <Chip label={companies.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
-              )}
-            </Stack>
-          }
-        />
-        <Tab
-          label={
-            <Stack direction="row" alignItems="center" spacing={0.75}>
-              <WorkOutlineIcon fontSize="small" />
-              <span>Anunțuri</span>
-              {jobs.length > 0 && (
-                <Chip label={jobs.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
-              )}
-            </Stack>
-          }
-        />
-        <Tab
-          label={
-            <Stack direction="row" alignItems="center" spacing={0.75}>
-              <ArticleOutlinedIcon fontSize="small" />
-              <span>Formulare</span>
-              {forms.length > 0 && (
-                <Chip label={forms.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
-              )}
-            </Stack>
-          }
-        />
-        <Tab
-          label={
-            <Stack direction="row" alignItems="center" spacing={0.75}>
-              <SendOutlinedIcon fontSize="small" />
-              <span>Aplicații</span>
-              {applications.length > 0 && (
-                <Chip label={applications.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
-              )}
-            </Stack>
-          }
-        />
-        {appSettings.features.alerts && (
-          <Tab
-            label={
-              <Stack direction="row" alignItems="center" spacing={0.75}>
-                <NotificationsOffIcon fontSize="small" />
-                <span>Alerte</span>
-                {archivedAlerts.length > 0 && (
-                  <Chip label={archivedAlerts.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
-                )}
-              </Stack>
-            }
-          />
-        )}
-      </Tabs>
+        <Tabs
+          value={tab}
+          onChange={(_, v) => setTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+          aria-label="Categorii arhivă"
+          sx={{
+            "& .MuiTab-root": {
+              minHeight: 48,
+              minWidth: { xs: 56, sm: 96 },
+              px: { xs: 1.25, sm: 2 },
+              textTransform: "none",
+            },
+          }}
+        >
+          {archiveTabs.map((item) => (
+            <Tab
+              key={item.label}
+              aria-label={
+                item.count > 0 ? `${item.label}, ${item.count} elemente` : item.label
+              }
+              label={<ArchiveTabLabel {...item} />}
+            />
+          ))}
+        </Tabs>
+      </Box>
 
-      {/* ── Companies tab ──────────────────────────────────────────────────── */}
+      {/* ── Societates tab ──────────────────────────────────────────────────── */}
       {tab === 0 && (
         loading ? <RowSkeleton /> :
-        companies.length === 0 ? <EmptyArchive title="Nicio companie arhivată" description="Companiile pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
+        companies.length === 0 ? <EmptyArchive title="Nicio societate arhivată" description="Societățile pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
           <Stack spacing={1.5}>
             {companies.map((company) => (
-              <Paper
-                key={company.id}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  px: 3,
-                  py: 2,
-                  border: "1px solid rgba(3, 23, 12, 0.1)",
-                  borderRadius: 2,
-                }}
-              >
-                <BusinessIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle2" fontWeight={700} noWrap>
-                    {company.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Arhivat {company.archived_at ? formatDate(company.archived_at) : "—"}
-                  </Typography>
+              <Paper key={company.id} sx={archiveRowPaperSx}>
+                <Box sx={archiveRowMainSx}>
+                  <BusinessIcon sx={{ color: "text.secondary", flexShrink: 0, mt: 0.25 }} />
+                  <Box sx={archiveRowTextSx}>
+                    <Typography variant="subtitle2" fontWeight={700} sx={archiveTitleSx}>
+                      {company.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={archiveMetaSx}>
+                      Arhivat {company.archived_at ? formatDate(company.archived_at) : "—"}
+                    </Typography>
+                  </Box>
                 </Box>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<UnarchiveIcon />}
+                <RestoreButton
                   onClick={() => restoreCompany(company.id)}
-                  sx={{ flexShrink: 0 }}
-                >
-                  Restaurează
-                </Button>
+                  sx={archiveRestoreButtonSx}
+                />
               </Paper>
             ))}
           </Stack>
@@ -300,39 +360,30 @@ function ArchiveContent() {
         jobs.length === 0 ? <EmptyArchive title="Niciun anunț arhivat" description="Anunțurile pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
           <Stack spacing={1.5}>
             {jobs.map((job) => (
-              <Paper
-                key={job.id}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  px: 3,
-                  py: 2,
-                  border: "1px solid rgba(3, 23, 12, 0.1)",
-                  borderRadius: 2,
-                }}
-              >
-                <WorkOutlineIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.25 }}>
-                    <Typography variant="subtitle2" fontWeight={700} noWrap>
-                      {job.title}
+              <Paper key={job.id} sx={archiveRowPaperSx}>
+                <Box sx={archiveRowMainSx}>
+                  <WorkOutlineIcon sx={{ color: "text.secondary", flexShrink: 0, mt: 0.25 }} />
+                  <Box sx={archiveRowTextSx}>
+                    <Stack
+                      direction="row"
+                      alignItems="flex-start"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                      sx={{ mb: 0.25 }}
+                    >
+                      <Typography variant="subtitle2" fontWeight={700} sx={archiveTitleSx}>
+                        {job.title}
+                      </Typography>
+                      <JobTags job={job} />
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={archiveMetaSx}>
+                      {job.companies?.name ?? "—"} • Arhivat{" "}
+                      {job.archived_at ? formatDate(job.archived_at) : "—"}
                     </Typography>
-                    <JobTags job={job} sx={{ ml: 2 }} />
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {job.companies?.name ?? "—"} • Arhivat {job.archived_at ? formatDate(job.archived_at) : "—"}
-                  </Typography>
+                  </Box>
                 </Box>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<UnarchiveIcon />}
-                  onClick={() => restoreJob(job.id)}
-                  sx={{ flexShrink: 0 }}
-                >
-                  Restaurează
-                </Button>
+                <RestoreButton onClick={() => restoreJob(job.id)} sx={archiveRestoreButtonSx} />
               </Paper>
             ))}
           </Stack>
@@ -352,53 +403,38 @@ function ArchiveContent() {
             {applications.map((app) => {
               const job = app.job_listings;
               return (
-                <Paper
-                  key={app.id}
-                  sx={{
-                    display: "flex",
-                    alignItems: { xs: "flex-start", sm: "center" },
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: { xs: 1.5, sm: 2 },
-                    px: { xs: 2, sm: 3 },
-                    py: 2,
-                    border: "1px solid rgba(3, 23, 12, 0.1)",
-                    borderRadius: 2,
-                  }}
-                >
-                  <SendOutlinedIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
-                  <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={1}
-                      sx={{ mb: 0.25 }}
-                      flexWrap="wrap"
-                      useFlexGap
-                    >
-                      <Typography variant="subtitle2" fontWeight={700} noWrap>
-                        {job?.title ?? "Loc de muncă șters"}
+                <Paper key={app.id} sx={archiveRowPaperSx}>
+                  <Box sx={archiveRowMainSx}>
+                    <SendOutlinedIcon sx={{ color: "text.secondary", flexShrink: 0, mt: 0.25 }} />
+                    <Box sx={archiveRowTextSx}>
+                      <Stack
+                        direction="row"
+                        alignItems="flex-start"
+                        spacing={1}
+                        flexWrap="wrap"
+                        useFlexGap
+                        sx={{ mb: 0.25 }}
+                      >
+                        <Typography variant="subtitle2" fontWeight={700} sx={archiveTitleSx}>
+                          {job?.title ?? "Loc de muncă șters"}
+                        </Typography>
+                        <Chip
+                          label={applicationStatusLabel[app.status]}
+                          size="small"
+                          color={applicationStatusColor[app.status]}
+                          sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600 }}
+                        />
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary" sx={archiveMetaSx}>
+                        {job?.companies?.name ?? "—"} • Aplicat {formatDate(app.applied_at)} • Arhivat{" "}
+                        {app.archived_at ? formatDate(app.archived_at) : "—"}
                       </Typography>
-                      <Chip
-                        label={applicationStatusLabel[app.status]}
-                        size="small"
-                        color={applicationStatusColor[app.status]}
-                        sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600 }}
-                      />
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary">
-                      {job?.companies?.name ?? "—"} • Aplicat {formatDate(app.applied_at)} • Arhivat{" "}
-                      {app.archived_at ? formatDate(app.archived_at) : "—"}
-                    </Typography>
+                    </Box>
                   </Box>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<UnarchiveIcon />}
+                  <RestoreButton
                     onClick={() => restoreApplicationRow(app.id)}
-                    sx={{ flexShrink: 0, alignSelf: { xs: "flex-end", sm: "center" } }}
-                  >
-                    Restaurează
-                  </Button>
+                    sx={archiveRestoreButtonSx}
+                  />
                 </Paper>
               );
             })}
@@ -412,38 +448,19 @@ function ArchiveContent() {
         forms.length === 0 ? <EmptyArchive title="Niciun formular arhivat" description="Formulele pe care le arhivezi vor dispărea de pe dashboard și vor apărea aici." /> : (
           <Stack spacing={1.5}>
             {forms.map((form) => (
-              <Paper
-                key={form.id}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  px: 3,
-                  py: 2,
-                  border: "1px solid rgba(3, 23, 12, 0.1)",
-                  borderRadius: 2,
-                }}
-              >
-                <ArticleOutlinedIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.25 }}>
-                    <Typography variant="subtitle2" fontWeight={700} noWrap>
+              <Paper key={form.id} sx={archiveRowPaperSx}>
+                <Box sx={archiveRowMainSx}>
+                  <ArticleOutlinedIcon sx={{ color: "text.secondary", flexShrink: 0, mt: 0.25 }} />
+                  <Box sx={archiveRowTextSx}>
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ ...archiveTitleSx, mb: 0.25 }}>
                       {form.name}
                     </Typography>
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    Arhivat {form.archived_at ? formatDate(form.archived_at) : "—"}
-                  </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={archiveMetaSx}>
+                      Arhivat {form.archived_at ? formatDate(form.archived_at) : "—"}
+                    </Typography>
+                  </Box>
                 </Box>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<UnarchiveIcon />}
-                  onClick={() => restoreForm(form.id)}
-                  sx={{ flexShrink: 0 }}
-                >
-                  Restaurează
-                </Button>
+                <RestoreButton onClick={() => restoreForm(form.id)} sx={archiveRestoreButtonSx} />
               </Paper>
             ))}
           </Stack>
@@ -461,38 +478,30 @@ function ArchiveContent() {
         ) : (
           <Stack spacing={1.5}>
             {archivedAlerts.map((alert) => (
-              <Paper
-                key={alert.id}
-                sx={{
-                  display: "flex",
-                  alignItems: { xs: "flex-start", sm: "center" },
-                  flexDirection: { xs: "column", sm: "row" },
-                  gap: { xs: 1.5, sm: 2 },
-                  px: { xs: 2, sm: 3 },
-                  py: 2,
-                  border: "1px solid rgba(3, 23, 12, 0.1)",
-                  borderRadius: 2,
-                }}
-              >
-                <NotificationsOffIcon sx={{ color: "text.secondary", flexShrink: 0 }} />
-                <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
-                    {alert.name}
-                  </Typography>
-                  <AlertFilterSummary filters={parseFilters(alert.filters)} />
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
-                    Arhivat {alert.archived_at ? formatDate(alert.archived_at) : "—"}
-                  </Typography>
+              <Paper key={alert.id} sx={archiveRowPaperSx}>
+                <Box sx={archiveRowMainSx}>
+                  <NotificationsOffIcon sx={{ color: "text.secondary", flexShrink: 0, mt: 0.25 }} />
+                  <Box sx={archiveRowTextSx}>
+                    <Typography variant="subtitle2" fontWeight={700} sx={{ ...archiveTitleSx, mb: 0.5 }}>
+                      {alert.name}
+                    </Typography>
+                    <AlertFilterSummary
+                      filters={parseFilters(alert.filters)}
+                      sx={{ "& .MuiChip-label": { overflowWrap: "anywhere", whiteSpace: "normal" } }}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ ...archiveMetaSx, mt: 0.5 }}
+                    >
+                      Arhivat {alert.archived_at ? formatDate(alert.archived_at) : "—"}
+                    </Typography>
+                  </Box>
                 </Box>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<UnarchiveIcon />}
+                <RestoreButton
                   onClick={() => restoreAlertRow(alert.id)}
-                  sx={{ flexShrink: 0, alignSelf: { xs: "flex-end", sm: "center" } }}
-                >
-                  Restaurează
-                </Button>
+                  sx={archiveRestoreButtonSx}
+                />
               </Paper>
             ))}
           </Stack>

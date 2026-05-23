@@ -6,14 +6,29 @@ import { supabaseFromBoundaryIgnores } from "./eslint/supabase-from-boundary-all
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
   ]),
+  // CommonJS tooling — require() is intentional.
+  {
+    name: "commonjs-tooling",
+    files: ["e2e/**/*.js", "scripts/**/*.{js,cjs,mjs}"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  // Deno Edge Functions — dynamic Supabase/JSON payloads; keep Deno lint in-function.
+  {
+    name: "supabase-edge-functions",
+    files: ["supabase/functions/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    },
+  },
   {
     name: "supabase-from-boundary",
     files: ["src/**/*.{ts,tsx}"],

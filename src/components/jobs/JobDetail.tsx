@@ -10,7 +10,6 @@ import {
   Stack,
   Button,
   Paper,
-  Divider,
   IconButton,
   Tooltip,
 } from "@mui/material";
@@ -21,7 +20,6 @@ import BookmarkIcon from "@mui/icons-material/Bookmark";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
-import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import WifiOutlinedIcon from "@mui/icons-material/WifiOutlined";
@@ -38,7 +36,6 @@ import { ApplyButton } from "@/components/jobs/ApplyButton";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import { useToast } from "@/contexts/ToastContext";
 import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 
@@ -232,7 +229,7 @@ export function JobDetail({
         {/* Job description — numbered sections */}
         <Stack spacing={2}>
           {isHtml && sections ? (
-            sections.map((section, idx) => (
+            sections.map((section) => (
               <Paper
                 key={section.title}
                 sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 2, border: "1px solid rgba(3, 23, 12, 0.1)" }}
@@ -387,14 +384,14 @@ export function JobDetail({
               variant="subtitle1"
               fontWeight={700}
               component={job.companies?.slug ? Link : "span"}
-              href={job.companies?.slug ? `/companies/${job.companies.slug}` : undefined}
+              href={job.companies?.slug ? `/societate/${job.companies.slug}` : undefined}
               sx={{
                 textDecoration: "none",
                 color: "inherit",
                 "&:hover": { textDecoration: "underline" },
               }}
             >
-              {job.companies?.name ?? "Companie"}
+              {job.companies?.name ?? "Societate"}
             </Typography>
             {job.companies?.description && (
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -410,7 +407,7 @@ export function JobDetail({
                 href={job.companies.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Vizitează website-ul companiei (se deschide în tab nou)"
+                aria-label="Vizitează website-ul societății (se deschide în tab nou)"
                 endIcon={<OpenInNewIcon sx={{ fontSize: "14px !important" }} />}
                 sx={{ mt: 2, borderRadius: 5, px: 3, fontWeight: 700 }}
               >

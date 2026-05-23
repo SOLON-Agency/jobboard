@@ -44,7 +44,7 @@ export default function PolicyPage() {
 
           <Typography variant="h4">3. Împărtășirea informațiilor</Typography>
           <Typography color="text.secondary">
-            Împărtășim informațiile despre aplicarea dumneavoastră doar cu companiile la care ați aplicat. Nu vândem informațiile personale dumneavoastră terților.
+            Împărtășim informațiile despre aplicarea dumneavoastră doar cu societățile la care ați aplicat. Nu vândem informațiile personale dumneavoastră terților.
           </Typography>
 
           <Typography variant="h4">4. Securitatea datelor</Typography>

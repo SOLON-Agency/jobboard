@@ -115,6 +115,7 @@ export async function isPushSubscribed(): Promise<boolean> {
  * Returns the current Notification permission state.
  */
 export function getPushPermission(): NotificationPermission {
+  if (typeof window === "undefined") return "default";
   if (!("Notification" in window)) return "denied";
   return Notification.permission;
 }

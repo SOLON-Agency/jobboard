@@ -26,14 +26,11 @@ export function useRole(): RoleState {
   const supabase = useSupabase();
 
   const [role, setRole] = useState<UserRole>("user");
-  const [loading, setLoading] = useState(true);
+  const [fetched, setFetched] = useState(false);
   const [hasArchivedApplications, setHasArchivedApplications] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
 
     void Promise.all([
       supabase
@@ -54,12 +51,12 @@ export function useRole(): RoleState {
       .catch(() => {
         /* keep defaults */
       })
-      .finally(() => setLoading(false));
+      .finally(() => setFetched(true));
   }, [user, supabase]);
 
   return {
     role,
-    loading,
+    loading: !!user && !fetched,
     hasArchivedApplications,
     isAtLeastEmployer: isAtLeastEmployer(role),
     isPremiumOrAdmin: isPremiumOrAdmin(role),

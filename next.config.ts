@@ -1,13 +1,18 @@
 import type { NextConfig } from "next";
+import withVercelToolbar from "@vercel/toolbar/plugins/next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/companies/:slug",
+        destination: "/societate/:slug",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "aofjdbonfqjkosbgzsbx.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
       {
         protocol: "https",
         hostname: "uccivcdtfpevtykirkuw.supabase.co",
@@ -23,4 +28,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withVercelToolbar()(nextConfig);

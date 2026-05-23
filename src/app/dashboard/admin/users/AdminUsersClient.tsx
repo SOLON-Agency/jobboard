@@ -13,13 +13,6 @@ import {
   Select,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   TextField,
   Typography,
 } from "@mui/material";
@@ -29,6 +22,10 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { useSupabase } from "@/hooks/useSupabase";
 import { ROLE_LABELS, ROLE_ORDER, type UserRole } from "@/lib/roles";
 import { formatDate, parseSupabaseError } from "@/lib/utils";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 
 type AdminUser = {
   id: string;
@@ -148,6 +145,101 @@ export function AdminUsersClient() {
     });
   }, [users, filterRole, search, sortField, sortDir]);
 
+  const columns: DashboardTableColumn<AdminUser>[] = [
+      {
+        id: "user",
+        header: "Utilizator",
+        sort: {
+          active: sortField === "full_name",
+          direction: sortField === "full_name" ? sortDir : "asc",
+          onClick: () => handleSort("full_name"),
+        },
+        cell: (u) => (
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Avatar
+              src={u.avatar_url ?? undefined}
+              sx={{ width: 32, height: 32, flexShrink: 0 }}
+              aria-hidden="true"
+            >
+              <PersonOutlineIcon fontSize="small" />
+            </Avatar>
+            <Typography variant="body2" fontWeight={500}>
+              {u.full_name ?? "—"}
+            </Typography>
+          </Stack>
+        ),
+      },
+      {
+        id: "email",
+        header: "Email",
+        hideBelow: "sm",
+        sort: {
+          active: sortField === "email",
+          direction: sortField === "email" ? sortDir : "asc",
+          onClick: () => handleSort("email"),
+        },
+        cell: (u) => (
+          <Typography variant="body2" color="text.secondary">
+            {u.email}
+          </Typography>
+        ),
+      },
+      {
+        id: "role",
+        header: "Rol",
+        hideBelow: "sm",
+        sort: {
+          active: sortField === "role",
+          direction: sortField === "role" ? sortDir : "asc",
+          onClick: () => handleSort("role"),
+        },
+        cell: (u) => (
+          <Chip
+            label={ROLE_LABELS[u.role]}
+            color={ROLE_COLOR[u.role]}
+            size="small"
+            variant="outlined"
+          />
+        ),
+      },
+      {
+        id: "created_at",
+        header: "Înregistrat",
+        hideBelow: "md",
+        sort: {
+          active: sortField === "created_at",
+          direction: sortField === "created_at" ? sortDir : "asc",
+          onClick: () => handleSort("created_at"),
+        },
+        cell: (u) => (
+          <Typography variant="body2" color="text.secondary">
+            {formatDate(u.created_at)}
+          </Typography>
+        ),
+      },
+      {
+        id: "change_role",
+        header: "Schimbă rol",
+        cell: (u) => (
+          <Box sx={{ minWidth: { xs: 44, sm: 170 } }}>
+            <FormControl size="small" fullWidth disabled={pendingRole[u.id]}>
+              <Select
+                value={u.role}
+                onChange={(e) => void handleRoleChange(u.id, e.target.value as UserRole)}
+                inputProps={{ "aria-label": `Rol pentru ${u.full_name ?? u.email}` }}
+              >
+                {ROLE_ORDER.map((r) => (
+                  <MenuItem key={r} value={r}>
+                    {ROLE_LABELS[r]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        ),
+      },
+  ];
+
   if (loading) {
     return (
       <>
@@ -229,118 +321,12 @@ export function AdminUsersClient() {
           </Typography>
         </Paper>
       ) : (
-        <TableContainer
-          component={Paper}
-          variant="outlined"
-          sx={{ borderRadius: 2, overflowX: "auto" }}
-        >
-          <Table size="small" aria-label="Lista utilizatorilor">
-            <TableHead>
-              <TableRow sx={{ bgcolor: "action.hover" }}>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "full_name"}
-                    direction={sortField === "full_name" ? sortDir : "asc"}
-                    onClick={() => handleSort("full_name")}
-                  >
-                    Utilizator
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "email"}
-                    direction={sortField === "email" ? sortDir : "asc"}
-                    onClick={() => handleSort("email")}
-                  >
-                    Email
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "role"}
-                    direction={sortField === "role" ? sortDir : "asc"}
-                    onClick={() => handleSort("role")}
-                  >
-                    Rol
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "created_at"}
-                    direction={sortField === "created_at" ? sortDir : "asc"}
-                    onClick={() => handleSort("created_at")}
-                  >
-                    Înregistrat
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Schimbă rol</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.map((u) => (
-                <TableRow key={u.id} hover sx={{ "&:last-child td": { border: 0 } }}>
-                  <TableCell>
-                    <Stack direction="row" alignItems="center" spacing={1.5}>
-                      <Avatar
-                        src={u.avatar_url ?? undefined}
-                        sx={{ width: 32, height: 32, flexShrink: 0 }}
-                        aria-hidden="true"
-                      >
-                        <PersonOutlineIcon fontSize="small" />
-                      </Avatar>
-                      <Typography variant="body2" fontWeight={500} noWrap>
-                        {u.full_name ?? "—"}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {u.email}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell>
-                    <Chip
-                      label={ROLE_LABELS[u.role]}
-                      color={ROLE_COLOR[u.role]}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {formatDate(u.created_at)}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell>
-                    <Box sx={{ minWidth: 170 }}>
-                      <FormControl size="small" fullWidth disabled={pendingRole[u.id]}>
-                        <Select
-                          value={u.role}
-                          onChange={(e) =>
-                            void handleRoleChange(u.id, e.target.value as UserRole)
-                          }
-                          inputProps={{
-                            "aria-label": `Rol pentru ${u.full_name ?? u.email}`,
-                          }}
-                        >
-                          {ROLE_ORDER.map((r) => (
-                            <MenuItem key={r} value={r}>
-                              {ROLE_LABELS[r]}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <ResponsiveDashboardTable
+          rows={filtered}
+          columns={columns}
+          getRowId={(u) => u.id}
+          ariaLabel="Lista utilizatorilor"
+        />
       )}
 
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: "block" }}>

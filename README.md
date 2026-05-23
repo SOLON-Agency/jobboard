@@ -345,7 +345,7 @@ Git branches map to Vercel scopes, Supabase projects, and title prefixes:
 
 | Branch | Vercel | URL | Supabase |
 |--------|--------|-----|----------|
-| `test` | Preview | `https://jobboard-sand.vercel.app/` | `aofjdbonfqjkosbgzsbx` |
+| `test` | Preview | `https://jobboard-sand.vercel.app/` | `uccivcdtfpevtykirkuw` |
 | `main` | Production | Production domain | `uccivcdtfpevtykirkuw` |
 
 Local development uses **Development** Vercel Flags (`npm run vercel:env`) and branch-aware Supabase credentials (`npm run env:sync`).

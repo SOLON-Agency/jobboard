@@ -82,10 +82,10 @@ const mapJobType = (type: string | null): string => {
 export const generateOrganizationJsonLd = (company: Tables<"companies">) => ({
   "@context": "https://schema.org",
   "@type": "Organization",
-  "@id": `${BASE_URL}/companies/${company.slug}`,
+  "@id": `${BASE_URL}/societate/${company.slug}`,
   name: company.name,
   description: company.description ?? undefined,
-  url: company.website ?? `${BASE_URL}/companies/${company.slug}`,
+  url: company.website ?? `${BASE_URL}/societate/${company.slug}`,
   logo: normalizeCompanyLogoUrl(company.logo_url),
   foundingDate: company.founded_year?.toString() ?? undefined,
   sameAs: [company.website].filter(Boolean) as string[],

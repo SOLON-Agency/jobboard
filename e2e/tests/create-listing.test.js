@@ -41,23 +41,6 @@ async function fillInput(page, name, value) {
   await page.type(`input[name="${name}"], textarea[name="${name}"]`, value);
 }
 
-/** Select an MUI Select option by visible label text. */
-async function selectOption(page, name, optionText) {
-  // Open the select
-  await page.click(`[name="${name}"]`);
-  // Wait for the dropdown to appear
-  await expectSelector(page, '[role="listbox"]', 5000);
-  // Click the matching option
-  const clicked = await page.evaluate((text) => {
-    const options = Array.from(document.querySelectorAll('[role="option"]'));
-    const opt = options.find((o) => o.textContent?.trim().includes(text));
-    if (!opt) return false;
-    opt.click();
-    return true;
-  }, optionText);
-  if (!clicked) throw new Error(`Option "${optionText}" not found in select "${name}"`);
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {

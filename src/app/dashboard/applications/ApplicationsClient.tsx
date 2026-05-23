@@ -121,11 +121,11 @@ function ApplicationActions({
     company?.slug
       ? {
           key: "view-company",
-          label: "Vezi compania",
+          label: "Vezi societatea",
           color: "secondary" as ActionColor,
           icon: <BusinessOutlinedIcon fontSize="small" />,
           onClick: () => {},
-          href: `/companies/${company.slug}`,
+          href: `/societate/${company.slug}`,
         }
       : null,
     canWithdraw

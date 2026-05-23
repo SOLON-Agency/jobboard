@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
@@ -44,14 +44,14 @@ export function WithdrawApplicationForm({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<WithdrawApplicationFormData>({
     resolver: zodResolver(withdrawApplicationSchema),
     defaultValues: { reason: "" },
   });
 
-  const reasonValue = watch("reason") ?? "";
+  const reasonValue = useWatch({ control, name: "reason" }) ?? "";
 
   const handleClose = () => {
     if (isSubmitting) return;

@@ -6,7 +6,8 @@
 
 const { execSync } = require("child_process");
 
-const SUPABASE_TEST_REF = "aofjdbonfqjkosbgzsbx";
+// TEST shares the jobboard project until a dedicated preview project is provisioned.
+const SUPABASE_TEST_REF = "uccivcdtfpevtykirkuw";
 const SUPABASE_MAIN_REF = "uccivcdtfpevtykirkuw";
 
 /** @type {Record<string, { branch: string, supabaseProjectRef: string, titlePrefix: string, vercelEnv: string, previewSiteUrl: string | null }>} */

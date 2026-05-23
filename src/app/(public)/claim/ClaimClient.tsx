@@ -53,7 +53,7 @@ export function ClaimClient({ token, code: initialCode, email, isAuthenticated }
         return;
       }
       setSuccess(true);
-      showToast("Felicitări! Compania a fost revendicată cu succes.", "success", 6000);
+      showToast("Felicitări! Societatea a fost revendicată cu succes.", "success", 6000);
       setTimeout(() => {
         router.push("/dashboard/company");
       }, 2000);
@@ -114,7 +114,7 @@ export function ClaimClient({ token, code: initialCode, email, isAuthenticated }
           <Stack spacing={2} alignItems="center">
             <CheckCircleOutlineIcon color="success" sx={{ fontSize: 56 }} />
             <Typography variant="h5" fontWeight={700}>
-              Companie revendicată!
+              Societate revendicată!
             </Typography>
             <Typography color="text.secondary">
               Ești redirecționat către panoul de control...
@@ -160,10 +160,10 @@ export function ClaimClient({ token, code: initialCode, email, isAuthenticated }
             <LockOpenOutlinedIcon color="primary" sx={{ fontSize: 36 }} />
             <Box>
               <Typography variant="h5" fontWeight={700} component="h1">
-                Revendică compania
+                Revendică societatea
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Preia gratuit controlul asupra profilului companiei tale.
+                Preia gratuit controlul asupra profilului societății tale.
               </Typography>
             </Box>
           </Stack>
@@ -176,7 +176,7 @@ export function ClaimClient({ token, code: initialCode, email, isAuthenticated }
 
           {!isAuthenticated && (
             <Alert severity="info">
-              Trebuie să ai un cont pentru a revendica compania.{" "}
+              Trebuie să ai un cont pentru a revendica societatea.{" "}
               <Button
                 size="small"
                 variant="text"
@@ -263,7 +263,7 @@ export function ClaimClient({ token, code: initialCode, email, isAuthenticated }
                 }
                 sx={{ py: 1.5 }}
               >
-                {isSubmitting ? "Se verifică..." : "Revendică compania"}
+                {isSubmitting ? "Se verifică..." : "Revendică societatea"}
               </Button>
             </Stack>
           </Box>

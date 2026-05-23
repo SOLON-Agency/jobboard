@@ -23,7 +23,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   getAllSkills,
-  getProfileSkills,
   addProfileSkill,
   removeProfileSkill,
   reorderProfileSkills,
@@ -64,13 +63,6 @@ export function EditSkills({
       .catch(() => { /* non-critical */ });
   }, [supabase]);
 
-  const reload = useCallback(async () => {
-    if (!user) return;
-    const data = await getProfileSkills(supabase, user.id);
-    setItems(data);
-    onReload?.();
-  }, [user, supabase, onReload]);
-
   // ── Add skill ─────────────────────────────────────────────────────────────
   const handleAdd = useCallback(
     async (name: string) => {
@@ -96,7 +88,7 @@ export function EditSkills({
         setAdding(false);
       }
     },
-    [user, supabase, items, allSkills, onReload]
+    [user, supabase, items, onReload]
   );
 
   // ── Remove skill ──────────────────────────────────────────────────────────

@@ -34,7 +34,7 @@ export interface ConfirmDialogProps {
  *
  * <ConfirmDialog
  *   open={open}
- *   title="Arhivează compania"
+ *   title="Arhivează societatea"
  *   body={`Ești sigur că vrei să arhivezi compania „${company.name}"?`}
  *   confirmLabel="Arhivează"
  *   onConfirm={handleConfirm}

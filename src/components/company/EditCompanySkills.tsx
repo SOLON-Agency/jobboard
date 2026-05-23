@@ -22,7 +22,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   getAllSkills,
-  getCompanySkills,
   addCompanySkill,
   removeCompanySkill,
   reorderCompanySkills,
@@ -134,7 +133,7 @@ export function EditCompanySkills({
   const helperText = error
     ? error
     : isNewSkill
-    ? `„${trimmedInput}" va fi adăugată ca personalizată și va apărea pe pagina companiei după aprobare de admin.`
+    ? `„${trimmedInput}" va fi adăugată ca personalizată și va apărea pe pagina societății după aprobare de admin.`
     : "Selectează din listă sau tastează o competență nouă și apasă Enter";
 
   return (

@@ -6,8 +6,8 @@ import { ClaimClient } from "./ClaimClient";
 import appSettings from "@/config/app.settings.json";
 
 export const metadata: Metadata = {
-  title: `Revendică compania — ${appSettings.name}`,
-  description: `Preia gratuit controlul asupra profilului companiei tale pe ${appSettings.name} și gestionează anunțurile și candidaturile.`,
+  title: `Revendică societatea — ${appSettings.name}`,
+  description: `Preia gratuit controlul asupra profilului societății tale pe ${appSettings.name} și gestionează anunțurile și candidaturile.`,
   robots: { index: false, follow: false },
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useCallback, useEffect, useState, startTransition } from "react";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Alert,
@@ -102,6 +102,12 @@ export function NotificationsSettings({
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
 
+  useEffect(() => {
+    startTransition(() => {
+      setPushPermission(getPushPermission());
+    });
+  }, []);
+
   // Cast to access columns added by migration that aren't yet in generated types
   const profileExt = profile as (typeof profile & {
     notifications_browser?: boolean | null;
@@ -121,7 +127,6 @@ export function NotificationsSettings({
   const {
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { isSubmitting, errors },
   } = useForm<NotificationPreferencesFormData>({
@@ -129,14 +134,14 @@ export function NotificationsSettings({
     defaultValues,
   });
 
-  const emailOn = watch("notifications_email");
-  const browserOn = watch("notifications_browser");
-  const smsOn = smsNotifications ? watch("notifications_sms") : false;
+  const emailOn = Boolean(useWatch({ control, name: "notifications_email" }));
+  const browserOn = Boolean(useWatch({ control, name: "notifications_browser" }));
+  const notificationsSmsRaw = useWatch({ control, name: "notifications_sms" });
+  const smsOn = smsNotifications ? Boolean(notificationsSmsRaw) : false;
 
-  // Sync push subscription state with UI
+  // Sync push subscription state with UI (async)
   useEffect(() => {
-    setPushPermission(getPushPermission());
-    isPushSubscribed().then(setPushSubscribed).catch(() => void 0);
+    void isPushSubscribed().then(setPushSubscribed).catch(() => void 0);
   }, []);
 
   const handleBrowserToggle = useCallback(
@@ -460,8 +465,6 @@ export function NotificationsSettings({
                           {label}
                         </TableCell>
                         {CHANNELS.map((ch) => {
-                          const fieldPath =
-                            `preferences.${typeKey}.${ch.key}` as keyof NotificationPreferencesFormData;
                           const masterDisabled = !channelMasterOn[ch.key];
                           return (
                             <TableCell key={ch.key} align="center">

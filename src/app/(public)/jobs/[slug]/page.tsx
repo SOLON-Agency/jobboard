@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   try {
     const job = await getJobBySlug(supabase, slug);
-    const company = job.companies?.name ?? "Companie";
+    const company = job.companies?.name ?? "Societate";
     const title = `${job.title} la ${company}`;
     const description =
       job.description?.slice(0, 160) ?? `Aplică la ${job.title} — ${company}`;

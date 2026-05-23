@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
@@ -50,7 +50,6 @@ export function AddEditBlogPost({ initialData, onSave }: AddEditBlogPostProps) {
     control,
     register,
     handleSubmit,
-    watch,
     setValue,
     getValues,
     formState: { errors, isSubmitting },
@@ -70,9 +69,9 @@ export function AddEditBlogPost({ initialData, onSave }: AddEditBlogPostProps) {
     },
   });
 
-  const titleValue = watch("title");
-  const contentValue = watch("content_markdown");
-  const tagsValue = watch("tags");
+  const titleValue = useWatch({ control, name: "title" }) ?? "";
+  const contentValue = useWatch({ control, name: "content_markdown" }) ?? "";
+  const tagsValue = useWatch({ control, name: "tags" }) ?? [];
   const estimatedReadingTime = readingTimeMinutes(contentValue);
 
   // Auto-derive slug from title until the user touches the slug field

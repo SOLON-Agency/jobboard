@@ -17,13 +17,6 @@ import {
   Select,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   TextField,
   Tooltip,
   Typography,
@@ -42,6 +35,10 @@ import {
 } from "@/services/applications.service";
 import { formatDate, parseSupabaseError } from "@/lib/utils";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 import type { Database, Json, Tables } from "@/types/database";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
@@ -220,6 +217,138 @@ export function CandidatesClient() {
     });
     return rows;
   }, [applications, search, statusFilter, sortKey, sortDir]);
+
+  const columns: DashboardTableColumn<ApplicationRow>[] = [
+      {
+        id: "candidate",
+        header: "Candidat",
+        sort: {
+          active: sortKey === "name",
+          direction: sortKey === "name" ? sortDir : "asc",
+          onClick: () => toggleSort("name"),
+        },
+        cell: (app) => {
+          const name = candidateName(app);
+          const email = candidateEmail(app);
+          return (
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Avatar
+                src={app.profiles?.avatar_url ?? undefined}
+                alt=""
+                sx={{ width: 32, height: 32, bgcolor: "background.default", flexShrink: 0 }}
+              >
+                <PersonOutlineIcon fontSize="small" sx={{ color: "text.secondary" }} />
+              </Avatar>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={600}>
+                  {name}
+                </Typography>
+                {email && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    component="a"
+                    href={`mailto:${email}`}
+                    sx={{ textDecoration: "none", display: "block", "&:hover": { color: "primary.main" } }}
+                  >
+                    {email}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          );
+        },
+      },
+      {
+        id: "headline",
+        header: "Headline",
+        hideBelow: "md",
+        cell: (app) => (
+          <Typography variant="caption" color="text.secondary">
+            {app.profiles?.headline || "—"}
+          </Typography>
+        ),
+      },
+      {
+        id: "applied_at",
+        header: "Aplicat",
+        hideBelow: "sm",
+        sort: {
+          active: sortKey === "applied_at",
+          direction: sortKey === "applied_at" ? sortDir : "desc",
+          onClick: () => toggleSort("applied_at"),
+        },
+        cell: (app) => (
+          <Typography variant="caption" color="text.secondary">
+            {formatDate(app.applied_at)}
+          </Typography>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        hideBelow: "sm",
+        sort: {
+          active: sortKey === "status",
+          direction: sortKey === "status" ? sortDir : "asc",
+          onClick: () => toggleSort("status"),
+        },
+        cell: (app) => (
+          <Chip
+            label={STATUS_LABEL[app.status]}
+            size="small"
+            color={STATUS_COLOR[app.status]}
+            sx={{ fontWeight: 600, fontSize: "0.7rem" }}
+          />
+        ),
+      },
+      {
+        id: "actions",
+        header: "Acțiuni",
+        headerAlign: "right",
+        align: "right",
+        cell: (app) => {
+          const name = candidateName(app);
+          return (
+            <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
+              {app.cv_url && (
+                <Tooltip title="Deschide CV">
+                  <IconButton
+                    component="a"
+                    href={app.cv_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    aria-label={`Deschide CV-ul candidatului ${name} (se deschide în tab nou)`}
+                  >
+                    <PictureAsPdfOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+              <FormControl size="small" sx={{ minWidth: { xs: 44, sm: 140 } }}>
+                <Select
+                  value={app.status}
+                  onChange={(e) =>
+                    void handleStatusChange(app.id, e.target.value as ApplicationStatus)
+                  }
+                  disabled={app.status === "withdrawn"}
+                  inputProps={{ "aria-label": `Schimbă statusul pentru ${name}` }}
+                  sx={{ fontSize: "0.75rem" }}
+                >
+                  <MenuItem value="pending">{STATUS_LABEL.pending}</MenuItem>
+                  <MenuItem value="reviewed">{STATUS_LABEL.reviewed}</MenuItem>
+                  <MenuItem value="shortlisted">{STATUS_LABEL.shortlisted}</MenuItem>
+                  <MenuItem value="rejected">{STATUS_LABEL.rejected}</MenuItem>
+                  <MenuItem value="withdrawn" disabled>
+                    {STATUS_LABEL.withdrawn}
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
+          );
+        },
+      },
+  ];
 
   const exportCsv = (): void => {
     if (filtered.length === 0) return;
@@ -417,212 +546,13 @@ export function CandidatesClient() {
       )}
 
       {!loading && filtered.length > 0 && (
-        <TableContainer
-          component={Paper}
-          sx={{
-            border: "1px solid rgba(3, 23, 12, 0.1)",
-            borderRadius: 2,
-            overflowX: "auto",
-          }}
-        >
-          <Table size="small" aria-label="Tabel candidați">
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortKey === "name"}
-                    direction={sortKey === "name" ? sortDir : "asc"}
-                    onClick={() => toggleSort("name")}
-                  >
-                    <Typography variant="caption" fontWeight={700}>
-                      Candidat
-                    </Typography>
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-                  <Typography variant="caption" fontWeight={700}>
-                    Headline
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortKey === "applied_at"}
-                    direction={sortKey === "applied_at" ? sortDir : "desc"}
-                    onClick={() => toggleSort("applied_at")}
-                  >
-                    <Typography variant="caption" fontWeight={700}>
-                      Aplicat
-                    </Typography>
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortKey === "status"}
-                    direction={sortKey === "status" ? sortDir : "asc"}
-                    onClick={() => toggleSort("status")}
-                  >
-                    <Typography variant="caption" fontWeight={700}>
-                      Status
-                    </Typography>
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography variant="caption" fontWeight={700}>
-                    Acțiuni
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.map((app) => {
-                const name = candidateName(app);
-                const email = candidateEmail(app);
-                return (
-                  <TableRow key={app.id} hover>
-                    <TableCell>
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        spacing={1.5}
-                      >
-                        <Avatar
-                          src={app.profiles?.avatar_url ?? undefined}
-                          alt=""
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            bgcolor: "background.default",
-                          }}
-                        >
-                          <PersonOutlineIcon
-                            fontSize="small"
-                            sx={{ color: "text.secondary" }}
-                          />
-                        </Avatar>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            noWrap
-                          >
-                            {name}
-                          </Typography>
-                          {email && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              component="a"
-                              href={`mailto:${email}`}
-                              sx={{
-                                textDecoration: "none",
-                                display: "block",
-                                "&:hover": { color: "primary.main" },
-                              }}
-                            >
-                              {email}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        display: { xs: "none", md: "table-cell" },
-                        maxWidth: 260,
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        noWrap
-                        sx={{ display: "block" }}
-                      >
-                        {app.profiles?.headline || "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        noWrap
-                      >
-                        {formatDate(app.applied_at)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={STATUS_LABEL[app.status]}
-                        size="small"
-                        color={STATUS_COLOR[app.status]}
-                        sx={{ fontWeight: 600, fontSize: "0.7rem" }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Stack
-                        direction="row"
-                        spacing={0.5}
-                        justifyContent="flex-end"
-                        alignItems="center"
-                      >
-                        {app.cv_url && (
-                          <Tooltip title="Deschide CV">
-                            <IconButton
-                              component="a"
-                              href={app.cv_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              size="small"
-                              aria-label={`Deschide CV-ul candidatului ${name} (se deschide în tab nou)`}
-                            >
-                              <PictureAsPdfOutlinedIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        <FormControl size="small" sx={{ minWidth: 140 }}>
-                          <Select
-                            value={app.status}
-                            onChange={(e) =>
-                              void handleStatusChange(
-                                app.id,
-                                e.target.value as ApplicationStatus
-                              )
-                            }
-                            disabled={app.status === "withdrawn"}
-                            inputProps={{
-                              "aria-label": `Schimbă statusul pentru ${name}`,
-                            }}
-                            sx={{ fontSize: "0.75rem" }}
-                          >
-                            <MenuItem value="pending">
-                              {STATUS_LABEL.pending}
-                            </MenuItem>
-                            <MenuItem value="reviewed">
-                              {STATUS_LABEL.reviewed}
-                            </MenuItem>
-                            <MenuItem value="shortlisted">
-                              {STATUS_LABEL.shortlisted}
-                            </MenuItem>
-                            <MenuItem value="rejected">
-                              {STATUS_LABEL.rejected}
-                            </MenuItem>
-                            {/* Only the candidate can withdraw their own
-                                application (enforced by RLS). Rendered here so
-                                the Select has a matching option when a
-                                withdrawn application is shown; the control is
-                                disabled in that case. */}
-                            <MenuItem value="withdrawn" disabled>
-                              {STATUS_LABEL.withdrawn}
-                            </MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <ResponsiveDashboardTable
+          rows={filtered}
+          columns={columns}
+          getRowId={(app) => app.id}
+          ariaLabel="Tabel candidați"
+          containerSx={{ border: "1px solid rgba(3, 23, 12, 0.1)" }}
+        />
       )}
     </Stack>
   );

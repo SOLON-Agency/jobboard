@@ -35,6 +35,10 @@ Reference implementations — when introducing a new feature, prefer mirroring a
 | Feature flag (static, JSON) | `lib/feature-flags.ts`, `middleware.ts` | `config/app.settings.json` |
 | Feature flag (Vercel Flags / Toolbar) | `flags.ts`, `components/providers/FavouritesFeatureRoot.tsx` | `flags/next`, `@flags-sdk/vercel` |
 | Page title prefix (TEST env) | `lib/page-title.ts`, `app/layout.tsx` | `NEXT_PUBLIC_TITLE_PREFIX`, `docs/ENVIRONMENTS.md` |
+| Public society profile URL | `app/(public)/societate/[slug]/page.tsx` | `lib/paths.ts` → `societatePath(slug)` |
+| List row actions (primary + kebab) | `app/dashboard/applications/ApplicationsClient.tsx` | `ApplicationActions` pattern |
+| Responsive dashboard data table | `components/dashboard/ResponsiveDashboardTable.tsx`, `app/dashboard/candidates/CandidatesOverviewClient.tsx` | `hideBelow: "sm" \| "md" \| "lg"` on columns — 2 cols on `xs`, more from `sm`/`md`/`lg` |
+| ESLint / React Compiler hygiene | `eslint.config.mjs` | `startTransition`, `useSyncExternalStore`, `useWatch` |
 
 ---
 
@@ -370,3 +374,109 @@ export async function generateMetadata(): Promise<Metadata> {
 ```
 
 Set `NEXT_PUBLIC_TITLE_PREFIX=[TEST]` on Vercel Preview and via `npm run env:sync` on branch `test`. See `docs/ENVIRONMENTS.md`.
+
+---
+
+## Public routes — society profile (`/societate`)
+
+**User-facing copy:** „Societate” / „Societăți” (not „Companie”). **Code identifiers** stay `company` / `companies` (DB table, services, types).
+
+| Concern | Rule |
+|---------|------|
+| Public URL | `/societate/{slug}` only — use `societatePath(slug)` from `lib/paths.ts` |
+| Legacy URLs | Permanent redirect `/companies/:slug` → `/societate/:slug` in `next.config.ts` |
+| Canonical / sitemap / email CTAs | Same `/societate/` prefix |
+| Component folder | `@/components/companies/` — **do not rename** to match the URL segment |
+
+```tsx
+import { societatePath } from "@/lib/paths";
+import Link from "next/link";
+
+<Link href={societatePath(company.slug)}>Vezi societatea</Link>
+```
+
+---
+
+## List row actions (dashboard tables)
+
+Mirror **`ApplicationActions`** in `ApplicationsClient.tsx`:
+
+1. **Primary** — first action, `variant="contained"`.
+2. **Secondary** — second action on `md+`, `variant="outlined"`.
+3. **Overflow** — remaining actions in a `MoreVert` kebab `Menu`.
+4. **Responsive labels** — icon + label from `sm` up; icon-only below `sm` (tooltip on primary when icon-only).
+
+```tsx
+const visibleCount = isMd ? 2 : 1;
+const visible = actions.slice(0, visibleCount);
+const overflow = actions.slice(visibleCount);
+const [primary, ...rest] = visible;
+```
+
+Reference: `CompanyActions` in `CompanyClient.tsx`, `AlertActions` in `AlertsClient.tsx`.
+
+---
+
+## Safe UI copy renames (never bulk-replace in code)
+
+When renaming Romanian UI strings (e.g. Companie → Societate):
+
+| ✅ Do | ❌ Don't |
+|-------|---------|
+| Change string literals in JSX / toast / Zod messages | Run substring replace on whole files |
+| Update `href`s via `societatePath()` or `/societate/` | Replace `companie` inside `companies`, `company_id`, `getUserCompanies`, SQL joins |
+| Grep for `/companies/` and user-visible „Companie” separately | Rename `@/components/companies/` or `companies.service.ts` |
+
+After any copy sweep, run **`npm run lint`** and **`npm run build`** — broken identifiers often surface as missing imports or Supabase join errors (`societates!inner`).
+
+---
+
+## ESLint & React Compiler (`eslint.config.mjs`)
+
+Run **`npm run lint`** before every PR. The config has scoped overrides:
+
+| Scope | Override | Why |
+|-------|----------|-----|
+| `e2e/**/*.js`, `scripts/**` | `no-require-imports` off | CommonJS tooling |
+| `supabase/functions/**` | `no-explicit-any` off | Deno JSON payloads; use `deno-lint` in-function where needed |
+| `src/**` | Supabase `.from()` boundary | Queries live in `src/services/` |
+
+### Fixing `react-hooks/set-state-in-effect`
+
+Prefer refactoring over disabling the rule:
+
+```tsx
+// Client-only charts (avoid SSR mismatch)
+const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+
+// Initial fetch / draft restore / clamp derived index
+import { startTransition } from "react";
+useEffect(() => {
+  startTransition(() => { void load(); });
+}, [load]);
+
+// Role hook — derive loading without sync setState when !user
+const [fetched, setFetched] = useState(false);
+const loading = !!user && !fetched;
+```
+
+### React Hook Form + Compiler
+
+Use **`useWatch({ control, name: "field" })`** instead of `watch("field")` when ESLint reports `react-hooks/incompatible-library`.
+
+```tsx
+import { useForm, useWatch } from "react-hook-form";
+
+const { control } = useForm<FormData>({ … });
+const isRemote = useWatch({ control, name: "is_remote" });
+```
+
+### Navbar homepage scroll
+
+Derive visibility — do not sync `setState` when `!isHomepage` inside an effect:
+
+```tsx
+const [scrollShowNavLinks, setScrollShowNavLinks] = useState(false);
+const showNavLinks = !isHomepage || scrollShowNavLinks;
+// effect only attaches scroll listener when isHomepage
+```
