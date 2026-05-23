@@ -67,7 +67,7 @@ export function useFavourites(): UseFavouritesReturn {
         else next.delete(companyId);
         return next;
       });
-      showToast(isFav ? "Companie salvată la favorite." : "Companie eliminată din favorite.", "info", 2500);
+      showToast(isFav ? "Societate salvată la favorite." : "Societate eliminată din favorite.", "info", 2500);
     },
     [supabase, user, showToast]
   );

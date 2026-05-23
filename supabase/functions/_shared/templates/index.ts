@@ -228,14 +228,14 @@ export const company_created = {
   buildEmail(d: D): EmailResult {
     const siteUrl = (d.site_url as string | undefined) ?? SITE_URL_FALLBACK;
     const name = esc(d.company_name ?? "Compania");
-    const subject = `Compania „${name}" a fost creată`;
+    const subject = `Societatea „${name}" a fost creată`;
     const html = _buildEmail({
-      heading: `Compania „${name}" a fost creată`,
-      preheader: `Profilul companiei ${name} este acum activ.`,
+      heading: `Societatea „${name}" a fost creată`,
+      preheader: `Profilul societății ${name} este acum activ.`,
       bodyHtml: `<p>Salut,</p>
-        <p>Compania <strong>${name}</strong> a fost creată cu succes pe LegalJobs. Poți acum să publici anunțuri de angajare.</p>`,
+        <p>Societatea <strong>${name}</strong> a fost creată cu succes pe LegalJobs. Poți acum să publici anunțuri de angajare.</p>`,
       ctaUrl: d.company_url ?? `${siteUrl}/dashboard`,
-      ctaLabel: "Gestionează compania",
+      ctaLabel: "Gestionează societatea",
       siteUrl,
     });
     return { subject, html };
@@ -245,7 +245,7 @@ export const company_created = {
   },
   buildInApp(d: D): InAppResult {
     return {
-      title: "Companie creată",
+      title: "Societate creată",
       body: `Compania „${d.company_name ?? ""}" a fost creată.`,
       data: d,
     };
@@ -262,10 +262,10 @@ export const company_updated = {
       heading: `${name} și-a actualizat profilul`,
       preheader: `${name} și-a actualizat informațiile de profil.`,
       bodyHtml: `<p>Salut,</p>
-        <p>Compania <strong>${name}</strong>, pe care o urmărești, și-a actualizat recent profilul.</p>
-        ${infoTable(detailRow("Companie", name))}`,
+        <p>Societatea <strong>${name}</strong>, pe care o urmărești, și-a actualizat recent profilul.</p>
+        ${infoTable(detailRow("Societate", name))}`,
       ctaUrl: d.company_url ?? siteUrl,
-      ctaLabel: "Vezi profilul companiei",
+      ctaLabel: "Vezi profilul societății",
       siteUrl,
     });
     return { subject: `${name} și-a actualizat profilul`, html };
@@ -275,7 +275,7 @@ export const company_updated = {
   },
   buildInApp(d: D): InAppResult {
     return {
-      title: "Profil companie actualizat",
+      title: "Profil societate actualizat",
       body: `${d.company_name ?? "Compania"} și-a actualizat profilul.`,
       data: d,
     };
@@ -289,15 +289,15 @@ export const company_archived = {
     const siteUrl = (d.site_url as string | undefined) ?? SITE_URL_FALLBACK;
     const name = esc(d.company_name ?? "Compania");
     const html = _buildEmail({
-      heading: `Compania „${name}" a fost arhivată`,
-      preheader: `Profilul companiei ${name} a fost arhivat.`,
+      heading: `Societatea „${name}" a fost arhivată`,
+      preheader: `Profilul societății ${name} a fost arhivat.`,
       bodyHtml: `<p>Salut,</p>
-        <p>Compania <strong>${name}</strong> a fost arhivată și nu mai este vizibilă public. Poți să o dezarhivezi oricând din panoul de control.</p>`,
+        <p>Societatea <strong>${name}</strong> a fost arhivată și nu mai este vizibilă public. Poți să o dezarhivezi oricând din panoul de control.</p>`,
       ctaUrl: `${siteUrl}/dashboard`,
       ctaLabel: "Panoul de control",
       siteUrl,
     });
-    return { subject: `Compania „${name}" a fost arhivată`, html };
+    return { subject: `Societatea „${name}" a fost arhivată`, html };
   },
   buildShort(d: D): string {
     return `Compania „${d.company_name ?? ""}" a fost arhivată.`;
@@ -314,15 +314,15 @@ export const company_deleted = {
     const siteUrl = (d.site_url as string | undefined) ?? SITE_URL_FALLBACK;
     const name = esc(d.company_name ?? "Compania");
     const html = _buildEmail({
-      heading: `Compania „${name}" a fost ștearsă`,
-      preheader: `Profilul companiei ${name} a fost șters definitiv.`,
+      heading: `Societatea „${name}" a fost ștearsă`,
+      preheader: `Profilul societății ${name} a fost șters definitiv.`,
       bodyHtml: `<p>Salut,</p>
-        <p>Compania <strong>${name}</strong> și toate datele asociate au fost șterse definitiv.</p>`,
+        <p>Societatea <strong>${name}</strong> și toate datele asociate au fost șterse definitiv.</p>`,
       ctaUrl: `${siteUrl}/dashboard`,
       ctaLabel: "Panoul de control",
       siteUrl,
     });
-    return { subject: `Compania „${name}" a fost ștearsă`, html };
+    return { subject: `Societatea „${name}" a fost ștearsă`, html };
   },
   buildShort(d: D): string {
     return `Compania „${d.company_name ?? ""}" a fost ștearsă.`;
@@ -341,21 +341,21 @@ export const company_favorited = {
     const user = esc(d.user_name ?? "Un utilizator");
     const html = _buildEmail({
       heading: `${user} a adăugat „${name}" la favorite`,
-      preheader: `Compania ta a primit un nou urmăritor.`,
+      preheader: `Societatea ta a primit un nou urmăritor.`,
       bodyHtml: `<p>Salut,</p>
-        <p><strong>${user}</strong> a adăugat compania <strong>${name}</strong> la lista sa de favorite.</p>`,
+        <p><strong>${user}</strong> a adăugat societatea <strong>${name}</strong> la lista sa de favorite.</p>`,
       ctaUrl: d.company_url ?? `${siteUrl}/dashboard`,
-      ctaLabel: "Vezi profilul companiei",
+      ctaLabel: "Vezi profilul societății",
       siteUrl,
     });
-    return { subject: `Compania ta „${name}" a primit un urmăritor nou`, html };
+    return { subject: `Societatea ta „${name}" a primit un urmăritor nou`, html };
   },
   buildShort(d: D): string {
     return `${d.user_name ?? "Un utilizator"} urmărește acum compania „${d.company_name ?? ""}".`;
   },
   buildInApp(d: D): InAppResult {
     return {
-      title: "Companie adăugată la favorite",
+      title: "Societate adăugată la favorite",
       body: `${d.user_name ?? "Un utilizator"} urmărește „${d.company_name ?? ""}".`,
       data: d,
     };
@@ -370,22 +370,22 @@ export const company_engagement_up = {
     const name = esc(d.company_name ?? "Compania");
     const count = d.followers_count ?? 0;
     const html = _buildEmail({
-      heading: `Compania „${name}" — interacțiuni în creștere!`,
+      heading: `Societatea „${name}" — interacțiuni în creștere!`,
       preheader: `Profilul tău are acum ${count} urmăritori.`,
       bodyHtml: `<p>Salut,</p>
-        <p>Compania ta <strong>${name}</strong> a ajuns la <strong>${count} urmăritori</strong> — felicitări!</p>`,
+        <p>Societatea ta <strong>${name}</strong> a ajuns la <strong>${count} urmăritori</strong> — felicitări!</p>`,
       ctaUrl: d.company_url ?? `${siteUrl}/dashboard`,
-      ctaLabel: "Vezi profilul companiei",
+      ctaLabel: "Vezi profilul societății",
       siteUrl,
     });
-    return { subject: `Compania ta „${name}" a atins ${count} urmăritori`, html };
+    return { subject: `Societatea ta „${name}" a atins ${count} urmăritori`, html };
   },
   buildShort(d: D): string {
     return `Compania „${d.company_name ?? ""}" a atins ${d.followers_count ?? 0} urmăritori!`;
   },
   buildInApp(d: D): InAppResult {
     return {
-      title: "Interacțiuni companie în creștere",
+      title: "Interacțiuni societate în creștere",
       body: `„${d.company_name ?? ""}" a atins ${d.followers_count ?? 0} urmăritori.`,
       data: d,
     };
@@ -403,8 +403,8 @@ export const job_created = {
       heading: `Anunț nou de la ${company}`,
       preheader: `${company} a publicat: „${title}".`,
       bodyHtml: `<p>Salut,</p>
-        <p>Compania <strong>${company}</strong>, pe care o urmărești, a publicat un nou anunț de angajare.</p>
-        ${infoTable([detailRow("Companie", company), detailRow("Post", title)].join(""))}`,
+        <p>Societatea <strong>${company}</strong>, pe care o urmărești, a publicat un nou anunț de angajare.</p>
+        ${infoTable([detailRow("Societate", company), detailRow("Post", title)].join(""))}`,
       ctaUrl: d.job_url ?? siteUrl,
       ctaLabel: "Vezi anunțul",
       siteUrl,
@@ -668,14 +668,14 @@ export const application_new = {
         <p>Candidatul <strong>${applicant}</strong> a aplicat la anunțul <strong>${jobTitle}</strong>.</p>
         ${infoTable([
           detailRow("Post", jobTitle),
-          detailRow("Companie", company),
+          detailRow("Societate", company),
           detailRow("Candidat", applicant),
         ].join(""))}`
       : `<p>Salut <strong>${applicant}</strong>,</p>
         <p>Candidatura ta pentru postul <strong>${jobTitle}</strong> la <strong>${company}</strong> a fost înregistrată cu succes.</p>
         ${infoTable([
           detailRow("Post", jobTitle),
-          detailRow("Companie", company),
+          detailRow("Societate", company),
         ].join(""))}`;
 
     const html = _buildEmail({
@@ -726,7 +726,7 @@ export const application_withdrawn = {
         <p>Candidatul <strong>${applicant}</strong> și-a retras candidatura pentru anunțul <strong>${jobTitle}</strong>.</p>
         ${infoTable([
           detailRow("Anunț", jobTitle),
-          detailRow("Companie", company),
+          detailRow("Societate", company),
           detailRow("Candidat", applicant),
         ].join(""))}
         ${reasonHtml}`
@@ -781,7 +781,7 @@ export const application_rejected = {
         <p>În urma procesului de selecție, am decis să continuăm cu alți candidați care corespund mai bine cerințelor actuale ale postului.</p>
         ${infoTable([
           detailRow("Post", jobTitle),
-          detailRow("Companie", company),
+          detailRow("Societate", company),
           detailRow("Status", "Respinsă"),
         ].join(""))}
         <p>Nu te descuraja — continuă să explorezi oportunitățile disponibile pe platformă. Îți dorim mult succes!</p>`,
@@ -814,7 +814,7 @@ export const alert_job_match = {
 
     const rows = [
       detailRow("Post", jobTitle),
-      company ? detailRow("Companie", company) : "",
+      company ? detailRow("Societate", company) : "",
       d.location ? detailRow("Locație", esc(String(d.location))) : "",
       d.job_type ? detailRow("Tip", esc(String(d.job_type))) : "",
     ].filter(Boolean).join("");
@@ -894,16 +894,16 @@ export const matchmaking = {
 
     if (isCandidate) {
       const companyName = esc(d.company_name ?? "");
-      const ctaUrl = d.company_slug ? `${siteUrl}/companies/${d.company_slug}` : siteUrl;
+      const ctaUrl = d.company_slug ? `${siteUrl}/societate/${d.company_slug}` : siteUrl;
       const html = _buildEmail({
         heading: "Potrivire competențe!",
         preheader: `Competențele tale se potrivesc cu ${companyName}.`,
         bodyHtml: `<p>Salut,</p>
           <p>Am găsit o potrivire între competențele tale și cele ale companiei <strong>${companyName}</strong>.</p>
           ${overlapHtml ? `<p>Competențe comune:${overlapHtml}</p>` : ""}
-          <p>Vizitează profilul companiei pentru a vedea oportunitățile disponibile.</p>`,
+          <p>Vizitează profilul societății pentru a vedea oportunitățile disponibile.</p>`,
         ctaUrl,
-        ctaLabel: "Vezi compania",
+        ctaLabel: "Vezi societatea",
         siteUrl,
       });
       return {
@@ -915,9 +915,9 @@ export const matchmaking = {
       const ctaUrl = d.user_slug ? `${siteUrl}/users/${d.user_slug}` : siteUrl;
       const html = _buildEmail({
         heading: "Potrivire competențe!",
-        preheader: `${userName} se potrivește cu competențele companiei tale.`,
+        preheader: `${userName} se potrivește cu competențele societății tale.`,
         bodyHtml: `<p>Salut,</p>
-          <p>Am găsit o potrivire: <strong>${userName}</strong> are competențe comune cu compania ta.</p>
+          <p>Am găsit o potrivire: <strong>${userName}</strong> are competențe comune cu societatea ta.</p>
           ${overlapHtml ? `<p>Competențe comune:${overlapHtml}</p>` : ""}
           <p>Vizitează profilul candidatului pentru a-l contacta.</p>`,
         ctaUrl,
@@ -925,7 +925,7 @@ export const matchmaking = {
         siteUrl,
       });
       return {
-        subject: `Potrivire: ${userName} se potrivește cu compania ta`,
+        subject: `Potrivire: ${userName} se potrivește cu societatea ta`,
         html,
       };
     }
@@ -935,7 +935,7 @@ export const matchmaking = {
     if (isCandidate) {
       return `Competențele tale se potrivesc cu ${d.company_name ?? "o companie"} (${d.match_count ?? 0} comune).`;
     }
-    return `${d.user_full_name ?? "Un candidat"} se potrivește cu compania ta (${d.match_count ?? 0} competențe comune).`;
+    return `${d.user_full_name ?? "Un candidat"} se potrivește cu societatea ta (${d.match_count ?? 0} competențe comune).`;
   },
   buildInApp(d: D): InAppResult {
     const isCandidate = d.audience !== "company";
@@ -948,7 +948,7 @@ export const matchmaking = {
     }
     return {
       title: "Potrivire competențe",
-      body: `${d.user_full_name ?? "Un candidat"} are competențe comune cu compania ta.`,
+      body: `${d.user_full_name ?? "Un candidat"} are competențe comune cu societatea ta.`,
       data: d,
     };
   },

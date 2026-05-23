@@ -11,11 +11,7 @@ import {
   Stack,
   Switch,
   Tab,
-  Table,
-  TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
   Tabs,
   Typography,
@@ -37,6 +33,10 @@ import {
   updateFaqRow,
 } from "@/services/faq.service";
 import type { FaqFormData } from "@/components/forms/validations/faq.schema";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 
 function faqPlacementAdminLabel(p: string): string {
   if (p === "both") return "Ambele pagini";
@@ -140,6 +140,90 @@ export function AdminFaqClient() {
 
   const tabIndex = tab === "home" ? 0 : 1;
 
+  const columns: DashboardTableColumn<Tables<"faq">>[] = [
+      {
+        id: "question",
+        header: "Întrebare",
+        cell: (row) => (
+          <>
+            <Typography variant="body2" fontWeight={600}>
+              {row.question}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+              {row.answer.slice(0, 120)}
+              {row.answer.length > 120 ? "…" : ""}
+            </Typography>
+            {!row.is_active ? (
+              <Chip label="Inactivă" size="small" color="warning" sx={{ mt: 1 }} />
+            ) : null}
+          </>
+        ),
+      },
+      {
+        id: "sort_order",
+        header: "Ordine",
+        hideBelow: "sm",
+        width: 72,
+        cell: (row) => row.sort_order,
+      },
+      {
+        id: "placement",
+        header: "Pagină",
+        hideBelow: "sm",
+        width: 140,
+        cell: (row) => (
+          <Chip
+            label={faqPlacementAdminLabel(row.placement)}
+            size="small"
+            variant="outlined"
+            color={row.placement === "both" ? "primary" : undefined}
+          />
+        ),
+      },
+      {
+        id: "active",
+        header: "Activă",
+        hideBelow: "md",
+        width: 120,
+        align: "center",
+        headerAlign: "center",
+        cell: (row) => (
+          <Switch
+            checked={row.is_active}
+            onChange={() => void handleToggleActive(row)}
+            inputProps={{ "aria-label": `Activă: ${row.question.slice(0, 40)}` }}
+          />
+        ),
+      },
+      {
+        id: "actions",
+        header: "Acțiuni",
+        width: 120,
+        align: "right",
+        headerAlign: "right",
+        cell: (row) => (
+          <>
+            <IconButton
+              aria-label="Editează"
+              onClick={() => openEdit(row)}
+              size="small"
+              color="primary"
+            >
+              <EditOutlinedIcon />
+            </IconButton>
+            <IconButton
+              aria-label="Șterge"
+              onClick={() => void handleDelete(row)}
+              size="small"
+              color="error"
+            >
+              <DeleteOutlineIcon />
+            </IconButton>
+          </>
+        ),
+      },
+  ];
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: "auto" }}>
       <DashboardPageHeader
@@ -182,87 +266,25 @@ export function AdminFaqClient() {
           <CircularProgress aria-label="Se încarcă" />
         </Box>
       ) : (
-        <TableContainer component={Paper}>
-          <Table size="small" aria-labelledby="faq-table-caption">
-            <caption id="faq-table-caption" style={{ captionSide: "top", textAlign: "left", padding: "12px 16px" }}>
-              Lista întrebărilor ({rows.length})
-            </caption>
-            <TableHead>
+        <ResponsiveDashboardTable
+          rows={rows}
+          columns={columns}
+          getRowId={(row) => row.id}
+          ariaLabel="Lista întrebărilor FAQ"
+          caption={`Lista întrebărilor (${rows.length})`}
+          tableSx={{ captionSide: "top" }}
+          emptyRow={
+            rows.length === 0 ? (
               <TableRow>
-                <TableCell width={72}>Ordine</TableCell>
-                <TableCell width={140}>Pagină</TableCell>
-                <TableCell>Întrebare</TableCell>
-                <TableCell width={120} align="center">
-                  Activă
-                </TableCell>
-                <TableCell width={120} align="right">
-                  Acțiuni
+                <TableCell colSpan={5}>
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                    Nu există întrebări pentru această pagină. Apasă „Adaugă întrebare”.
+                  </Typography>
                 </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id} hover>
-                  <TableCell>{row.sort_order}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={faqPlacementAdminLabel(row.placement)}
-                      size="small"
-                      variant="outlined"
-                      color={row.placement === "both" ? "primary" : undefined}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {row.question}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-                      {row.answer.slice(0, 120)}
-                      {row.answer.length > 120 ? "…" : ""}
-                    </Typography>
-                    {!row.is_active ? (
-                      <Chip label="Inactivă" size="small" color="warning" sx={{ mt: 1 }} />
-                    ) : null}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Switch
-                      checked={row.is_active}
-                      onChange={() => void handleToggleActive(row)}
-                      inputProps={{ "aria-label": `Activă: ${row.question.slice(0, 40)}` }}
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      aria-label="Editează"
-                      onClick={() => openEdit(row)}
-                      size="small"
-                      color="primary"
-                    >
-                      <EditOutlinedIcon />
-                    </IconButton>
-                    <IconButton
-                      aria-label="Șterge"
-                      onClick={() => void handleDelete(row)}
-                      size="small"
-                      color="error"
-                    >
-                      <DeleteOutlineIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                      Nu există întrebări pentru această pagină. Apasă „Adaugă întrebare”.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            ) : null
+          }
+        />
       )}
 
       <AddEditFaq

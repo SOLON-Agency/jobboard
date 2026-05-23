@@ -100,8 +100,8 @@ export function ConsentScreen({
   scopes,
   state,
 }: ConsentScreenProps) {
-  const [approvePending, startApprove] = useTransition();
-  const [denyPending, startDeny] = useTransition();
+  const [approvePending] = useTransition();
+  const [denyPending] = useTransition();
   const pending = approvePending || denyPending;
 
   const resolvedScopes = scopes.map(resolveScope);

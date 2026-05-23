@@ -101,7 +101,6 @@ function NavList({ items, pathname, onNavigate }: NavListProps) {
 
 function useNavItems(): NavItem[] {
   const {
-    role,
     loading,
     hasArchivedApplications,
     isAtLeastEmployer,
@@ -122,7 +121,7 @@ function useNavItems(): NavItem[] {
   // ── Employer+ items ────────────────────────────────────────────────────────
   if (isAtLeastEmployer) {
     items.push(
-      { label: "Companiile mele", href: "/dashboard/company", icon: <BusinessIcon /> },
+      { label: "Societățile mele", href: "/dashboard/company", icon: <BusinessIcon /> },
       { label: "Anunțurile mele", href: "/dashboard/jobs", icon: <WorkIcon /> },
       ...(appSettings.features.forms
         ? [{ label: "Formularele mele", href: "/dashboard/forms", icon: <EditDocumentIcon /> }]
@@ -159,7 +158,7 @@ function useNavItems(): NavItem[] {
       { label: "Test funcții Edge", href: "/dashboard/edge-functions", icon: <CloudQueueIcon /> },
       { label: "Utilizatori", href: "/dashboard/admin/users", icon: <GroupOutlinedIcon /> },
       { label: "Competențe", href: "/dashboard/admin/skills", icon: <PsychologyOutlinedIcon /> },
-      { label: "Companii nerevendicate", href: "/dashboard/admin/unclaimed", icon: <DomainAddOutlinedIcon /> },
+      { label: "Societăți nerevendicate", href: "/dashboard/admin/unclaimed", icon: <DomainAddOutlinedIcon /> },
       { label: "Noutăți platformă", href: "/dashboard/admin/releases", icon: <CampaignOutlinedIcon /> },
       { label: "Întrebări frecvente", href: "/dashboard/admin/faq", icon: <LiveHelpOutlinedIcon /> }
     );

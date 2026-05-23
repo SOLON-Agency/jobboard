@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const slugs = await getAllCompanySlugs(supabase);
     companyPages = slugs.map((slug) => ({
-      url: `${baseUrl}/companies/${slug}`,
+      url: `${baseUrl}/societate/${slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.6,

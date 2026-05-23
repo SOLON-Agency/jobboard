@@ -74,7 +74,7 @@ const advantages: readonly Advantage[] = [
     badge: "Portal societate juridică",
     title: "Profil complet pentru societățile juridice relevante",
     description:
-      "Fiecare companie are o pagină dedicată: identitate vizuală, domenii de practică și toate pozițiile active într-un singur loc. Angajatorii își consolidează brandul juridic, iar profesioniștii juridici pot evalua oferta generală înainte de a aplica.",
+      "Fiecare societate are o pagină dedicată: identitate vizuală, domenii de practică și toate pozițiile active într-un singur loc. Angajatorii își consolidează brandul juridic, iar profesioniștii juridici pot evalua oferta generală înainte de a aplica.",
     bullets: [
       "Profile dedicate pentru firme din piața juridică românească",
       "Context despre specializări, cultură de lucru și tipul mandatelor",

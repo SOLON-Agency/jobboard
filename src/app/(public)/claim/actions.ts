@@ -32,7 +32,7 @@ export async function claimCompanyAction(params: {
       : claimPath;
     return {
       ok: false,
-      error: "Trebuie să ai un cont pentru a revendica compania.",
+      error: "Trebuie să ai un cont pentru a revendica societatea.",
       redirectTo: `/register?redirect=${encodeURIComponent(redirectQuery)}${
         params.companyEmail ? `&email=${encodeURIComponent(params.companyEmail)}` : ""
       }`,

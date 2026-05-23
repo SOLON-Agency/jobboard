@@ -73,14 +73,6 @@ interface JobActionsRowProps {
   onPreviewCandidates?: (job: JobWithCompany) => void;
 }
 
-const ACTION_COLORS: Record<ActionColor, { bg: string; hover: string }> = {
-  primary:   { bg: "rgba(25,118,210,0.08)",  hover: "primary.main" },
-  secondary: { bg: "rgba(62,92,118,0.08)",   hover: "secondary.main" },
-  success:   { bg: "rgba(46,125,50,0.08)",   hover: "success.main" },
-  warning:   { bg: "rgba(237,108,2,0.08)",   hover: "warning.main" },
-};
-
-
 
 interface JobListProps {
   /** Controlled mode — pass jobs directly; skips internal fetching */
@@ -131,9 +123,7 @@ export function JobList({
   const [totalPages, setTotalPages]     = useState(0);
   const [loading, setLoading]           = useState(!isControlled);
 
-  // Track the active filter signature so we can toast only when filters change
   const FILTER_KEYS = ["q", "location", "type", "experience", "salaryMin", "salaryMax", "remote", "minBenefits"];
-  const filterSignature = FILTER_KEYS.map((k) => searchParams.get(k) ?? "").join("|");
   const prevFilterRef = useRef<string | null>(null);
 
   const { jobFavourites, toggleJob } = useFavourites();
@@ -358,7 +348,6 @@ function JobActionsRow({
   job, onEdit, onDuplicate, onStatusChange, onArchive, onPreviewCandidates,
 }: JobActionsRowProps) {
   const theme = useTheme();
-  const isMd = useMediaQuery(theme.breakpoints.up("md"));
   const isSm = useMediaQuery(theme.breakpoints.up("sm"));
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 

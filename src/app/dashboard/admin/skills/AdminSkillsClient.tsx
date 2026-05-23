@@ -10,13 +10,6 @@ import {
   Skeleton,
   Stack,
   Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   TextField,
   Tooltip,
   Typography,
@@ -27,6 +20,10 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { getAllSkillsAdmin } from "@/services/skills.service";
 import { parseSupabaseError } from "@/lib/utils";
 import type { Skill } from "@/services/skills.service";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 
 type SortField = "name" | "is_approved";
 type SortDir = "asc" | "desc";
@@ -121,6 +118,61 @@ export function AdminSkillsClient() {
 
   const pendingCount = useMemo(() => skills.filter((s) => !s.is_approved).length, [skills]);
 
+  const columns: DashboardTableColumn<Skill>[] = [
+      {
+        id: "name",
+        header: "Competență",
+        sort: {
+          active: sortField === "name",
+          direction: sortField === "name" ? sortDir : "asc",
+          onClick: () => handleSort("name"),
+        },
+        cell: (skill) => (
+          <Typography variant="body2" fontWeight={500}>
+            {skill.name}
+          </Typography>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        hideBelow: "sm",
+        sort: {
+          active: sortField === "is_approved",
+          direction: sortField === "is_approved" ? sortDir : "asc",
+          onClick: () => handleSort("is_approved"),
+        },
+        cell: (skill) => (
+          <Chip
+            label={skill.is_approved ? "Aprobată" : "În așteptare"}
+            color={skill.is_approved ? "success" : "warning"}
+            size="small"
+            variant="outlined"
+          />
+        ),
+      },
+      {
+        id: "approval",
+        header: "Aprobare",
+        cell: (skill) => (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Tooltip title={skill.is_approved ? "Retrage aprobarea" : "Aprobă competența"}>
+              <Switch
+                checked={skill.is_approved ?? false}
+                onChange={(_, checked) => void handleToggleApproval(skill.id, checked)}
+                disabled={pending[skill.id]}
+                size="small"
+                color="success"
+                inputProps={{
+                  "aria-label": `${skill.is_approved ? "Retrage aprobarea" : "Aprobă"} competența ${skill.name}`,
+                }}
+              />
+            </Tooltip>
+          </Box>
+        ),
+      },
+  ];
+
   if (loading) {
     return (
       <>
@@ -207,86 +259,15 @@ export function AdminSkillsClient() {
           </Typography>
         </Paper>
       ) : (
-        <TableContainer
-          component={Paper}
-          variant="outlined"
-          sx={{ borderRadius: 2, overflowX: "auto" }}
-        >
-          <Table size="small" aria-label="Lista competențelor">
-            <TableHead>
-              <TableRow sx={{ bgcolor: "action.hover" }}>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "name"}
-                    direction={sortField === "name" ? sortDir : "asc"}
-                    onClick={() => handleSort("name")}
-                  >
-                    Competență
-                  </TableSortLabel>
-                </TableCell>
-
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "is_approved"}
-                    direction={sortField === "is_approved" ? sortDir : "asc"}
-                    onClick={() => handleSort("is_approved")}
-                  >
-                    Status
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Aprobare</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.map((skill) => (
-                <TableRow
-                  key={skill.id}
-                  hover
-                  sx={{
-                    "&:last-child td": { border: 0 },
-                    bgcolor: !skill.is_approved ? "warning.50" : "inherit",
-                  }}
-                >
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={500}>
-                      {skill.name}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell>
-                    <Chip
-                      label={skill.is_approved ? "Aprobată" : "În așteptare"}
-                      color={skill.is_approved ? "success" : "warning"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Tooltip
-                        title={skill.is_approved ? "Retrage aprobarea" : "Aprobă competența"}
-                      >
-                        <Switch
-                          checked={skill.is_approved ?? false}
-                          onChange={(_, checked) =>
-                            void handleToggleApproval(skill.id, checked)
-                          }
-                          disabled={pending[skill.id]}
-                          size="small"
-                          color="success"
-                          inputProps={{
-                            "aria-label": `${skill.is_approved ? "Retrage aprobarea" : "Aprobă"} competența ${skill.name}`,
-                          }}
-                        />
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <ResponsiveDashboardTable
+          rows={filtered}
+          columns={columns}
+          getRowId={(skill) => skill.id}
+          ariaLabel="Lista competențelor"
+          getRowSx={(skill) => ({
+            bgcolor: !skill.is_approved ? "warning.50" : "inherit",
+          })}
+        />
       )}
 
       <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: "block" }}>

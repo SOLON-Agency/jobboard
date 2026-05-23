@@ -15,12 +15,6 @@ import {
   Paper,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -33,6 +27,10 @@ import { useToast } from "@/contexts/ToastContext";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 import { formatDate } from "@/lib/utils";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 
 type ReleaseAnnouncement = {
   id: string;
@@ -148,6 +146,110 @@ export function AdminReleasesClient() {
     setEditSaving(false);
   };
 
+  const columns: DashboardTableColumn<ReleaseAnnouncement>[] = [
+      {
+        id: "title",
+        header: "Titlu",
+        headerSx: { fontWeight: 700 },
+        cell: (release) => (
+          <Stack spacing={0.25}>
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              fontFamily="monospace"
+              sx={{ display: { xs: "block", sm: "none" } }}
+            >
+              v{release.version}
+            </Typography>
+            <Typography variant="body2">
+              {release.title || <em style={{ color: "gray" }}>Fără titlu</em>}
+            </Typography>
+          </Stack>
+        ),
+      },
+      {
+        id: "version",
+        header: "Versiune",
+        hideBelow: "sm",
+        headerSx: { fontWeight: 700 },
+        cell: (release) => (
+          <Typography variant="body2" fontWeight={600} fontFamily="monospace">
+            v{release.version}
+          </Typography>
+        ),
+      },
+      {
+        id: "status",
+        header: "Stare",
+        hideBelow: "sm",
+        headerSx: { fontWeight: 700 },
+        cell: (release) => (
+          <Chip
+            label={release.draft ? "Draft" : "Publicat"}
+            color={release.draft ? "default" : "success"}
+            size="small"
+          />
+        ),
+      },
+      {
+        id: "created_at",
+        header: "Creat la",
+        hideBelow: "md",
+        headerSx: { fontWeight: 700 },
+        cell: (release) => (
+          <Typography variant="caption" color="text.secondary">
+            {formatDate(release.created_at)}
+          </Typography>
+        ),
+      },
+      {
+        id: "sent_at",
+        header: "Trimis la",
+        hideBelow: "lg",
+        headerSx: { fontWeight: 700 },
+        cell: (release) => (
+          <Typography variant="caption" color="text.secondary">
+            {release.sent_at ? formatDate(release.sent_at) : "—"}
+          </Typography>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Acțiuni",
+        headerAlign: "right",
+        align: "right",
+        headerSx: { fontWeight: 700, textAlign: "right" },
+        cell: (release) => (
+          <Stack direction="row" spacing={0.5} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
+            <IconButton
+              size="small"
+              aria-label={`Editează anunțul v${release.version}`}
+              onClick={() => openEdit(release)}
+              disabled={!release.draft}
+            >
+              <EditOutlinedIcon fontSize="small" />
+            </IconButton>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={
+                publishingId === release.id ? (
+                  <CircularProgress size={14} color="inherit" />
+                ) : (
+                  <SendOutlinedIcon fontSize="small" />
+                )
+              }
+              disabled={!release.draft || publishingId !== null}
+              onClick={() => void handlePublish(release)}
+              sx={{ minWidth: { xs: 44, sm: 100 } }}
+            >
+              {publishingId === release.id ? "Se trimite…" : "Publică"}
+            </Button>
+          </Stack>
+        ),
+      },
+  ];
+
   return (
     <>
       <DashboardPageHeader
@@ -179,81 +281,14 @@ export function AdminReleasesClient() {
             </Typography>
           </Box>
         ) : (
-          <TableContainer>
-            <Table aria-label="Anunțuri noutăți">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Versiune</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Titlu</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Stare</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Creat la</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Trimis la</TableCell>
-                  <TableCell sx={{ fontWeight: 700, textAlign: "right" }}>Acțiuni</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {releases.map((release) => (
-                  <TableRow key={release.id} hover>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600} fontFamily="monospace">
-                        v{release.version}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {release.title || <em style={{ color: "gray" }}>Fără titlu</em>}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={release.draft ? "Draft" : "Publicat"}
-                        color={release.draft ? "default" : "success"}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(release.created_at)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption" color="text.secondary">
-                        {release.sent_at ? formatDate(release.sent_at) : "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                        <IconButton
-                          size="small"
-                          aria-label={`Editează anunțul v${release.version}`}
-                          onClick={() => openEdit(release)}
-                          disabled={!release.draft}
-                        >
-                          <EditOutlinedIcon fontSize="small" />
-                        </IconButton>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          startIcon={
-                            publishingId === release.id ? (
-                              <CircularProgress size={14} color="inherit" />
-                            ) : (
-                              <SendOutlinedIcon fontSize="small" />
-                            )
-                          }
-                          disabled={!release.draft || publishingId !== null}
-                          onClick={() => void handlePublish(release)}
-                          sx={{ minWidth: 100 }}
-                        >
-                          {publishingId === release.id ? "Se trimite…" : "Publică"}
-                        </Button>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <ResponsiveDashboardTable
+            rows={releases}
+            columns={columns}
+            getRowId={(release) => release.id}
+            ariaLabel="Anunțuri noutăți"
+            containerComponent={Box}
+            containerSx={{ overflow: "hidden" }}
+          />
         )}
       </Paper>
 

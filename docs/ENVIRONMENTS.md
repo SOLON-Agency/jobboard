@@ -8,7 +8,7 @@ Canonical reference for humans and AI agents. Git branches map to Vercel deploym
 
 | Context | Git branch | Vercel scope | Public URL | Supabase project ref | Browser title prefix | Vercel Flags |
 |---------|------------|--------------|------------|----------------------|----------------------|--------------|
-| **TEST** | `test` | Preview | `https://jobboard-sand.vercel.app/` | `aofjdbonfqjkosbgzsbx` | `[TEST] ` | Preview `FLAGS` / `FLAGS_SECRET` |
+| **TEST** | `test` | Preview | `https://jobboard-sand.vercel.app/` | `uccivcdtfpevtykirkuw` | `[TEST] ` | Preview `FLAGS` / `FLAGS_SECRET` |
 | **PROD** | `main` | Production | Production domain (`NEXT_PUBLIC_SITE_URL` in Vercel Production) | `uccivcdtfpevtykirkuw` | _(none)_ | Production `FLAGS` / `FLAGS_SECRET` |
 | **Local** | `test` or `main` | Development (flags only) | `http://localhost:3000` | Active branch selects project | `[TEST] ` on `test`, none on `main` | Development `FLAGS` / `FLAGS_SECRET` |
 
@@ -24,7 +24,7 @@ flowchart LR
     devEnv[Development env vars]
   end
   subgraph supabase [Supabase projects]
-    testDb[aofjdbonfqjkosbgzsbx]
+    testDb[uccivcdtfpevtykirkuw]
     prodDb[uccivcdtfpevtykirkuw]
   end
   testBranch --> previewEnv --> testDb
@@ -38,11 +38,11 @@ flowchart LR
 
 ## Agent quick rules
 
-1. **On branch `test`**, never assume production data — queries hit `aofjdbonfqjkosbgzsbx`.
+1. **On branch `test`**, never assume production data — queries hit `uccivcdtfpevtykirkuw` (same project as main until a dedicated preview DB is provisioned).
 2. **On branch `main`**, migrations and Edge Function deploys from pre-commit target `uccivcdtfpevtykirkuw` (production).
 3. **Locally**, `npm run vercel:env` and pre-commit always pull **Development** Vercel Flags — not Preview or Production flag values.
 4. **`NEXT_PUBLIC_TITLE_PREFIX`** drives the `[TEST] ` browser/social title prefix via `src/lib/page-title.ts` — do not hardcode `[TEST]` in page metadata.
-5. **Cursor MCP** (`.cursor/mcp.json`) is wired to the **TEST** Supabase project (`aofjdbonfqjkosbgzsbx`).
+5. **Cursor MCP** (`.cursor/mcp.json`) is wired to the **jobboard** Supabase project (`uccivcdtfpevtykirkuw`).
 6. **Schema changes** must be applied to **both** Supabase projects when shipping migrations (test first, then main).
 
 ---
@@ -88,8 +88,8 @@ Override branch detection: `SUPABASE_ENV=test` or `SUPABASE_ENV=main`.
 
 | Variable | Required | Where to get it |
 |----------|----------|-----------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | `https://aofjdbonfqjkosbgzsbx.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase Dashboard → project **aofjdbonfqjkosbgzsbx** → Settings → API |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | `https://uccivcdtfpevtykirkuw.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase Dashboard → project **uccivcdtfpevtykirkuw** → Settings → API |
 | `SUPABASE_DB_PASSWORD` | Yes (migrations on `test`) | Same project → Settings → Database |
 | `NEXT_PUBLIC_TITLE_PREFIX` | Yes | `[TEST]` |
 
@@ -116,7 +116,7 @@ Do **not** set `NEXT_PUBLIC_TITLE_PREFIX`. Mirror values in **Vercel → Product
 | 2 | `vercel env pull --environment=development` → merge `.env.local` | Development flags only |
 | 3 | `node scripts/sync-branch-environment.js` again | Re-compose `.env` |
 | 4 | `npm run build` | — |
-| 5 | Deploy changed Edge Functions | `test` → `aofjdbonfqjkosbgzsbx`; `main` → `uccivcdtfpevtykirkuw` |
+| 5 | Deploy changed Edge Functions | `test` / `main` → `uccivcdtfpevtykirkuw` |
 | 6 | Push staged migrations | Same project as step 5 |
 
 Opt-outs: `SKIP_ENV_SYNC=1`, `SKIP_CODEGEN=1`, `SKIP_VERCEL_ENV_PULL=1`, `SKIP_BUILD=1`, `SKIP_DEPLOY=1`, `SKIP_MIGRATIONS=1`, or `git commit --no-verify`.
@@ -141,7 +141,7 @@ Configure in **Vercel → Project → Settings → Environment Variables**.
 | Variable | Value |
 |----------|-------|
 | `NEXT_PUBLIC_SITE_URL` | `https://jobboard-sand.vercel.app/` |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://aofjdbonfqjkosbgzsbx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://uccivcdtfpevtykirkuw.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | _(TEST anon key)_ |
 | `NEXT_PUBLIC_TITLE_PREFIX` | `[TEST]` |
 | `FLAGS` | Preview-scoped value (auto when using Vercel Flags) |

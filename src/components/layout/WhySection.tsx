@@ -24,7 +24,7 @@ const features = [
     icon: <BusinessIcon sx={{ fontSize: 28 }} />,
     title: "Portal societăți juridice",
     description:
-      "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile ale unei companii într-un singur loc.",
+      "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile ale unei societăți într-un singur loc.",
     color: "#c3ae61",
     lightBg: "rgba(195,174,97,0.06)",
     border: "rgba(195,174,97,0.2)",

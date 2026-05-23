@@ -7,6 +7,7 @@ import { FavouritesFeatureRoot } from "@/components/providers/FavouritesFeatureR
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { VercelToolbar } from "@vercel/toolbar/next";
+import { isVercelToolbarConfigured } from "@/lib/vercel-toolbar";
 import { generateWebSiteJsonLd } from "@/lib/seo";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import "./globals.css";
@@ -93,7 +94,9 @@ export default function RootLayout({
                 {children}
               </main>
               <Footer />
-              {process.env.NODE_ENV === "development" ? <VercelToolbar /> : null}
+              {process.env.NODE_ENV === "development" && isVercelToolbarConfigured ? (
+                <VercelToolbar />
+              ) : null}
             </ToastProvider>
             </ReduxStoreProvider>
           </ThemeRegistry>

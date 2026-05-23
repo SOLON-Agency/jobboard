@@ -16,7 +16,6 @@ interface BlogCardProps {
 }
 
 export function BlogCard({ post, priority = false }: BlogCardProps) {
-  const authorName = post.profiles?.full_name ?? "Echipa JurisJobs";
   const href = `/blog/${post.slug}`;
 
   return (

@@ -13,7 +13,7 @@ Companion to `/AGENTS.md` at the repo root. Use this file for code-level pattern
 | `/docs/ENVIRONMENTS.md` | Everyone | TEST vs PROD branch mapping (Vercel, Supabase, flags, pre-commit) |
 | `/README.md` | Humans onboarding | Setup, scripts, high-level structure |
 | **`src/AGENTS.md`** (this file) | Implementors | `/src` conventions, services/forms/server-client split |
-| **`src/PATTERNS.md`** | Implementors | Copy-paste snippets; must match patterns declared here and in `/AGENTS.md` |
+| **`src/PATTERNS.md`** | Implementors | Copy-paste snippets; ESLint / route / rename guardrails; must match patterns in `/AGENTS.md` |
 
 **When you add or change a cross-cutting pattern**, update **both** `src/AGENTS.md` and `src/PATTERNS.md` in the same PR (and `/AGENTS.md` or `/README.md` if onboarding or product rules change). When you add a **vertical feature** (e.g. alerts, blog), link its entry points (`page.tsx`, main `*Client.tsx`, services) from `src/PATTERNS.md` Pattern Index if it becomes a reference implementation.
 

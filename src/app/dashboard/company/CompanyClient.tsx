@@ -107,7 +107,7 @@ function CompanyActions({ company, onEdit, onArchive }: CompanyActionsProps) {
         >
           <MuiMenuItem
             component={Link}
-            href={`/companies/${company.slug}`}
+            href={`/societate/${company.slug}`}
             target="_blank"
             onClick={() => setMenuAnchor(null)}
             sx={{ gap: 1.5, py: 1 }}
@@ -151,7 +151,7 @@ export function CompanyClient() {
 
   const [companies, setCompanies] = useState<CompanyWithJobCount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showArchived, setShowArchived] = useState(false);
+  const showArchived = false;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyWithJobCount | null>(null);
@@ -216,7 +216,7 @@ export function CompanyClient() {
     setArchiving(true);
     try {
       await archiveCompany(supabase, archiveTarget.id, next);
-      showToast(next ? "Companie arhivată." : "Companie dezarhivată.", "info");
+      showToast(next ? "Societate arhivată." : "Societate dezarhivată.", "info");
       if (next && user) {
         void dispatchNotification(supabase, {
           type: NOTIFICATION_TYPES.COMPANY_ARCHIVED,
@@ -232,7 +232,7 @@ export function CompanyClient() {
       setArchiving(false);
       setArchiveTarget(null);
     }
-  }, [archiveTarget, supabase, showToast, load]);
+  }, [archiveTarget, supabase, showToast, load, user]);
 
   const handleArchiveCancel = useCallback(() => {
     setArchiveTarget(null);
@@ -263,7 +263,7 @@ export function CompanyClient() {
       if (!editing && maxCompanies !== null && activeCompanyCount >= maxCompanies) {
         setMessage({
           type: "error",
-          text: `Ai atins limita de ${maxCompanies} companie activă. Arhivează compania existentă sau treci la un plan superior.`,
+          text: `Ai atins limita de ${maxCompanies} societate activă. Arhivează societatea existentă sau treci la un plan superior.`,
         });
         return;
       }
@@ -282,8 +282,8 @@ export function CompanyClient() {
             founded_year: data.founded_year ? Number(data.founded_year) : null,
             ...(logoUrl ? { logo_url: logoUrl } : {}),
           });
-          setMessage({ type: "success", text: "Companie actualizată." });
-          showToast("Companie actualizată cu succes.");
+          setMessage({ type: "success", text: "Societate actualizată." });
+          showToast("Societate actualizată cu succes.");
           void supabase.functions
             .invoke("company-followers-notify", {
               body: { company_id: editing.id, event: "company_updated" },
@@ -323,8 +323,8 @@ export function CompanyClient() {
             }
           }
 
-          setMessage({ type: "success", text: "Companie creată." });
-          showToast("Companie creată cu succes.");
+          setMessage({ type: "success", text: "Societate creată." });
+          showToast("Societate creată cu succes.");
           void dispatchNotification(supabase, {
             type: NOTIFICATION_TYPES.COMPANY_CREATED,
             recipients: [user.id],
@@ -338,7 +338,7 @@ export function CompanyClient() {
         setMessage({ type: "error", text: parseSupabaseError(err) });
       }
     },
-    [user, supabase, editing, load, uploadLogo]
+    [user, supabase, editing, companies, role, load, uploadLogo, showToast]
   );
 
   if (loading) {
@@ -362,12 +362,12 @@ export function CompanyClient() {
   return (
     <>
       <DashboardPageHeader
-        title={<Typography variant="h3">Companii</Typography>}
+        title={<Typography variant="h3">Societăți</Typography>}
         actions={
           <Tooltip
             title={
               atCompanyLimit
-                ? `Ai atins limita de ${maxCompanies} companie activă. Arhivează compania existentă sau treci la un plan superior.`
+                ? `Ai atins limita de ${maxCompanies} societate activă. Arhivează societatea existentă sau treci la un plan superior.`
                 : ""
             }
           >
@@ -378,7 +378,7 @@ export function CompanyClient() {
                 onClick={openCreate}
                 disabled={atCompanyLimit}
               >
-                Companie nouă
+                Societate nouă
               </Button>
             </span>
           </Tooltip>
@@ -389,13 +389,13 @@ export function CompanyClient() {
         <Paper sx={{ p: 5, textAlign: "center", border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
           <BusinessIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
           <Typography variant="h5" sx={{ mb: 1 }}>
-            Nicio companie
+            Nicio societate
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Creează o companie pentru a publica locuri de muncă.
+            Creează o societate pentru a publica locuri de muncă.
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            Creează companie
+            Creează societate
           </Button>
         </Paper>
       ) : (
@@ -526,7 +526,7 @@ export function CompanyClient() {
       <EditSideDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editing ? `Editează: ${editing.name}` : "Creează companie"}
+        title={editing ? `Editează: ${editing.name}` : "Creează societate"}
         message={message}
         onMessageClose={() => setMessage(null)}
       >
@@ -549,11 +549,11 @@ export function CompanyClient() {
 
       <ConfirmDialog
         open={Boolean(archiveTarget)}
-        title={archiveTarget?.is_archived ? "Dezarhivează compania" : "Arhivează compania"}
+        title={archiveTarget?.is_archived ? "Dezarhivează societatea" : "Arhivează societatea"}
         body={
           archiveTarget?.is_archived
-            ? `Ești sigur că vrei să dezarhivezi compania „${archiveTarget.name}"? Compania va deveni din nou activă.`
-            : `Ești sigur că vrei să arhivezi compania „${archiveTarget?.name}"? Anunțurile active vor fi suspendate.`
+            ? `Ești sigur că vrei să dezarhivezi societatea „${archiveTarget.name}"? Societatea va deveni din nou activă.`
+            : `Ești sigur că vrei să arhivezi societatea „${archiveTarget?.name}"? Anunțurile active vor fi suspendate.`
         }
         confirmLabel={archiveTarget?.is_archived ? "Dezarhivează" : "Arhivează"}
         confirmColor={archiveTarget?.is_archived ? "primary" : "error"}

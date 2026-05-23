@@ -138,7 +138,7 @@ export function AddEditForm({
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!formData.name.trim()) errs.name = "Numele formularului este obligatoriu";
-    if (companies.length > 1 && !formData.company_id) errs.company_id = "Selectează o companie";
+    if (companies.length > 1 && !formData.company_id) errs.company_id = "Selectează o societate";
     fields.forEach((f, i) => {
       if (!f.label.trim()) errs[`field_${i}_label`] = "Eticheta este obligatorie";
       if (FIELD_WITH_OPTIONS.includes(f.field_type) && !f.options_raw.trim()) {
@@ -172,7 +172,7 @@ export function AddEditForm({
         {companies.length > 1 && (
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
-              Companie *
+              Societate *
             </Typography>
             <Select
               size="small"
@@ -183,7 +183,7 @@ export function AddEditForm({
               displayEmpty
             >
               <MenuItem value="" disabled>
-                Selectează compania...
+                Selectează societatea...
               </MenuItem>
               {companies.map((c) => (
                 <MenuItem key={c.id} value={c.id}>
@@ -247,7 +247,7 @@ export function AddEditForm({
             sx={{ p: 3, textAlign: "center", borderStyle: "dashed", borderRadius: 2 }}
           >
             <Typography variant="body2" color="text.secondary">
-              Niciun câmp adăugat. Apasă „Adaugă câmp" pentru a începe.
+              Niciun câmp adăugat. Apasă „Adaugă câmp” pentru a începe.
             </Typography>
           </Paper>
         )}

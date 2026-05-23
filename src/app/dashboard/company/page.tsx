@@ -3,7 +3,7 @@ import { requireEmployerRole } from "@/lib/server-guards";
 import { CompanyClient } from "./CompanyClient";
 
 export const metadata: Metadata = {
-  title: "Compania mea",
+  title: "Societatea mea",
   robots: { index: false },
 };
 

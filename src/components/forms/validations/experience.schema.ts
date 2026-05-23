@@ -9,7 +9,7 @@ const yearField = z
 export const experienceSchema = z
   .object({
     title: z.string().min(1, "Titlul este obligatoriu"),
-    company: z.string().min(1, "Compania este obligatorie"),
+    company: z.string().min(1, "Societatea este obligatorie"),
     description: z.string().max(1000, "Maxim 1000 de caractere").optional().or(z.literal("")),
     is_current: z.boolean(),
     start_year: yearField,

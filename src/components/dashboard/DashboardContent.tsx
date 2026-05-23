@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   Box,
@@ -358,7 +358,7 @@ function ProfileProgress({
   ];
 
   const employerSteps: Step[] = [
-    { visibleLabel: "Companie",              visible: true, label: "Companie creată",          done: hasCompanies },
+    { visibleLabel: "Societate",              visible: true, label: "Societate creată",          done: hasCompanies },
     { visibleLabel: "Formular",              visible: true, label: "Formular creat",           done: formsTotal > 0 },
     { visibleLabel: "Creare anunț",          visible: true, label: "Anunț creat",              done: publishedJobs + draftJobs > 0 },
     { visibleLabel: "Gestionează anunțuri",  visible: true, label: "Anunț publicat",              done: publishedJobs + draftJobs > 0 },
@@ -538,10 +538,11 @@ export function DashboardContent({
   applicationsByStatus,
   formResponsesByMonth,
 }: DashboardStats) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const { isAtLeastEmployer, isAdmin } = useRole();
 
@@ -558,7 +559,7 @@ export function DashboardContent({
   const hasJobStatus = jobsByStatus.some((s) => s.value > 0);
   const hasAppStatus = applicationsByStatus.some((s) => s.value > 0);
   const hasFormResponses = formResponsesByMonth.some((m) => m.count > 0);
-  const hasApplicationsWithdrawn = applicationsWithdrawn > 0;
+
 
   // Greeting based on time of day
   const hour = new Date().getHours();
@@ -715,7 +716,7 @@ export function DashboardContent({
           />
           {favEnabled && (
             <StatCard
-              label="Companii salvate"
+              label="Societăți salvate"
               value={savedCompanies}
               icon={<BookmarkOutlinedIcon fontSize="small" />}
               accentColor={C.secondary}
@@ -792,7 +793,7 @@ export function DashboardContent({
                   value={companyVisits ?? 0}
                   icon={<VisibilityOutlinedIcon fontSize="small" />}
                   accentColor={C.gold}
-                  sublabel="Pe profilul companiei"
+                  sublabel="Pe profilul societății"
                 />
               )}
               {typeof companyEngages === "number" && (
@@ -801,7 +802,7 @@ export function DashboardContent({
                   value={companyEngages}
                   icon={<TouchAppOutlinedIcon fontSize="small" />}
                   accentColor={C.gold}
-                  sublabel="Totale ale companiei"
+                  sublabel="Totale ale societății"
                 />
               )}
               {formsEnabled && (
@@ -1100,7 +1101,7 @@ export function DashboardContent({
               icon={<BookmarkOutlinedIcon fontSize="small" />}
               color={C.gold}
               label="Favorite"
-              sublabel="Joburi și companii salvate"
+              sublabel="Joburi și societăți salvate"
             />
           )}
 
@@ -1132,7 +1133,7 @@ export function DashboardContent({
               href="/dashboard/company"
               icon={<BusinessCenterOutlinedIcon fontSize="small" />}
               color={C.primary}
-              label="Adaugă companie"
+              label="Adaugă societate"
               sublabel="Începe să recrutezi"
               warn
             />

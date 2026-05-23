@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, startTransition } from "react";
 import {
   Box,
   Button,
@@ -22,7 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -60,7 +60,9 @@ export function AddEditEducation({
 
   // Sync when the parent finishes loading and passes real data for the first time.
   useEffect(() => {
-    setItems(initialItems ?? []);
+    startTransition(() => {
+      setItems(initialItems ?? []);
+    });
   }, [initialItems]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -71,7 +73,6 @@ export function AddEditEducation({
     register,
     handleSubmit,
     reset,
-    watch,
     control,
     setValue,
     formState: { errors, isSubmitting },
@@ -80,7 +81,7 @@ export function AddEditEducation({
     defaultValues: { is_current: false },
   });
 
-  const isCurrent = watch("is_current");
+  const isCurrent = Boolean(useWatch({ control, name: "is_current" }));
 
   const reload = useCallback(async () => {
     if (!user) return;

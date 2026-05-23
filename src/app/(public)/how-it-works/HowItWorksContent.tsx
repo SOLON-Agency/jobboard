@@ -82,7 +82,7 @@ const employerSteps = [
   {
     number: "01",
     icon: <BusinessCenterIcon sx={{ fontSize: 26 }} />,
-    title: "Creează pagina companiei",
+    title: "Creează pagina societății",
     body: "Prezintă-ți firma, cultura organizațională și echipa. Un profil complet atrage candidați mai calificați.",
   },
   {

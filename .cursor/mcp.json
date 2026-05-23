@@ -4,7 +4,10 @@
       "url": "https://resend.com/docs/mcp"
     },
     "supabase": {
-      "url": "https://mcp.supabase.com/mcp?project_ref=aofjdbonfqjkosbgzsbx"
+      "url": "https://mcp.supabase.com/mcp?project_ref=uccivcdtfpevtykirkuw"
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com"
     }
   }
 }

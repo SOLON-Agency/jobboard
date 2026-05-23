@@ -14,13 +14,6 @@ import {
   Select,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableSortLabel,
   TextField,
   Tooltip,
   Typography,
@@ -37,6 +30,10 @@ import {
 } from "@/services/applications.service";
 import { formatDate, parseSupabaseError } from "@/lib/utils";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 import type { Database } from "@/types/database";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
@@ -174,6 +171,124 @@ export function CandidatesOverviewClient() {
     });
   }, [candidates, filterStatus, filterJobId, search, sortField, sortDir]);
 
+  const columns: DashboardTableColumn<EmployerCandidate>[] = [
+      {
+        id: "candidate",
+        header: "Candidat",
+        sort: {
+          active: sortField === "full_name",
+          direction: sortField === "full_name" ? sortDir : "asc",
+          onClick: () => handleSort("full_name"),
+        },
+        cell: (candidate) => (
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Avatar
+              src={candidate.profiles?.avatar_url ?? undefined}
+              sx={{ width: 32, height: 32, flexShrink: 0 }}
+              aria-hidden="true"
+            >
+              <PersonOutlineIcon fontSize="small" />
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={600}>
+                {candidate.profiles?.full_name ?? "Candidat necunoscut"}
+              </Typography>
+              {candidate.profiles?.headline && (
+                <Typography variant="caption" color="text.secondary">
+                  {candidate.profiles.headline}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        id: "job",
+        header: "Post",
+        hideBelow: "sm",
+        sort: {
+          active: sortField === "job_title",
+          direction: sortField === "job_title" ? sortDir : "asc",
+          onClick: () => handleSort("job_title"),
+        },
+        cell: (candidate) => (
+          <Box>
+            <Typography variant="body2">
+              {candidate.job_listings?.title ?? "—"}
+            </Typography>
+            {candidate.job_listings?.companies?.name && (
+              <Typography variant="caption" color="text.secondary">
+                {candidate.job_listings.companies.name}
+              </Typography>
+            )}
+          </Box>
+        ),
+      },
+      {
+        id: "applied_at",
+        header: "Aplicat",
+        hideBelow: "md",
+        sort: {
+          active: sortField === "applied_at",
+          direction: sortField === "applied_at" ? sortDir : "asc",
+          onClick: () => handleSort("applied_at"),
+        },
+        cell: (candidate) => (
+          <Typography variant="body2" color="text.secondary">
+            {formatDate(candidate.applied_at ?? "")}
+          </Typography>
+        ),
+      },
+      {
+        id: "status",
+        header: "Status",
+        hideBelow: "sm",
+        sort: {
+          active: sortField === "status",
+          direction: sortField === "status" ? sortDir : "asc",
+          onClick: () => handleSort("status"),
+        },
+        cell: (candidate) => (
+          <Chip
+            label={STATUS_LABEL[candidate.status as ApplicationStatus] ?? candidate.status}
+            color={STATUS_COLOR[candidate.status as ApplicationStatus] ?? "default"}
+            size="small"
+            variant="outlined"
+          />
+        ),
+      },
+      {
+        id: "actions",
+        header: "Acțiuni",
+        cell: (candidate) => (
+          <Tooltip title="Schimbă statusul">
+            <FormControl size="small" sx={{ minWidth: { xs: 44, sm: 140 } }}>
+              <Select
+                value={candidate.status ?? "pending"}
+                disabled={candidate.status === "withdrawn"}
+                onChange={(e) =>
+                  void handleStatusChange(candidate.id, e.target.value as ApplicationStatus)
+                }
+                displayEmpty
+                inputProps={{
+                  "aria-label": `Status pentru ${candidate.profiles?.full_name ?? "candidat"}`,
+                }}
+              >
+                {ALL_STATUSES.filter((s) => s !== "withdrawn").map((s) => (
+                  <MenuItem key={s} value={s}>
+                    {STATUS_LABEL[s]}
+                  </MenuItem>
+                ))}
+                <MenuItem value="withdrawn" disabled>
+                  {STATUS_LABEL.withdrawn}
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Tooltip>
+        ),
+      },
+  ];
+
   if (loading) {
     return (
       <>
@@ -206,7 +321,7 @@ export function CandidatesOverviewClient() {
       >
         <TextField
           size="small"
-          placeholder="Caută candidat, post, companie..."
+          placeholder="Caută candidat, post, societate..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ minWidth: 240, flex: 1 }}
@@ -272,155 +387,12 @@ export function CandidatesOverviewClient() {
           </Typography>
         </Paper>
       ) : (
-        <TableContainer
-          component={Paper}
-          variant="outlined"
-          sx={{ borderRadius: 2, overflowX: "auto" }}
-        >
-          <Table size="small" aria-label="Lista candidaților">
-            <TableHead>
-              <TableRow sx={{ bgcolor: "action.hover" }}>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "full_name"}
-                    direction={sortField === "full_name" ? sortDir : "asc"}
-                    onClick={() => handleSort("full_name")}
-                  >
-                    Candidat
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "job_title"}
-                    direction={sortField === "job_title" ? sortDir : "asc"}
-                    onClick={() => handleSort("job_title")}
-                  >
-                    Post
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "applied_at"}
-                    direction={sortField === "applied_at" ? sortDir : "asc"}
-                    onClick={() => handleSort("applied_at")}
-                  >
-                    Aplicat
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>
-                  <TableSortLabel
-                    active={sortField === "status"}
-                    direction={sortField === "status" ? sortDir : "asc"}
-                    onClick={() => handleSort("status")}
-                  >
-                    Status
-                  </TableSortLabel>
-                </TableCell>
-                <TableCell>Acțiuni</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filtered.map((candidate) => (
-                <TableRow
-                  key={candidate.id}
-                  hover
-                  sx={{ "&:last-child td": { border: 0 } }}
-                >
-                  {/* Candidate */}
-                  <TableCell>
-                    <Stack direction="row" alignItems="center" spacing={1.5}>
-                      <Avatar
-                        src={candidate.profiles?.avatar_url ?? undefined}
-                        sx={{ width: 32, height: 32, flexShrink: 0 }}
-                        aria-hidden="true"
-                      >
-                        <PersonOutlineIcon fontSize="small" />
-                      </Avatar>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="body2" fontWeight={600} noWrap>
-                          {candidate.profiles?.full_name ?? "Candidat necunoscut"}
-                        </Typography>
-                        {candidate.profiles?.headline && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{
-                              display: "-webkit-box",
-                              WebkitLineClamp: 1,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {candidate.profiles.headline}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Stack>
-                  </TableCell>
-
-                  {/* Job */}
-                  <TableCell>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="body2" noWrap sx={{ maxWidth: 220 }}>
-                        {candidate.job_listings?.title ?? "—"}
-                      </Typography>
-                      {candidate.job_listings?.companies?.name && (
-                        <Typography variant="caption" color="text.secondary" noWrap>
-                          {candidate.job_listings.companies.name}
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-
-                  {/* Date */}
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {formatDate(candidate.applied_at ?? "")}
-                    </Typography>
-                  </TableCell>
-
-                  {/* Status */}
-                  <TableCell>
-                    <Chip
-                      label={STATUS_LABEL[candidate.status as ApplicationStatus] ?? candidate.status}
-                      color={STATUS_COLOR[candidate.status as ApplicationStatus] ?? "default"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell>
-                    <Tooltip title="Schimbă statusul">
-                      <FormControl size="small" sx={{ minWidth: 140 }}>
-                        <Select
-                          value={candidate.status ?? "pending"}
-                          disabled={candidate.status === "withdrawn"}
-                          onChange={(e) =>
-                            void handleStatusChange(candidate.id, e.target.value as ApplicationStatus)
-                          }
-                          displayEmpty
-                          inputProps={{ "aria-label": `Status pentru ${candidate.profiles?.full_name ?? "candidat"}` }}
-                        >
-                          {ALL_STATUSES.filter((s) => s !== "withdrawn").map((s) => (
-                            <MenuItem key={s} value={s}>
-                              {STATUS_LABEL[s]}
-                            </MenuItem>
-                          ))}
-                          {/* Provides a matching option when the candidate has
-                              withdrawn; recruiters cannot change this status. */}
-                          <MenuItem value="withdrawn" disabled>
-                            {STATUS_LABEL.withdrawn}
-                          </MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <ResponsiveDashboardTable
+          rows={filtered}
+          columns={columns}
+          getRowId={(candidate) => candidate.id}
+          ariaLabel="Lista candidaților"
+        />
       )}
 
       {/* Summary */}

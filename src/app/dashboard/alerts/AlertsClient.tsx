@@ -6,11 +6,17 @@ import {
   Button,
   Chip,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
   Paper,
   Skeleton,
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ArchiveIcon from "@mui/icons-material/Archive";
@@ -18,6 +24,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PauseIcon from "@mui/icons-material/Pause";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -221,6 +228,141 @@ function AlertsContent() {
   );
 }
 
+type ActionColor = "primary" | "secondary" | "warning" | "error";
+
+interface ActionDef {
+  key: string;
+  label: string;
+  icon: React.ReactElement;
+  color: ActionColor;
+  onClick: () => void;
+}
+
+interface AlertActionsProps {
+  alert: Alert;
+  onEdit: () => void;
+  onToggleActive: () => void;
+  onArchive: () => void;
+}
+
+function AlertActions({ alert, onEdit, onToggleActive, onArchive }: AlertActionsProps) {
+  const theme = useTheme();
+  const isSm = useMediaQuery(theme.breakpoints.up("sm"));
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const actions: ActionDef[] = [
+    {
+      key: "toggle",
+      label: alert.is_active ? "Dezactivează" : "Activează",
+      icon: alert.is_active ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />,
+      color: alert.is_active ? "secondary" : "primary",
+      onClick: onToggleActive,
+    },
+    {
+      key: "edit",
+      label: "Editează",
+      icon: <EditIcon fontSize="small" />,
+      color: "primary",
+      onClick: onEdit,
+    },
+    {
+      key: "archive",
+      label: "Arhivează",
+      icon: <ArchiveIcon fontSize="small" />,
+      color: "error",
+      onClick: onArchive,
+    },
+  ];
+
+  const visibleCount = isMd ? 2 : 1;
+  const visible = actions.slice(0, visibleCount);
+  const overflow = actions.slice(visibleCount);
+  const [primary, ...rest] = visible;
+
+  const renderButton = (action: ActionDef, variant: "contained" | "outlined") => (
+    <Button
+      size="small"
+      variant={variant}
+      color={action.color}
+      onClick={action.onClick}
+      startIcon={isSm ? action.icon : undefined}
+      sx={{
+        minWidth: 0,
+        px: isSm ? 1.5 : 1,
+        fontWeight: variant === "contained" ? 600 : 500,
+        whiteSpace: "nowrap",
+        boxShadow: "none",
+        "&:hover": { boxShadow: "none" },
+      }}
+    >
+      {isSm ? action.label : action.icon}
+    </Button>
+  );
+
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      {primary && (
+        <Tooltip title={!isSm ? primary.label : ""}>
+          {renderButton(primary, "contained")}
+        </Tooltip>
+      )}
+
+      {rest.map((action) => (
+        <Box key={action.key}>{renderButton(action, "outlined")}</Box>
+      ))}
+
+      {overflow.length > 0 && (
+        <>
+          <Tooltip title="Mai multe acțiuni">
+            <IconButton
+              size="small"
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
+              aria-label="Mai multe acțiuni pentru această alertă"
+              sx={{ color: "text.secondary" }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={() => setMenuAnchor(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            slotProps={{
+              paper: { sx: { minWidth: 180, borderRadius: 2, mt: 0.5 } },
+            }}
+          >
+            {overflow.map((action) => (
+              <MenuItem
+                key={action.key}
+                onClick={() => {
+                  action.onClick();
+                  setMenuAnchor(null);
+                }}
+                sx={{ gap: 1.5, py: 1 }}
+              >
+                <ListItemIcon sx={{ minWidth: 0, color: `${action.color}.main` }}>
+                  {action.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={action.label}
+                  primaryTypographyProps={{
+                    variant: "body2",
+                    color: `${action.color}.main`,
+                    fontWeight: 500,
+                  }}
+                />
+              </MenuItem>
+            ))}
+          </Menu>
+        </>
+      )}
+    </Stack>
+  );
+}
+
 interface AlertRowProps {
   alert: AlertWithProfile;
   showOwner: boolean;
@@ -275,27 +417,14 @@ function AlertRow({ alert, showOwner, onEdit, onToggleActive, onArchive }: Alert
         )}
       </Box>
 
-      <Stack direction="row" spacing={0.5} flexShrink={0} alignSelf={{ xs: "flex-end", sm: "center" }}>
-        <Tooltip title={alert.is_active ? "Dezactivează" : "Activează"}>
-          <IconButton
-            size="small"
-            onClick={onToggleActive}
-            aria-label={alert.is_active ? "Dezactivează alerta" : "Activează alerta"}
-          >
-            {alert.is_active ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Editează">
-          <IconButton size="small" onClick={onEdit} aria-label="Editează alerta">
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Arhivează">
-          <IconButton size="small" onClick={onArchive} color="default" aria-label="Arhivează alerta">
-            <ArchiveIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+      <Box flexShrink={0} alignSelf={{ xs: "flex-end", sm: "center" }}>
+        <AlertActions
+          alert={alert}
+          onEdit={onEdit}
+          onToggleActive={onToggleActive}
+          onArchive={onArchive}
+        />
+      </Box>
     </Paper>
   );
 }

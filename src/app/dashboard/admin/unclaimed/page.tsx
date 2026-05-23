@@ -8,7 +8,7 @@ import { getUnclaimedCompanies } from "@/services/companies.service";
 import { UnclaimedListClient } from "./UnclaimedListClient";
 
 export const metadata: Metadata = {
-  title: "Companii nerevendicate",
+  title: "Societăți nerevendicate",
   robots: { index: false },
 };
 
@@ -28,17 +28,17 @@ export default async function UnclaimedCompaniesPage() {
       >
         <Box>
           <Typography variant="h5" component="h1" fontWeight={700}>
-            Companii nerevendicate
+            Societăți nerevendicate
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {companies.length === 0
-              ? "Nicio companie nerevendicată momentan."
+              ? "Nicio societate nerevendicată momentan."
               : `${companies.length} compan${companies.length === 1 ? "ie" : "ii"} în așteptarea revendicării contului lor`}
           </Typography>
         </Box>
         <Link href="/dashboard/admin/unclaimed/new" style={{ textDecoration: "none" }}>
           <Button variant="contained" startIcon={<AddIcon />} size="small">
-            Companie nouă
+            Societate nouă
           </Button>
         </Link>
       </Stack>

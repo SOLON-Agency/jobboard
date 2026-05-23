@@ -25,7 +25,7 @@ import { unclaimedCompanySchema, type UnclaimedCompanyFormData } from "@/compone
 import { createUnclaimedAction } from "./actions";
 import type { CompanyOption } from "@/components/forms/AddEditJob";
 
-const STEPS = ["Detalii companie", "Primul anunț", "Confirmare și trimitere"];
+const STEPS = ["Detalii societate", "Primul anunț", "Confirmare și trimitere"];
 
 const defaultCompanyValues: CompanyFormData = {
   name: "",
@@ -84,7 +84,7 @@ export function UnclaimedNewClient() {
   // persisted yet. company_id will be set to "__pending__" and is ignored.
   const pendingCompanyOption: CompanyOption[] = companyData
     ? [{ id: "__pending__", name: companyData.name }]
-    : [{ id: "__pending__", name: "Compania nouă" }];
+    : [{ id: "__pending__", name: "Societatea nouă" }];
 
   const handleCompanySubmit = async (data: CompanyFormData) => {
     // Validate that email is provided (unclaimedCompanySchema requires it)
@@ -138,7 +138,7 @@ export function UnclaimedNewClient() {
       code: res.code,
     });
     setActiveStep(3);
-    showToast("Compania și anunțul au fost create. Emailul de invitație a fost trimis.", "success", 6000);
+    showToast("Societatea și anunțul au fost create. Emailul de invitație a fost trimis.", "success", 6000);
   };
 
   const copyToClipboard = (text: string) => {
@@ -154,11 +154,11 @@ export function UnclaimedNewClient() {
         <Stack spacing={3} alignItems="center" textAlign="center">
           <CheckCircleOutlineIcon color="success" sx={{ fontSize: 56 }} />
           <Typography variant="h5" fontWeight={700}>
-            Companie creată cu succes!
+            Societate creată cu succes!
           </Typography>
           <Typography color="text.secondary">
             Emailul de invitație a fost trimis la{" "}
-            <strong>{result.companyEmail}</strong>. Compania{" "}
+            <strong>{result.companyEmail}</strong>. Societatea{" "}
             <strong>{result.companyName}</strong> va apărea în listele publice
             imediat.
           </Typography>
@@ -222,7 +222,7 @@ export function UnclaimedNewClient() {
             href="/dashboard/admin/unclaimed/new"
             sx={{ mt: 1 }}
           >
-            Adaugă o altă companie nerevendicată
+            Adaugă o altă societate nerevendicată
           </Button>
         </Stack>
       </Paper>
@@ -251,10 +251,10 @@ export function UnclaimedNewClient() {
       {activeStep === 0 && (
         <Paper sx={{ p: { xs: 2, sm: 3 } }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-            Detalii companie nerevendicată
+            Detalii societate nerevendicată
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Câmpul <strong>Email companie</strong> este obligatoriu — la această
+            Câmpul <strong>Email societate</strong> este obligatoriu — la această
             adresă vor fi trimise notificările zilnice de revendicare.
           </Typography>
           <AddEditCompany
@@ -315,7 +315,7 @@ export function UnclaimedNewClient() {
           <Stack spacing={2} divider={<Divider />}>
             <Box>
               <Typography variant="caption" color="text.secondary" textTransform="uppercase">
-                Companie
+                Societate
               </Typography>
               <Typography fontWeight={600}>{companyData.name}</Typography>
               <Typography variant="body2" color="text.secondary">
@@ -341,7 +341,7 @@ export function UnclaimedNewClient() {
                 Ce se întâmplă la submit
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
-                1. Se creează compania cu <code>is_claimed=false</code>.
+                1. Se creează societatea cu <code>is_claimed=false</code>.
               </Typography>
               <Typography variant="body2">
                 2. Se creează anunțul de angajare.

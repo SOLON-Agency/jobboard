@@ -151,7 +151,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const c = company as any;
     const companyName: string = c.name ?? "Compania";
     const companySlug: string = c.slug ?? "";
-    const companyUrl = companySlug ? `${siteUrl}/companies/${companySlug}` : siteUrl;
+    const companyUrl = companySlug ? `${siteUrl}/societate/${companySlug}` : siteUrl;
 
     const { data: followers, error: followersErr } = await serviceClient
       .from("company_favourites")

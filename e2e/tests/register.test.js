@@ -21,7 +21,6 @@ const {
   newPage,
   goto,
   expectSelector,
-  clickButtonByText,
   screenshotOnFail,
   waitForNav,
 } = require('../helpers');

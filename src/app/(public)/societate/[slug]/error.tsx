@@ -13,7 +13,7 @@ export default function CompanyDetailError({ error, reset }: ErrorProps) {
 
   return (
     <Box sx={{ textAlign: "center", py: 8 }}>
-      <Typography variant="h5" gutterBottom>Profilul companiei nu a putut fi încărcat</Typography>
+      <Typography variant="h5" gutterBottom>Profilul societății nu a putut fi încărcat</Typography>
       <Button variant="contained" onClick={reset} sx={{ mt: 2 }}>Încearcă din nou</Button>
     </Box>
   );

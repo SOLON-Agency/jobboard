@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState, startTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { slideVariantsFull, slideVariantsReduced, carouselTransition } from "@/lib/motion";
 import {
   Box,
   Typography,
-  Chip,
   Stack,
   IconButton,
   Paper,
@@ -17,11 +16,8 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import type { Tables } from "@/types/database";
-import { formatSalary, jobTypeLabels, jobTypeChipSx, truncate } from "@/lib/utils";
-import { ApplyButton } from "@/components/jobs/ApplyButton";
-import type { BenefitItem } from "@/services/benefits.service";
+import { formatSalary, truncate } from "@/lib/utils";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
 import { JobTags } from "./JobTags";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
@@ -65,7 +61,9 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const numPositions = Math.max(1, jobs.length - perView + 1);
-  numPositionsRef.current = numPositions;
+  useEffect(() => {
+    numPositionsRef.current = numPositions;
+  }, [numPositions]);
   const canPrev = start > 0;
   const canNext = start < numPositions - 1;
   const visible = useMemo(() => jobs.slice(start, start + perView), [jobs, start, perView]);
@@ -132,7 +130,9 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
   }, [reduceMotion, start, visible, gridStyle]);
 
   useEffect(() => {
-    setStart((s) => Math.min(s, Math.max(0, numPositions - 1)));
+    startTransition(() => {
+      setStart((s) => Math.min(s, Math.max(0, numPositions - 1)));
+    });
   }, [numPositions, jobs.length]);
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function JobsCarousel({ title, subtitle, description, jobs, autoScroll = 
       setStart((s) => (s >= np - 1 ? 0 : s + 1));
     }, AUTO_MS);
     return () => window.clearInterval(id);
-  }, [jobs.length, perView, paused]);
+  }, [autoScroll, jobs.length, perView, paused]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     if (!isBelowLg) return;

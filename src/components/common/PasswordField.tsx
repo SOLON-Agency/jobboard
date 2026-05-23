@@ -11,7 +11,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 export const PasswordField = forwardRef<HTMLDivElement, TextFieldProps>(
-  function PasswordField({ InputProps, type: _type, ...props }, ref) {
+  function PasswordField({ InputProps, ...props }, ref) {
     const [showPassword, setShowPassword] = useState(false);
 
     return (

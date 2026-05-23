@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useRef,
   useState,
+  startTransition,
 } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -32,8 +33,6 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -52,7 +51,7 @@ import {
 import { createJob } from "@/services/jobs.service";
 import { createCompany, updateCompany } from "@/services/companies.service";
 import { createBenefit } from "@/services/benefits.service";
-import { slugify, parseSupabaseError, jobTypeLabels, experienceLevelLabels, formatSalary, formatDate } from "@/lib/utils";
+import { slugify, parseSupabaseError, formatSalary } from "@/lib/utils";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "@/components/forms/validations/login.schema";
@@ -61,10 +60,10 @@ import { JobTags } from "@/components/jobs/JobTags";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STEP_LABELS = ["Anunț", "Companie", "Confirmare"];
+const STEP_LABELS = ["Anunț", "Societate", "Confirmare"];
 const STEP_DESCRIPTIONS = [
   "Titlu, descriere, salariu și aplicare",
-  "Informații despre compania angajatoare",
+  "Informații despre societatea angajatoare",
   "Revizuiește și publică anunțul",
 ];
 const PLACEHOLDER_COMPANY_ID = "wizard-pending";
@@ -322,10 +321,6 @@ function ConfirmationStep({
   onEditCompany,
 }: ConfirmationProps) {
   const descriptionText = jobData.description.replace(/<[^>]*>/g, "").trim();
-  const salaryText = formatSalary(
-    jobData.salary_min ? Number(jobData.salary_min) : null,
-    jobData.salary_max ? Number(jobData.salary_max) : null
-  );
 
   return (
     <Stack spacing={3}>
@@ -364,7 +359,7 @@ function ConfirmationStep({
             startIcon={<EditIcon />}
             onClick={onEditCompany}
             sx={{ color: "text.secondary" }}
-            aria-label="Editează compania"
+            aria-label="Editează societatea"
           >
             Editează
           </Button>
@@ -555,13 +550,15 @@ export function AnuntWizard() {
     if (!user || user.is_anonymous || !user.email_confirmed_at) return;
     const draft = loadDraft();
     if (!draft) return;
-    setJobData(draft.jobData);
-    setJobBenefits(draft.jobBenefits ?? []);
-    setCompanyData(draft.companyData);
-    setCompanyLogoUrl(draft.companyLogoUrl ?? null);
-    setDraftRestored(true);
-    setStep(2);
-    clearDraft();
+    startTransition(() => {
+      setJobData(draft.jobData);
+      setJobBenefits(draft.jobBenefits ?? []);
+      setCompanyData(draft.companyData);
+      setCompanyLogoUrl(draft.companyLogoUrl ?? null);
+      setDraftRestored(true);
+      setStep(2);
+      clearDraft();
+    });
   }, [user]);
 
   // ── Rotate loading messages during publish ────────────────────────────────
@@ -895,7 +892,7 @@ export function AnuntWizard() {
                 <AddEditJob
                   ref={jobFormRef}
                   key="wizard-job"
-                  companies={[{ id: PLACEHOLDER_COMPANY_ID, name: "Compania ta" }]}
+                  companies={[{ id: PLACEHOLDER_COMPANY_ID, name: "Societatea ta" }]}
                   editingJob={null}
                   defaultValues={
                     jobData ?? {
@@ -931,7 +928,7 @@ export function AnuntWizard() {
             {step === 1 && (
               <>
                 <Typography variant="h5" fontWeight={800} sx={{ mb: 0.5 }}>
-                  Compania ta
+                  Societatea ta
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Candidații vor vedea aceste informații alături de anunțul tău.

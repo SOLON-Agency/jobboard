@@ -391,7 +391,7 @@ export function JobsClient() {
                   onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
                   displayEmpty
                 >
-                  <MenuItem value="all">Toate companiile</MenuItem>
+                  <MenuItem value="all">Toate societățile</MenuItem>
                   {companies.map((c) => (
                     <MenuItem key={c.id} value={c.id}>{c.name.slice(0, 50)}...</MenuItem>
                   ))}
@@ -426,24 +426,24 @@ export function JobsClient() {
       {companies.length === 0 ? (
         <Paper sx={{ p: 4, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2, textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
-          <Typography variant="h5" sx={{ mb: 1 }}>Nicio companie</Typography>
+          <Typography variant="h5" sx={{ mb: 1 }}>Nicio societate</Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            Creează mai întâi o companie pentru a gestiona anunțurile de muncă.
+            Creează mai întâi o societate pentru a gestiona anunțurile de muncă.
           </Typography>
           <Button component={Link} href="/dashboard/company" variant="outlined">
-            Creează companie
+            Creează societate
           </Button>
         </Paper>
       ) : filteredJobs.length === 0 ? (
         <Paper sx={{ p: 4, border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2, textAlign: "center" }}>
           <WorkOutlineIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
           <Typography variant="h5" sx={{ mb: 1 }}>
-            {selectedCompanyId === "all" ? "Niciun anunț de muncă" : "Niciun anunț pentru această companie"}
+            {selectedCompanyId === "all" ? "Niciun anunț de muncă" : "Niciun anunț pentru această societate"}
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             {selectedCompanyId === "all"
               ? "Creează primul tău anunț pentru a atrage candidații potriviți."
-              : "Adaugă un anunț nou pentru compania selectată."}
+              : "Adaugă un anunț nou pentru societatea selectată."}
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Creează anunț de muncă

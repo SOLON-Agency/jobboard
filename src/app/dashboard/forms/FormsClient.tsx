@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, startTransition } from "react";
 import Link from "next/link";
 import {
   Box,
@@ -27,7 +27,8 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+
+
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import ArchiveIcon from "@mui/icons-material/Archive";
@@ -93,10 +94,9 @@ interface FormActionsRowProps {
   form: FormWithCount;
   onEdit: (f: FormWithCount) => void;
   onArchive: (f: FormWithCount) => void;
-  onDelete: (f: FormWithCount) => void;
 }
 
-function FormActionsRow({ form, onEdit, onArchive, onDelete }: FormActionsRowProps) {
+function FormActionsRow({ form, onEdit, onArchive }: FormActionsRowProps) {
   const theme = useTheme();
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
   const isSm = useMediaQuery(theme.breakpoints.up("sm"));
@@ -215,7 +215,11 @@ export function FormsClient() {
     setLoading(false);
   }, [user, supabase]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    startTransition(() => {
+      void load();
+    });
+  }, [load]);
 
   const openCreate = () => {
     setEditingForm(null);
@@ -271,7 +275,7 @@ export function FormsClient() {
         setMessage({ type: "error", text: parseSupabaseError(err) });
       }
     },
-    [supabase, editingForm, load]
+    [supabase, editingForm, load, showToast, user]
   );
 
   const handleDelete = async (form: FormWithCount) => {
@@ -330,13 +334,13 @@ export function FormsClient() {
           <>
             {companies.length > 1 && (
               <FormControl size="small" sx={{ minWidth: 180, maxWidth: "100%" }}>
-                <InputLabel>Companie</InputLabel>
+                <InputLabel>Societate</InputLabel>
                 <Select
-                  label="Companie"
+                  label="Societate"
                   value={selectedCompanyId}
                   onChange={(e: SelectChangeEvent) => setSelectedCompanyId(e.target.value)}
                 >
-                  <MenuItem value="all">Toate companiile</MenuItem>
+                  <MenuItem value="all">Toate societățile</MenuItem>
                   {companies.map((c) => (
                     <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
                   ))}
@@ -354,12 +358,12 @@ export function FormsClient() {
       {!loading && companies.length === 0 && (
         <Paper sx={{ p: 4, textAlign: "center", border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
           <ArticleOutlinedIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
-          <Typography variant="h6" sx={{ mb: 0.5 }}>Nicio companie</Typography>
+          <Typography variant="h6" sx={{ mb: 0.5 }}>Nicio societate</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Trebuie să ai o companie înainte de a crea formulare.
+            Trebuie să ai o societate înainte de a crea formulare.
           </Typography>
           <Button component={Link} href="/dashboard/company" variant="outlined">
-            Adaugă o companie
+            Adaugă o societate
           </Button>
         </Paper>
       )}
@@ -378,12 +382,12 @@ export function FormsClient() {
         <Paper sx={{ p: 6, textAlign: "center", border: "1px solid rgba(3, 23, 12, 0.1)", borderRadius: 2 }}>
           <ArticleOutlinedIcon sx={{ fontSize: 52, color: "text.secondary", mb: 1.5 }} />
           <Typography variant="h6" sx={{ mb: 0.5 }}>
-            {selectedCompanyId === "all" ? "Niciun formular creat" : "Niciun formular pentru această companie"}
+            {selectedCompanyId === "all" ? "Niciun formular creat" : "Niciun formular pentru această societate"}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
             {selectedCompanyId === "all"
               ? "Creează primul formular de aplicare și leagă-l de un anunț de muncă."
-              : "Adaugă un formular nou pentru compania selectată."}
+              : "Adaugă un formular nou pentru societatea selectată."}
           </Typography>
           <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
             Creează primul formular
@@ -441,7 +445,6 @@ export function FormsClient() {
                   form={form}
                   onEdit={openEdit}
                   onArchive={handleArchiveForm}
-                  onDelete={handleDelete}
                 />
               </Box>
             </Paper>

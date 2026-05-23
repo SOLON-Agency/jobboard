@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useImperativeHandle, forwardRef } from "react";
+import React, { useEffect, useState, useCallback, useImperativeHandle, forwardRef, useRef, startTransition } from "react";
 import {
   Typography,
   TextField,
@@ -8,7 +8,6 @@ import {
   Stack,
   Box,
   Chip,
-  Divider,
   FormControl,
   IconButton,
   InputLabel,
@@ -30,7 +29,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSupabase } from "@/hooks/useSupabase";
 import { jobTypeLabels, experienceLevelLabels, parseSupabaseError, truncate } from "@/lib/utils";
@@ -88,7 +87,7 @@ interface AddEditJobProps {
 
 export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
   function AddEditJob(
-    { companies, editingJob, defaultValues, onSubmit, onDelete, onCancel, hideActions, wizardMode },
+    { companies, editingJob, defaultValues, onSubmit, onDelete, hideActions, wizardMode },
     ref,
   ) {
     const supabase = useSupabase();
@@ -206,7 +205,6 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
       handleSubmit,
       control,
       register,
-      watch,
       setValue,
       formState: { errors, isSubmitting },
     } = useForm<JobFormData>({
@@ -237,9 +235,17 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
       [supabase],
     );
 
-    const selectedCompanyId = watch("company_id");
+    const selectedCompanyId = useWatch({ control, name: "company_id" });
+    const isRemoteWatched = useWatch({ control, name: "is_remote" });
+    const prevIsRemoteRef = useRef(isRemoteWatched);
+    const watchedPublishedAt = useWatch({ control, name: "published_at" });
+    const watchedApplicationMethod = useWatch({ control, name: "application_method" });
+
     useEffect(() => {
-      if (selectedCompanyId) loadForms(selectedCompanyId);
+      if (!selectedCompanyId) return;
+      startTransition(() => {
+        void loadForms(selectedCompanyId);
+      });
     }, [selectedCompanyId, loadForms]);
 
     const fieldTypesToDb = (fields: FormField[]) =>
@@ -279,19 +285,17 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
           setFormDrawerMessage({ type: "error", text: parseSupabaseError(err) });
         }
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
       [supabase, selectedCompanyId, loadForms, setValue],
     );
 
     useEffect(() => {
-      const subscription = watch((value, { name, type }) => {
-        // If "is_remote" changed and is true, clear the location.
-        if (name === "is_remote" && value.is_remote === true) {
-          setValue("location", "", { shouldValidate: true, shouldDirty: true });
-        }
-      });
-      return () => subscription.unsubscribe();
-    }, [watch, setValue]);
+      const wasRemote = prevIsRemoteRef.current;
+      prevIsRemoteRef.current = isRemoteWatched;
+      if (isRemoteWatched === true && wasRemote === false) {
+        setValue("location", "", { shouldValidate: true, shouldDirty: true });
+      }
+    }, [isRemoteWatched, setValue]);
 
     return (
       <Box component="form" onSubmit={(e) => e.preventDefault()} noValidate>
@@ -302,8 +306,8 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
               control={control}
               render={({ field }) => (
                 <FormControl fullWidth required error={!!errors.company_id}>
-                  <InputLabel>Companie</InputLabel>
-                  <Select {...field} label="Companie">
+                  <InputLabel>Societate</InputLabel>
+                  <Select {...field} label="Societate">
                     {companies.map((c) => (
                       <MenuItem key={c.id} value={c.id}>
                         {c.name}
@@ -354,8 +358,8 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                   onChange={field.onChange}
                   onInputChange={field.onChange}
                   onBlur={field.onBlur}
-                  label={watch("is_remote") ? "Remote" : "Locație"}
-                  disabled={watch("is_remote")}
+                  label={isRemoteWatched ? "Remote" : "Locație"}
+                  disabled={Boolean(isRemoteWatched)}
                   fullWidth
                 />
               )}
@@ -510,7 +514,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
                   }
                   inputProps={{
                     "aria-describedby": "expires_at-helper",
-                    min: watch("published_at") || undefined,
+                    min: watchedPublishedAt || undefined,
                   }}
                   slotProps={{ inputLabel: { shrink: true } }}
                 />
@@ -733,7 +737,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             )}
           />
 
-          {watch("application_method") === "url" && (
+          {watchedApplicationMethod === "url" && (
             <TextField
               {...register("application_url")}
               label="Unde se va aplica?"
@@ -750,7 +754,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             />
           )}
 
-          {watch("application_method") === "form" &&
+          {watchedApplicationMethod === "form" &&
             (formsList.length > 0 ? (
               <Stack direction="row" spacing={1} alignItems="center">
                 <Controller
@@ -785,7 +789,7 @@ export const AddEditJob = forwardRef<AddEditJobHandle, AddEditJobProps>(
             ) : (
               <Stack direction="row" spacing={2} alignItems="center">
                 <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-                  Niciun formular creat pentru această companie.
+                  Niciun formular creat pentru această societate.
                 </Typography>
                 <Button
                   variant="outlined"

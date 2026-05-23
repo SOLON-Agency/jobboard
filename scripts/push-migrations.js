@@ -13,7 +13,7 @@
  * Required env vars (loaded from .env if present):
  *   SUPABASE_ACCESS_TOKEN  — personal access token
  *   SUPABASE_DB_PASSWORD   — active DB password (set by npm run env:sync from TEST/MAIN keys)
- *   Branch `test` → project aofjdbonfqjkosbgzsbx
+ *   Branch `test` / `main` → project uccivcdtfpevtykirkuw
  *   Branch `main` → project uccivcdtfpevtykirkuw
  *   @see docs/ENVIRONMENTS.md
  *

@@ -11,8 +11,8 @@ import appSettings from "@/config/app.settings.json";
 
 const includedFeatures: readonly string[] = [
   "Până la 5 anunțuri de angajare active simultan",
-  "Profil de companie complet: logo, descriere și domenii de practică",
-  "Control total asupra vizibilității profilului companiei",
+  "Profil de societate complet: logo, descriere și domenii de practică",
+  "Control total asupra vizibilității profilului societății",
   "Acces la dashboard-ul de anunțuri și aplicații în timp real",
   "Filtrare și triere a candidaților care aplică la anunțurile tale",
   "Notificari pe email în momente cheie ale procesului de recrutare",

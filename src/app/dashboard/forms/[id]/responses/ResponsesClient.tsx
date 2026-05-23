@@ -17,11 +17,7 @@ import {
   Select,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
   TextField,
   Tooltip,
@@ -43,6 +39,10 @@ import {
 } from "@/services/forms.service";
 import { formatDate, parseSupabaseError } from "@/lib/utils";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import {
+  ResponsiveDashboardTable,
+  type DashboardTableColumn,
+} from "@/components/dashboard/ResponsiveDashboardTable";
 import type { Tables } from "@/types/database";
 
 type FormWithFields = Tables<"forms"> & { form_fields: Tables<"form_fields">[] };
@@ -153,6 +153,102 @@ export function ResponsesClient() {
     const val = response.form_response_values.find((v) => v.field_id === fieldId);
     return val?.value ?? "—";
   };
+
+  const columns: DashboardTableColumn<FormResponseWithValues>[] = (() => {
+    if (!form) return [];
+
+    const fieldColumns: DashboardTableColumn<FormResponseWithValues>[] = form.form_fields
+      .slice(0, 3)
+      .map((field) => ({
+        id: `field-${field.id}`,
+        header: (
+          <Typography variant="caption" fontWeight={700}>
+            {field.label}
+          </Typography>
+        ),
+        hideBelow: "md" as const,
+        cellSx: { maxWidth: 180 },
+        cell: (response) => (
+          <Typography variant="caption" sx={{ display: "block" }}>
+            {getFieldValue(response, field.id)}
+          </Typography>
+        ),
+      }));
+
+    return [
+      {
+        id: "respondent",
+        header: (
+          <Typography variant="caption" fontWeight={700}>
+            Respondent
+          </Typography>
+        ),
+        cell: (response) => (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton
+              size="small"
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleExpand(response.id);
+              }}
+              aria-label={expanded.has(response.id) ? "Ascunde detalii" : "Arată detalii"}
+            >
+              {expanded.has(response.id) ? (
+                <ExpandLessIcon fontSize="small" />
+              ) : (
+                <ExpandMoreIcon fontSize="small" />
+              )}
+            </IconButton>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={600}>
+                {response.respondent_name || "Anonim"}
+              </Typography>
+              {response.respondent_email && (
+                <Typography variant="caption" color="text.secondary">
+                  {response.respondent_email}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        ),
+      },
+      {
+        id: "date",
+        header: (
+          <Typography variant="caption" fontWeight={700}>
+            Data
+          </Typography>
+        ),
+        hideBelow: "sm",
+        cell: (response) => (
+          <Typography variant="caption" color="text.secondary">
+            {formatDate(response.created_at)}
+          </Typography>
+        ),
+      },
+      ...fieldColumns,
+      {
+        id: "actions",
+        header: "",
+        align: "right",
+        width: 60,
+        cell: (response) => (
+          <Box onClick={(event) => event.stopPropagation()}>
+            <Tooltip title="Șterge răspuns">
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => void handleDelete(response)}
+                aria-label="Șterge răspuns"
+              >
+                <DeleteOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        ),
+      },
+    ];
+  })();
 
   return (
     <Stack spacing={3}>
@@ -300,135 +396,69 @@ export function ResponsesClient() {
 
       {/* ── Responses table ───────────────────────────────────────────────── */}
       {!loading && responses.length > 0 && form && (
-        <TableContainer
-          component={Paper}
-          sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}
-        >
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: 40 }} />
-                <TableCell><Typography variant="caption" fontWeight={700}>Respondent</Typography></TableCell>
-                <TableCell><Typography variant="caption" fontWeight={700}>Data</Typography></TableCell>
-                {form.form_fields.slice(0, 3).map((f) => (
-                  <TableCell key={f.id} sx={{ display: { xs: "none", md: "table-cell" } }}>
-                    <Typography variant="caption" fontWeight={700} noWrap>{f.label}</Typography>
-                  </TableCell>
-                ))}
-                <TableCell align="right" sx={{ width: 60 }} />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {responses.map((response) => (
-                <React.Fragment key={response.id}>
-                  <TableRow
-                    hover
-                    sx={{ cursor: "pointer" }}
-                    onClick={() => toggleExpand(response.id)}
-                  >
-                    <TableCell sx={{ width: 40 }}>
-                      <IconButton size="small">
-                        {expanded.has(response.id) ? (
-                          <ExpandLessIcon fontSize="small" />
-                        ) : (
-                          <ExpandMoreIcon fontSize="small" />
-                        )}
-                      </IconButton>
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
-                        {response.respondent_name || "Anonim"}
-                      </Typography>
-                      {response.respondent_email && (
-                        <Typography variant="caption" color="text.secondary">
-                          {response.respondent_email}
-                        </Typography>
-                      )}
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {formatDate(response.created_at)}
-                      </Typography>
-                    </TableCell>
-
-                    {form.form_fields.slice(0, 3).map((f) => (
-                      <TableCell
-                        key={f.id}
-                        sx={{ display: { xs: "none", md: "table-cell" }, maxWidth: 180 }}
-                      >
-                        <Typography variant="caption" noWrap sx={{ display: "block" }}>
-                          {getFieldValue(response, f.id)}
-                        </Typography>
-                      </TableCell>
-                    ))}
-
-                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                      <Tooltip title="Șterge răspuns">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleDelete(response)}
-                        >
-                          <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-
-                  {/* ── Expanded detail row ──────────────────────────── */}
-                  <TableRow>
-                    <TableCell colSpan={5 + Math.min(form.form_fields.length, 3)} sx={{ p: 0 }}>
-                      <Collapse in={expanded.has(response.id)} timeout="auto" unmountOnExit>
-                        <Box sx={{ px: 4, py: 2, bgcolor: "action.hover" }}>
-                          <Typography variant="caption" fontWeight={700} sx={{ mb: 1.5, display: "block" }}>
-                            Toate răspunsurile
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: "grid",
-                              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
-                              gap: 1.5,
-                            }}
-                          >
-                            {form.form_fields.map((field) => {
-                              const raw = getFieldValue(response, field.id);
-                              const isCheckbox = field.field_type === "checkbox";
-                              const tags = isCheckbox && raw !== "—"
-                                ? raw.split(",").map((t) => t.trim()).filter(Boolean)
-                                : [];
-                              return (
-                                <Box key={field.id}>
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: isCheckbox && tags.length > 0 ? 0.5 : 0 }}>
-                                    {field.label}
-                                  </Typography>
-                                  {isCheckbox && tags.length > 0 ? (
-                                    <Stack direction="row" flexWrap="wrap" gap={0.5}>
-                                      {tags.map((tag) => (
-                                        tag.split("|||").map((t) => (
-                                          <Chip key={t} label={t} size="small" variant="outlined" />
-                                        ))
-                                      ))}
-                                    </Stack>
-                                  ) : (
-                                    <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
-                                      {raw}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              );
-                            })}
+        <ResponsiveDashboardTable
+          rows={responses}
+          columns={columns}
+          getRowId={(response) => response.id}
+          ariaLabel="Răspunsuri formular"
+          onRowClick={(response) => toggleExpand(response.id)}
+          renderRowExtra={(response) => (
+            <TableRow>
+              <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+                <Collapse in={expanded.has(response.id)} timeout="auto" unmountOnExit>
+                  <Box sx={{ px: 4, py: 2, bgcolor: "action.hover" }}>
+                    <Typography variant="caption" fontWeight={700} sx={{ mb: 1.5, display: "block" }}>
+                      Toate răspunsurile
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
+                        gap: 1.5,
+                      }}
+                    >
+                      {form.form_fields.map((field) => {
+                        const raw = getFieldValue(response, field.id);
+                        const isCheckbox = field.field_type === "checkbox";
+                        const tags =
+                          isCheckbox && raw !== "—"
+                            ? raw.split(",").map((t) => t.trim()).filter(Boolean)
+                            : [];
+                        return (
+                          <Box key={field.id}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                display: "block",
+                                mb: isCheckbox && tags.length > 0 ? 0.5 : 0,
+                              }}
+                            >
+                              {field.label}
+                            </Typography>
+                            {isCheckbox && tags.length > 0 ? (
+                              <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                                {tags.map((tag) =>
+                                  tag.split("|||").map((t) => (
+                                    <Chip key={t} label={t} size="small" variant="outlined" />
+                                  ))
+                                )}
+                              </Stack>
+                            ) : (
+                              <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
+                                {raw}
+                              </Typography>
+                            )}
                           </Box>
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                </Collapse>
+              </TableCell>
+            </TableRow>
+          )}
+        />
       )}
     </Stack>
   );

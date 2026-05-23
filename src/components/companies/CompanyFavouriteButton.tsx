@@ -15,7 +15,7 @@ interface CompanyFavouriteButtonProps {
 
 export function CompanyFavouriteButton({
   companyId,
-  companyName = "compania",
+  companyName = "societatea",
 }: CompanyFavouriteButtonProps) {
   const { user } = useAuth();
   const { isCompanyFavourite, toggleCompany } = useFavourites();
@@ -26,7 +26,7 @@ export function CompanyFavouriteButton({
   const isFav = isCompanyFavourite(companyId);
 
   return (
-    <Tooltip title={isFav ? "Elimină din favorite" : "Salvează compania"}>
+    <Tooltip title={isFav ? "Elimină din favorite" : "Salvează societatea"}>
       <IconButton
         onClick={() => void toggleCompany(companyId)}
         aria-label={

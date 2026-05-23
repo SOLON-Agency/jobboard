@@ -35,7 +35,7 @@ interface AddEditCompanyProps {
 }
 
 export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyProps>(
-  function AddEditCompany({ editing, defaultValues, initialLogoUrl, onSubmit, onCancel, hideActions }, ref) {
+  function AddEditCompany({ editing, defaultValues, initialLogoUrl, onSubmit, hideActions }, ref) {
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(initialLogoUrl ?? null);
 
@@ -89,7 +89,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
                   "&:hover": { bgcolor: "action.hover" },
                 }}
                 title="Încarcă logo"
-                aria-label="Încarcă logo companie"
+                aria-label="Încarcă logo societate"
               >
                 <CameraAltIcon sx={{ fontSize: 14 }} />
                 <input type="file" hidden accept="image/*" onChange={handleLogoChange} />
@@ -97,7 +97,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
             </Box>
             <Box>
               <Typography variant="body2" fontWeight={600}>
-                Logo companie
+                Logo societate
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 JPG, PNG sau SVG. Recomandat 200×200 px.
@@ -111,7 +111,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Numele companiei"
+                label="Numele societății"
                 fullWidth
                 required
                 error={!!errors.name}
@@ -132,7 +132,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Email companie"
+                label="Email societate"
                 type="email"
                 fullWidth
                 error={!!errors.email}
@@ -166,7 +166,7 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Dimensiunea companiei"
+                  label="Dimensiunea societății"
                   fullWidth
                   placeholder="ex. 10-50"
                 />
@@ -214,8 +214,8 @@ export const AddEditCompany = forwardRef<AddEditCompanyHandle, AddEditCompanyPro
                 {isSubmitting
                   ? "Se salvează..."
                   : editing
-                    ? "Actualizează compania"
-                    : "Creează companie"}
+                    ? "Actualizează societatea"
+                    : "Creează societate"}
               </Button>
             </Stack>
           )}
