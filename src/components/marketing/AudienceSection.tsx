@@ -117,7 +117,7 @@ export function AudienceSection() {
               mb: 1.5,
             }}
           >
-            Pentru cine este {appSettings.name}
+            Pentru cine este {appSettings.name}?
           </Typography>
           <Typography
             id="audience-section-heading"
@@ -129,7 +129,7 @@ export function AudienceSection() {
               fontSize: { xs: "1.85rem", sm: "2.2rem", md: "2.6rem", lg: "3rem" },
             }}
           >
-            Locul unde profesioniștii juridici potriviți{" "}
+            Recrutare modernă pentru{" "}
             <Box
               component="span"
               sx={{
@@ -140,7 +140,7 @@ export function AudienceSection() {
                 backgroundClip: "text",
               }}
             >
-              se întâlnesc
+               juriști inteligenți
             </Box>
           </Typography>
           <Typography
@@ -152,7 +152,7 @@ export function AudienceSection() {
           >
             De la firme de avocatură consacrate până la juniori în primul lor an de
             practică, fiecare segment al pieței juridice din România are aici un spațiu
-            construit pe măsură.
+            dedicat.
           </Typography>
         </Box>
 

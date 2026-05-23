@@ -73,10 +73,13 @@ export function BannerSection() {
                 id="banner-cta-heading"
                 sx={{ color: "#F0EBD8", mb: 0.5 }}
               >
-                Gata să îți lansezi cariera?
+                Hai pe {appSettings.name}
               </Typography>
-              <Typography sx={{ color: "rgba(240,235,216,0.5)" }}>
+              {/* <Typography sx={{ color: "rgba(240,235,216,0.5)" }}>
                 Alătură-te profesioniștilor juridici activi pe platforma {appSettings.name}.
+              </Typography> */}
+              <Typography sx={{ color: "rgba(240,235,216,0.5)" }}>
+                Locul unde recrutarea juridică încetează să mai fie penală.
               </Typography>
             </Box>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ flexShrink: 0 }}>

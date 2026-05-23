@@ -22,7 +22,7 @@ const features = [
   },
   {
     icon: <BusinessIcon sx={{ fontSize: 28 }} />,
-    title: "Portale companii",
+    title: "Portal societăți juridice",
     description:
       "Explorează firmele de avocatură de top și răsfoiește toate posturile disponibile ale unei companii într-un singur loc.",
     color: "#c3ae61",

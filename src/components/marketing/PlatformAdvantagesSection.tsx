@@ -43,7 +43,7 @@ const advantages: readonly Advantage[] = [
     badge: "Alerte personalizate",
     title: "Alerte care lucrează 24/7 pentru cariera ta",
     description:
-      "Salvează căutările și competențele tale, iar platforma îți trimite notificări în timp real când apar oportunități relevante: posturi de avocat definitiv, stagiar, jurist sau in-house counsel.",
+      "Salvează căutările și preferințele tale, iar platforma îți trimite notificări în timp real când apar oportunități relevante: posturi de avocat definitiv, stagiar, jurist sau consilier juridic in-house.",
     bullets: [
       "Notificări în timp real pe SMS, e-mail și în browser",
       "Filtre fine pe specializare, locație și nivel de experiență",
@@ -57,7 +57,7 @@ const advantages: readonly Advantage[] = [
   {
     icon: <PaymentsOutlinedIcon sx={{ fontSize: 30 }} />,
     badge: "Transparență salarială",
-    title: "Salarii afișate clar, fără ghicitori",
+    title: "Salarii (și beneficii) afișate clar, fără ghicitori",
     description:
       "Încurajăm angajatorii să publice intervale salariale reale și pachete de beneficii detaliate. Tu vezi din primul minut dacă oportunitatea se aliniază așteptărilor tale profesionale.",
     bullets: [
@@ -71,10 +71,10 @@ const advantages: readonly Advantage[] = [
   },
   {
     icon: <BusinessOutlinedIcon sx={{ fontSize: 30 }} />,
-    badge: "Profile companii",
-    title: "Cele mai relevante firme juridice din România",
+    badge: "Portal societate juridică",
+    title: "Cele mai relevante societăți juridice din România",
     description:
-      "Fiecărei companii îi dedicăm o pagină completă în ecosistem: identitate vizuală, domenii de practică, cultură de firmă și toate pozițiile active într-un singur loc — ca să alegi angajatori care sunt pe măsura reputației tale profesionale.",
+      "Fiecărei companii îi dedicăm o pagină completă în ecosistem: identitate vizuală, domenii de practică și toate pozițiile active într-un singur loc — ca să alegi angajatorul potrivit.",
     bullets: [
       "Firme consolidate din piața juridică românească, prezentate transparent pe profile dedicate",
       "Înțelegi în avans cultura de lucru, specializările firmei și natura mandatelor, înainte să aplici"
@@ -100,10 +100,10 @@ const advantages: readonly Advantage[] = [
   },
   {
     icon: <GppGoodOutlinedIcon sx={{ fontSize: 30 }} />,
-    badge: "Conformitate GDPR",
-    title: "Conformitate GDPR la standard european",
+    badge: "Security & GDPR",
+    title: "Conformitate GDPR și security la standard european",
     description:
-      "Datele sensibile ale profesioniștilor juridici merită tratate ca atare. Procesăm informațiile strict pentru scopurile recrutării, cu drepturi clare de acces, rectificare și ștergere.",
+      "Datele sensibile ale profesioniștilor juridici merită tratate cu atenție. Procesăm informațiile strict pentru scopurile recrutării, cu drepturi clare de acces, rectificare și ștergere. Nu vindem datele terților.",
     bullets: [
       "Stocare securizată în infrastructură conformă cu GDPR",
       "Control complet al candidatului asupra vizibilității profilului",
@@ -160,9 +160,8 @@ export function PlatformAdvantagesSection() {
             color="text.secondary"
             sx={{ lineHeight: 1.75, fontSize: { xs: "1rem", md: "1.1rem" } }}
           >
-            Cinci avantaje care diferențiază {appSettings.name} de platformele generaliste de
-            recrutare și care transformă fiecare interacțiune într-un pas concret spre o
-            potrivire profesională relevantă.
+              Câteva avantaje care diferențiază {appSettings.name} de platformele generaliste de
+            recrutare.
           </Typography>
         </Box>
 

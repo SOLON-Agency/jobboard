@@ -133,7 +133,7 @@ function CompanyActions({ company, onEdit, onArchive }: CompanyActionsProps) {
               </ListItemIcon>
               <ListItemText
                 primary={archiveAction.label}
-                primaryTypographyProps={{ variant: "body2", color: "warning.main", fontWeight: 500 }}
+                primaryTypographyProps={{ variant: "body2", color: "error.main", fontWeight: 500 }}
               />
             </MuiMenuItem>
           )}

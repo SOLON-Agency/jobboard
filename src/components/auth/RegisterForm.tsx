@@ -13,6 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { PasswordField } from "@/components/common/PasswordField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterFormData } from "@/components/forms/validations/register.schema";
@@ -112,10 +113,9 @@ export function RegisterForm() {
             inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
-          <TextField
+          <PasswordField
             {...register("password")}
             label="Parolă"
-            type="password"
             fullWidth
             required
             error={!!errors.password}
@@ -123,10 +123,9 @@ export function RegisterForm() {
             inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
-          <TextField
+          <PasswordField
             {...register("confirmPassword")}
             label="Confirmă parola"
-            type="password"
             fullWidth
             required
             error={!!errors.confirmPassword}

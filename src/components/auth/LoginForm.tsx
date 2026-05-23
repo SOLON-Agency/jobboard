@@ -13,6 +13,7 @@ import {
   Alert,
   Paper,
 } from "@mui/material";
+import { PasswordField } from "@/components/common/PasswordField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "@/components/forms/validations/login.schema";
@@ -97,10 +98,9 @@ export function LoginForm() {
             inputProps={{ "aria-required": "true" }}
             sx={{ mb: 2 }}
           />
-          <TextField
+          <PasswordField
             {...register("password")}
             label="Parolă"
-            type="password"
             fullWidth
             required
             error={!!errors.password}

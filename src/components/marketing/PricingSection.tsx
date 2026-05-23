@@ -37,7 +37,7 @@ export function PricingSection() {
               mb: 1.5,
             }}
           >
-            Acces gratuit pentru angajatori
+            Acces gratuit pentru candidați
           </Typography>
           <Typography
             id="pricing-section-heading"
@@ -45,7 +45,7 @@ export function PricingSection() {
             component="h2"
             sx={{ mb: 2, fontSize: { xs: "1.85rem", sm: "2.2rem", md: "2.6rem", lg: "3rem" } }}
           >
-            Publici{" "}
+            Publică{" "}
             <Box
               component="span"
               sx={{
@@ -64,8 +64,7 @@ export function PricingSection() {
             color="text.secondary"
             sx={{ lineHeight: 1.75, fontSize: { xs: "1rem", md: "1.1rem" } }}
           >
-            Începi într-un singur minut, fără card de credit și fără angajament. Testezi
-            calitatea audienței noastre direct pe rolurile pe care le ai deschise astăzi.
+            Începi într-un singur minut, fără card de credit și fără angajament permanent.
           </Typography>
         </Box>
 
@@ -157,14 +156,12 @@ export function PricingSection() {
                   color="text.secondary"
                   sx={{ lineHeight: 1.75, mb: 2.5 }}
                 >
-                  Publicarea anunțurilor pe {appSettings.name} este gratuită până la 5 roluri
-                  active simultan. Suficient pentru a testa platforma pe pozițiile tale cheie
-                  înainte de a explora opțiunile premium.
+                  Publicarea anunțurilor pe {appSettings.name} este gratuită până la 5 anunțuri
+                  active simultan. 
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3, fontStyle: "italic" }}>
-                  Fără reclame, fără spam, fără perioade limitate. Doar acces complet la audiența
-                  juridică pe care o construim zi de zi.
+                  Fără reclame, fără spam, fără paywalls. Control total asupra notificărilor.
                 </Typography>
 
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
