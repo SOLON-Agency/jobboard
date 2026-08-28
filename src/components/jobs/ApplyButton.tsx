@@ -23,11 +23,16 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { trackCompanyEngage } from "@/services/companies.service";
 import { parseSupabaseError } from "@/lib/utils";
+import {
+  hasApplied,
+  createExternalApplication,
+  isApplicationsDuplicateError,
+  notifyJobApplication,
+} from "@/services/applications.service";
 import { ApplicationForm } from "@/components/forms/ApplicationForm";
 import type { Tables } from "@/types/database";
 
@@ -73,24 +78,6 @@ const buildMailtoSubject = (companyName: string | undefined, jobTitle: string): 
   return contact ? `Candidatură + ${contact} | ${jobTitle}` : `Candidatură | ${jobTitle}`;
 };
 
-// TODO: The "job-application" Edge Function folder is missing from supabase/functions/
-// — ensure it is deployed separately before this invocation can succeed.
-const notifyApplication = (supabase: SupabaseClient, jobId: string) => {
-  void supabase.functions
-    .invoke("job-application", { body: { job_id: jobId } })
-    .catch((err: unknown) => console.warn("job-application:", err));
-};
-
-/** Unique violation on `applications` (not form_responses). */
-const isApplicationsDuplicateError = (err: unknown): boolean => {
-  if (!err || typeof err !== "object") return false;
-  const { code, message = "" } = err as { code?: string; message?: string };
-  if (code !== "23505") return false;
-  const m = message.toLowerCase();
-  if (m.includes("form_response")) return false;
-  return m.includes("application") || /job_id|user_id/.test(m);
-};
-
 // ─── ApplyButton ──────────────────────────────────────────────────────────────
 
 export function ApplyButton({
@@ -124,13 +111,8 @@ export function ApplyButton({
     }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("applications")
-        .select("id")
-        .eq("job_id", job.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!cancelled && data) setAlreadyApplied(true);
+      const applied = await hasApplied(supabase, job.id, user.id);
+      if (!cancelled && applied) setAlreadyApplied(true);
     })();
     return () => {
       cancelled = true;
@@ -182,15 +164,9 @@ export function ApplyButton({
     setConfirming(true);
     setConfirmError(null);
     try {
-      const { error: appErr } = await supabase.from("applications").insert({
-        job_id: job.id,
-        user_id: user.id,
-        form_data: null,
-        status: "pending",
-      });
-      if (appErr) throw appErr;
+      await createExternalApplication(supabase, job.id, user.id);
 
-      notifyApplication(supabase, job.id);
+      notifyJobApplication(supabase, job.id);
       trackCompanyEngage(supabase, job.company_id).catch(() => {});
       setAlreadyApplied(true);
       setConfirmed(true);

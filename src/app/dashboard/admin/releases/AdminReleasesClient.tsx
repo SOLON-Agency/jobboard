@@ -56,25 +56,19 @@ export function AdminReleasesClient() {
   const [editBodyHtml, setEditBodyHtml] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const releasesTable = () => (supabase as any).from("app_release_announcements");
-
   const loadReleases = useCallback(async () => {
     setLoading(true);
-    const { data, error } = (await releasesTable()
+    const { data, error } = await supabase
+      .from("app_release_announcements")
       .select("*")
-      .order("created_at", { ascending: false })) as {
-      data: ReleaseAnnouncement[] | null;
-      error: { message: string } | null;
-    };
+      .order("created_at", { ascending: false });
 
     if (error) {
       showToast("Nu s-au putut încărca anunțurile.", "error", 5000);
     } else {
-      setReleases(data ?? []);
+      setReleases((data ?? []) as ReleaseAnnouncement[]);
     }
     setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, showToast]);
 
   useEffect(() => {
@@ -85,9 +79,10 @@ export function AdminReleasesClient() {
     setPublishingId(release.id);
     try {
       // Mark as published in DB
-      const { error: updateError } = (await releasesTable()
+      const { error: updateError } = await supabase
+        .from("app_release_announcements")
         .update({ draft: false, sent_at: new Date().toISOString() })
-        .eq("id", release.id)) as { error: { message: string } | null };
+        .eq("id", release.id);
 
       if (updateError) {
         showToast(`Eroare la publicare: ${updateError.message}`, "error", 5000);
@@ -132,9 +127,10 @@ export function AdminReleasesClient() {
   const handleEditSave = async () => {
     if (!editingRelease) return;
     setEditSaving(true);
-    const { error } = (await releasesTable()
+    const { error } = await supabase
+      .from("app_release_announcements")
       .update({ title: editTitle, body_html: editBodyHtml })
-      .eq("id", editingRelease.id)) as { error: { message: string } | null };
+      .eq("id", editingRelease.id);
 
     if (error) {
       showToast("Nu s-a putut salva.", "error", 5000);

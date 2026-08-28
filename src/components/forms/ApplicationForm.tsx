@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -31,7 +31,14 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 
 
-import { useAuth } from "@/hooks/useAuth";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  buildApplicationFormSchema,
+  validateApplicationUploads,
+  type ApplicationFormValues,
+} from "@/components/forms/validations/application.schema";
+import { uploadApplicationAttachment } from "@/services/applications.service";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getFormWithFields } from "@/services/forms.service";
 import { trackCompanyEngage } from "@/services/companies.service";
@@ -67,6 +74,7 @@ interface FieldProps {
   value: string;
   fileValue: File | null;
   error?: string;
+  helperId?: string;
   onChange: (val: string) => void;
   onFileChange: (file: File | null) => void;
 }
@@ -76,6 +84,7 @@ function FormFieldInput({
   value,
   fileValue,
   error,
+  helperId,
   onChange,
   onFileChange,
 }: FieldProps) {
@@ -105,6 +114,7 @@ function FormFieldInput({
           error={!!error}
           helperText={error}
           size="small"
+          inputProps={{ "aria-describedby": helperId }}
         />
       );
 
@@ -121,17 +131,22 @@ function FormFieldInput({
           error={!!error}
           helperText={error}
           size="small"
+          inputProps={{ "aria-describedby": helperId }}
         />
       );
 
     case "radio":
       return (
         <FormControl required={field.is_required} error={!!error} fullWidth>
-          <FormLabel sx={{ fontSize: "0.875rem" }}>
+          <FormLabel sx={{ fontSize: "0.875rem" }} id={helperId ? `${helperId}-label` : undefined}>
             {field.label}
             {field.is_required ? " *" : ""}
           </FormLabel>
-          <RadioGroup value={value} onChange={(e) => onChange(e.target.value)}>
+          <RadioGroup
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            aria-labelledby={helperId ? `${helperId}-label` : undefined}
+          >
             {options.map((opt) => (
               <FormControlLabel
                 key={opt}
@@ -141,14 +156,14 @@ function FormFieldInput({
               />
             ))}
           </RadioGroup>
-          {error && <FormHelperText>{error}</FormHelperText>}
+          {error && <FormHelperText id={helperId} role="alert">{error}</FormHelperText>}
         </FormControl>
       );
 
     case "checkbox":
       return (
         <FormControl required={field.is_required} error={!!error} fullWidth>
-          <FormLabel sx={{ fontSize: "0.875rem" }}>
+          <FormLabel sx={{ fontSize: "0.875rem" }} id={helperId ? `${helperId}-label` : undefined}>
             {field.label}
             {field.is_required ? " *" : ""}
           </FormLabel>
@@ -172,7 +187,7 @@ function FormFieldInput({
               />
             ))}
           </FormGroup>
-          {error && <FormHelperText>{error}</FormHelperText>}
+          {error && <FormHelperText id={helperId} role="alert">{error}</FormHelperText>}
         </FormControl>
       );
 
@@ -183,6 +198,7 @@ function FormFieldInput({
             variant="caption"
             color="text.secondary"
             sx={{ display: "block", mb: 0.5 }}
+            id={helperId ? `${helperId}-label` : undefined}
           >
             {field.label}
             {field.is_required ? " *" : ""}
@@ -203,7 +219,7 @@ function FormFieldInput({
               onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
             />
           </Button>
-          {error && <FormHelperText error>{error}</FormHelperText>}
+          {error && <FormHelperText id={helperId} error role="alert">{error}</FormHelperText>}
         </Box>
       );
 
@@ -221,6 +237,7 @@ function FormFieldInput({
           error={!!error}
           helperText={error}
           size="small"
+          inputProps={{ "aria-describedby": helperId }}
         />
       );
 
@@ -238,6 +255,7 @@ function FormFieldInput({
           error={!!error}
           helperText={error}
           size="small"
+          inputProps={{ "aria-describedby": helperId }}
         />
       );
 
@@ -253,20 +271,10 @@ function FormFieldInput({
           error={!!error}
           helperText={error}
           size="small"
+          inputProps={{ "aria-describedby": helperId }}
         />
       );
   }
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const isApplicationsDuplicateError = (err: unknown): boolean => {
-  if (!err || typeof err !== "object") return false;
-  const { code, message = "" } = err as { code?: string; message?: string };
-  if (code !== "23505") return false;
-  const m = message.toLowerCase();
-  if (m.includes("form_response")) return false;
-  return m.includes("application") || /job_id|user_id/.test(m);
 };
 
 // ─── ApplicationForm ──────────────────────────────────────────────────────────
@@ -284,13 +292,25 @@ export function ApplicationForm({
 
   const [formSpec, setFormSpec] = useState<FormWithFields | null>(null);
   const [loadingForm, setLoadingForm] = useState(false);
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [fileValues, setFileValues] = useState<Record<string, File | null>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+
+  const schema = formSpec ? buildApplicationFormSchema(formSpec.form_fields) : undefined;
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ApplicationFormValues>({
+    resolver: schema ? zodResolver(schema) : undefined,
+    defaultValues: {},
+  });
+
+  const submitting = isSubmitting;
 
   // Fetch form spec once when the drawer first opens
   useEffect(() => {
@@ -299,59 +319,38 @@ export function ApplicationForm({
     getFormWithFields(supabase, job.application_form_id)
       .then((form) => {
         setFormSpec(form);
-        const init: Record<string, string> = {};
+        const init: ApplicationFormValues = {};
         form.form_fields.forEach((f) => {
-          init[f.id] = "";
+          if (f.field_type !== "upload") init[f.id] = "";
         });
-        setFieldValues(init);
+        reset(init);
       })
       .finally(() => setLoadingForm(false));
-  }, [open, job.application_form_id, formSpec, supabase]);
+  }, [open, job.application_form_id, formSpec, supabase, reset]);
 
   // Reset transient UI state each time the drawer closes
   useEffect(() => {
     if (!open) {
       setSubmitted(false);
       setSubmitError(null);
-      setErrors({});
+      setUploadErrors({});
+      setFileValues({});
       setDescriptionExpanded(false);
     }
   }, [open]);
 
-  const setField = (id: string, val: string) =>
-    setFieldValues((prev) => ({ ...prev, [id]: val }));
-
-  const setFile = (id: string, file: File | null) =>
+  const setFile = (id: string, file: File | null) => {
     setFileValues((prev) => ({ ...prev, [id]: file }));
-
-  const validate = (): boolean => {
-    const errs: Record<string, string> = {};
-    formSpec?.form_fields.forEach((f) => {
-      const val = fieldValues[f.id]?.trim() ?? "";
-      if (f.field_type === "upload") {
-        if (f.is_required && !fileValues[f.id]) errs[f.id] = "Câmp obligatoriu";
-      } else if (f.field_type === "email") {
-        if (f.is_required && !val) {
-          errs[f.id] = "Câmp obligatoriu";
-        } else if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-          errs[f.id] = "Adresă de email invalidă";
-        }
-      } else if (f.field_type === "phone") {
-        if (f.is_required && !val) {
-          errs[f.id] = "Câmp obligatoriu";
-        } else if (val && !/^(\+?\d[\d\s\-().]{6,19}\d)$/.test(val)) {
-          errs[f.id] = "Număr de telefon invalid (ex: 0721 000 000 sau +40 721 000 000)";
-        }
-      } else if (f.is_required && !val) {
-        errs[f.id] = "Câmp obligatoriu";
-      }
-    });
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (file) {
+      setUploadErrors((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   };
 
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
+  const onSubmit = async (fieldValues: ApplicationFormValues) => {
     if (!user) {
       setSubmitError("Trebuie să fii autentificat pentru a aplica.");
       return;
@@ -362,19 +361,25 @@ export function ApplicationForm({
       );
       return;
     }
-    setSubmitting(true);
+    if (!formSpec) return;
+
+    const uploadErrs = validateApplicationUploads(formSpec.form_fields, fileValues);
+    if (Object.keys(uploadErrs).length > 0) {
+      setUploadErrors(uploadErrs);
+      return;
+    }
+
     setSubmitError(null);
     try {
       const finalValues: Record<string, string> = { ...fieldValues };
       for (const [fieldId, file] of Object.entries(fileValues)) {
         if (!file) continue;
-        const path = `${job.id}/${fieldId}/${Date.now()}-${file.name}`;
-        const { error: upErr } = await supabase.storage
-          .from("attachments")
-          .upload(path, file);
-        if (upErr) throw upErr;
-        const { data } = supabase.storage.from("attachments").getPublicUrl(path);
-        finalValues[fieldId] = data.publicUrl;
+        finalValues[fieldId] = await uploadApplicationAttachment(
+          supabase,
+          job.id,
+          fieldId,
+          file
+        );
       }
 
       const response = await fetch("/api/jobs/apply-internal-form", {
@@ -406,16 +411,9 @@ export function ApplicationForm({
       setSubmitted(true);
       onSubmitted();
     } catch (err) {
-      if (isApplicationsDuplicateError(err)) {
-        onSubmitted();
-        return;
-      }
       setSubmitError(parseSupabaseError(err));
-    } finally {
-      setSubmitting(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, supabase, job, formSpec, fieldValues, fileValues, onSubmitted]);
+  };
 
   return (
     <Drawer
@@ -512,7 +510,14 @@ export function ApplicationForm({
             pentru a aplica la acest loc de muncă.
           </Alert>
         ) : (
-          <Stack spacing={2.5}>
+          <Box
+            id="application-form"
+            key={formSpec?.id ?? "loading"}
+            component="form"
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+          >
+            <Stack spacing={2.5}>
             {job.description && (() => {
               const isHtml = job.description.trimStart().startsWith("<");
               const plainText = isHtml
@@ -569,19 +574,50 @@ export function ApplicationForm({
                 </Box>
               );
             })()}
-            {formSpec?.form_fields.map((field) => (
-              <FormFieldInput
-                key={field.id}
-                field={field}
-                value={fieldValues[field.id] ?? ""}
-                fileValue={fileValues[field.id] ?? null}
-                error={errors[field.id]}
-                onChange={(val) => setField(field.id, val)}
-                onFileChange={(file) => setFile(field.id, file)}
-              />
-            ))}
-            {submitError && <Alert severity="error">{submitError}</Alert>}
-          </Stack>
+            {formSpec?.form_fields.map((field) => {
+              const helperId = `field-${field.id}-error`;
+              const fieldError =
+                field.field_type === "upload"
+                  ? uploadErrors[field.id]
+                  : (errors[field.id]?.message as string | undefined);
+
+              if (field.field_type === "upload") {
+                return (
+                  <FormFieldInput
+                    key={field.id}
+                    field={field}
+                    value=""
+                    fileValue={fileValues[field.id] ?? null}
+                    error={fieldError}
+                    helperId={helperId}
+                    onChange={() => {}}
+                    onFileChange={(file) => setFile(field.id, file)}
+                  />
+                );
+              }
+
+              return (
+                <Controller
+                  key={field.id}
+                  name={field.id as keyof ApplicationFormValues}
+                  control={control}
+                  render={({ field: rhfField }) => (
+                    <FormFieldInput
+                      field={field}
+                      value={rhfField.value ?? ""}
+                      fileValue={null}
+                      error={fieldError}
+                      helperId={helperId}
+                      onChange={rhfField.onChange}
+                      onFileChange={() => {}}
+                    />
+                  )}
+                />
+              );
+            })}
+            {submitError && <Alert severity="error" role="alert">{submitError}</Alert>}
+            </Stack>
+          </Box>
         )}
       </Box>
 
@@ -599,10 +635,11 @@ export function ApplicationForm({
           }}
         >
           <Button
+            type="submit"
+            form="application-form"
             variant="contained"
             fullWidth
             disabled={submitting}
-            onClick={handleSubmit}
             endIcon={
               submitting ? (
                 <CircularProgress size={16} color="inherit" />

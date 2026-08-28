@@ -36,6 +36,7 @@ import {
   type ExperienceItem,
 } from "@/services/experience.service";
 import { parseSupabaseError, truncate } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 import { experienceSchema, type ExperienceFormData } from "./validations/experience.schema";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export function AddEditExperience({
 }: AddEditExperienceProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [items, setItems] = useState<ExperienceItem[]>(initialItems ?? []);
 
@@ -144,7 +146,7 @@ export function AddEditExperience({
         await createExperienceItem(supabase, { ...payload, user_id: user.id, sort_order: items.length });
       }
       await reload();
-      setMessage({ type: "success", text: editingId ? "Actualizat cu succes." : "Adăugat cu succes." });
+      showToast(editingId ? "Actualizat cu succes." : "Adăugat cu succes.");
       setTimeout(closeDrawer, 800);
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });

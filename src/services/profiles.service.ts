@@ -109,3 +109,37 @@ export const updateMyProfile = async (
   if (error) throw error;
   return data;
 };
+
+/**
+ * Upload a profile avatar and return its public URL.
+ *
+ * RLS: authenticated users can upload to the avatars bucket.
+ */
+export const uploadAvatar = async (
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  file: File
+): Promise<string> => {
+  const path = `${userId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+};
+
+/**
+ * Upload a CV and return its public URL.
+ *
+ * RLS: authenticated users can upload to the cvs bucket.
+ */
+export const uploadCv = async (
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  file: File
+): Promise<string> => {
+  const path = `${userId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("cvs").getPublicUrl(path);
+  return data.publicUrl;
+};

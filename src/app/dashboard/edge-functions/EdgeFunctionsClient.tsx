@@ -152,8 +152,6 @@ export function EdgeFunctionsClient() {
     setJobAppPending(true);
     setJobAppResult(null);
     try {
-      // TODO: The "job-application" Edge Function folder is missing from supabase/functions/
-      // — ensure it is deployed separately before this test invocation can succeed.
       const { data, error } = await supabase.functions.invoke("job-application", {
         body: { job_id: resolvedJobId },
       });

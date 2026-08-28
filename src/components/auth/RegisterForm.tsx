@@ -99,7 +99,8 @@ export function RegisterForm() {
             required
             error={!!errors.fullName}
             helperText={errors.fullName?.message}
-            inputProps={{ "aria-required": "true" }}
+            inputProps={{ "aria-required": "true", "aria-describedby": errors.fullName ? "register-fullname-error" : undefined }}
+            FormHelperTextProps={{ id: "register-fullname-error" }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -110,7 +111,8 @@ export function RegisterForm() {
             required
             error={!!errors.email}
             helperText={errors.email?.message}
-            inputProps={{ "aria-required": "true" }}
+            inputProps={{ "aria-required": "true", "aria-describedby": errors.email ? "register-email-error" : undefined }}
+            FormHelperTextProps={{ id: "register-email-error" }}
             sx={{ mb: 2 }}
           />
           <PasswordField
@@ -120,7 +122,8 @@ export function RegisterForm() {
             required
             error={!!errors.password}
             helperText={errors.password?.message}
-            inputProps={{ "aria-required": "true" }}
+            inputProps={{ "aria-required": "true", "aria-describedby": errors.password ? "register-password-error" : undefined }}
+            FormHelperTextProps={{ id: "register-password-error" }}
             sx={{ mb: 2 }}
           />
           <PasswordField
@@ -130,7 +133,8 @@ export function RegisterForm() {
             required
             error={!!errors.confirmPassword}
             helperText={errors.confirmPassword?.message}
-            inputProps={{ "aria-required": "true" }}
+            inputProps={{ "aria-required": "true", "aria-describedby": errors.confirmPassword ? "register-confirm-password-error" : undefined }}
+            FormHelperTextProps={{ id: "register-confirm-password-error" }}
             sx={{ mb: 3 }}
           />
           <Button

@@ -251,7 +251,7 @@ export function FormsClient() {
         const dbFields = fieldTypesToDb(fields);
         if (editingForm) {
           await updateForm(supabase, editingForm.id, { name: data.name, description: data.description || null, status }, dbFields);
-          setMessage({ type: "success", text: "Formularul a fost actualizat." });
+          setMessage(null);
           showToast("Formular actualizat cu succes.");
         } else {
           await createForm(
@@ -259,7 +259,7 @@ export function FormsClient() {
             { name: data.name, description: data.description || null, company_id: data.company_id, status },
             dbFields
           );
-          setMessage({ type: "success", text: status === "published" ? "Formularul a fost publicat." : "Formularul a fost salvat ca ciornă." });
+          setMessage(null);
           showToast(status === "published" ? "Formular publicat cu succes." : "Formular salvat ca ciornă.");
           if (user) {
             void dispatchNotification(supabase, {

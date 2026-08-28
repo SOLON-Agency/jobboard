@@ -24,6 +24,7 @@ import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import WifiOutlinedIcon from "@mui/icons-material/WifiOutlined";
 import type { Tables } from "@/types/database";
+import { societatePath } from "@/lib/paths";
 import type { BenefitItem } from "@/services/benefits.service";
 import {
   formatSalary,
@@ -384,7 +385,7 @@ export function JobDetail({
               variant="subtitle1"
               fontWeight={700}
               component={job.companies?.slug ? Link : "span"}
-              href={job.companies?.slug ? `/societate/${job.companies.slug}` : undefined}
+              href={job.companies?.slug ? societatePath(job.companies.slug) : undefined}
               sx={{
                 textDecoration: "none",
                 color: "inherit",

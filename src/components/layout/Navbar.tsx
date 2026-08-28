@@ -29,6 +29,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useAuth } from "@/hooks/useAuth";
+import { getProfileAvatar } from "@/services/profiles.service";
 import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import appSettings from "@/config/app.settings.json";
@@ -59,12 +60,9 @@ export function Navbar() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => setFetchedAvatarUrl(data?.avatar_url ?? null));
+    getProfileAvatar(supabase, user.id).then((profile) =>
+      setFetchedAvatarUrl(profile?.avatar_url ?? null)
+    );
   }, [user, supabase]);
 
   useEffect(() => {
