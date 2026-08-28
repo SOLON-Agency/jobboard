@@ -18,7 +18,7 @@ import { formatPageTitle } from "@/lib/page-title";
 // Revalidate once per day so counts stay fresh without a full redeploy
 export const revalidate = 86400;
 
-const SEO_TITLE = `${appSettings.name} — Recrutare juridică inteligentă în România`;
+const SEO_TITLE = `${appSettings.name}`;
 const SEO_DESCRIPTION =
   `${appSettings.name} este platforma premium de recrutare dedicată exclusiv pieței juridice din România: avocați, juriști, departamente in-house și agenții de recrutare. Matchmaking inteligent, alerte personalizate, transparență salarială, candidați verificați și conformitate GDPR. Publici până la 5 anunțuri complet gratuit.`;
 
