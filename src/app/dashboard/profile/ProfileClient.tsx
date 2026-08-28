@@ -174,7 +174,9 @@ export function ProfileClient() {
       }
     },
     [user, supabase, loadProfile, showToast]
-  ); = useCallback(async () => {
+  );
+
+  const handleCvDownload = useCallback(async () => {
     if (!profile?.cv_url) return;
     const pathMatch = profile.cv_url.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
     if (!pathMatch) { window.open(profile.cv_url, "_blank"); return; }

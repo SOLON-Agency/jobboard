@@ -54,7 +54,7 @@ export function buildApplicationFormSchema(fields: FormFieldSpec[]) {
   return z.object(shape);
 }
 
-export type ApplicationFormValues = z.infer<ReturnType<typeof buildApplicationFormSchema>>;
+export type ApplicationFormValues = Record<string, string>;
 
 /** Validate required upload fields separately (files are not in RHF state). */
 export function validateApplicationUploads(

@@ -31,7 +31,7 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   buildApplicationFormSchema,
@@ -39,6 +39,7 @@ import {
   type ApplicationFormValues,
 } from "@/components/forms/validations/application.schema";
 import { uploadApplicationAttachment } from "@/services/applications.service";
+import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { getFormWithFields } from "@/services/forms.service";
 import { trackCompanyEngage } from "@/services/companies.service";
@@ -306,7 +307,7 @@ export function ApplicationForm({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ApplicationFormValues>({
-    resolver: schema ? zodResolver(schema) : undefined,
+    resolver: schema ? (zodResolver(schema) as Resolver<ApplicationFormValues>) : undefined,
     defaultValues: {},
   });
 
