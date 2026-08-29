@@ -39,7 +39,7 @@ import { EditSkills } from "@/components/profile/EditSkills";
 import { getEducationItems, type EducationItem } from "@/services/education.service";
 import { getExperienceItems, type ExperienceItem } from "@/services/experience.service";
 import { getProfileSkills, type ProfileSkillWithName } from "@/services/skills.service";
-import { getMyProfile, updateMyProfile, uploadAvatar, uploadCv } from "@/services/profiles.service";
+import { getMyProfile, getCvSignedDownloadUrl, updateMyProfile, uploadAvatar, uploadCv } from "@/services/profiles.service";
 import { parseSupabaseError } from "@/lib/utils";
 import { useToast } from "@/contexts/ToastContext";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -178,16 +178,18 @@ export function ProfileClient() {
 
   const handleCvDownload = useCallback(async () => {
     if (!profile?.cv_url) return;
-    const pathMatch = profile.cv_url.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
-    if (!pathMatch) { window.open(profile.cv_url, "_blank"); return; }
-    const { data } = await supabase.storage
-      .from("cvs")
-      .createSignedUrl(pathMatch[1], 300, { download: true });
-    if (data?.signedUrl) {
-      const a = document.createElement("a");
-      a.href = data.signedUrl;
-      a.click();
+    try {
+      const signedUrl = await getCvSignedDownloadUrl(supabase, profile.cv_url);
+      if (signedUrl) {
+        const a = document.createElement("a");
+        a.href = signedUrl;
+        a.click();
+        return;
+      }
+    } catch {
+      // Fall back to opening the public URL when signing fails.
     }
+    window.open(profile.cv_url, "_blank");
   }, [profile, supabase]);
 
   const openViewProfile = () => {

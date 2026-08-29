@@ -143,3 +143,22 @@ export const uploadCv = async (
   const { data } = supabase.storage.from("cvs").getPublicUrl(path);
   return data.publicUrl;
 };
+
+/**
+ * Create a short-lived signed URL for downloading a CV from storage.
+ * Accepts either a full public URL or a storage path within the cvs bucket.
+ */
+export const getCvSignedDownloadUrl = async (
+  supabase: SupabaseClient<Database>,
+  cvUrl: string,
+  expiresInSeconds = 300
+): Promise<string | null> => {
+  const pathMatch = cvUrl.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
+  const storagePath = pathMatch?.[1] ?? cvUrl;
+  const { data, error } = await supabase.storage
+    .from("cvs")
+    .createSignedUrl(storagePath, expiresInSeconds, { download: true });
+
+  if (error) throw error;
+  return data?.signedUrl ?? null;
+};

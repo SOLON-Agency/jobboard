@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -316,7 +316,9 @@ export function ApplicationForm({
   // Fetch form spec once when the drawer first opens
   useEffect(() => {
     if (!open || !job.application_form_id || formSpec) return;
-    setLoadingForm(true);
+    startTransition(() => {
+      setLoadingForm(true);
+    });
     getFormWithFields(supabase, job.application_form_id)
       .then((form) => {
         setFormSpec(form);
@@ -332,11 +334,13 @@ export function ApplicationForm({
   // Reset transient UI state each time the drawer closes
   useEffect(() => {
     if (!open) {
-      setSubmitted(false);
-      setSubmitError(null);
-      setUploadErrors({});
-      setFileValues({});
-      setDescriptionExpanded(false);
+      startTransition(() => {
+        setSubmitted(false);
+        setSubmitError(null);
+        setUploadErrors({});
+        setFileValues({});
+        setDescriptionExpanded(false);
+      });
     }
   }, [open]);
 
