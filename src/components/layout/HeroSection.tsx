@@ -3,8 +3,8 @@
 import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { motion } from "framer-motion";
-import { heroContainer, heroItem } from "@/lib/motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { heroContainer, heroItem, resolveMotionDuration } from "@/lib/motion";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 const BG = "#03170C";
@@ -28,6 +28,7 @@ const pills = ["Matchmaking inteligent", "Alerte personalizate", "Transparență
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function HeroSection({ }: { counts?: HeroCounts }) {
+  const reduced = useReducedMotion();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
   const targetRef = useRef({ x: 0, y: 0 });
@@ -172,7 +173,12 @@ export function HeroSection({ }: { counts?: HeroCounts }) {
         maxWidth="lg"
         sx={{ position: "relative", zIndex: 10, pb: { xs: 4, md: 8 }, pt: { xs: 4, md: 0 }, textAlign: "center" }}
       >
-        <motion.div variants={heroContainer} initial="hidden" animate="visible">
+        <motion.div
+          variants={heroContainer}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: resolveMotionDuration(reduced) }}
+        >
 
           {/* Badge */}
           {/* <motion.div variants={heroItem}>
@@ -235,22 +241,25 @@ export function HeroSection({ }: { counts?: HeroCounts }) {
             </Typography>
           </motion.div>
 
-          {/* Subtitle */}
-          {/* <motion.div variants={heroItem}>
+          {/* Value proposition */}
+          <motion.div variants={heroItem}>
             <Typography
+              component="p"
               sx={{
-                fontSize: { xs: "1.05rem", md: "1.35rem" },
-                color: "rgba(240,235,216,0.65)",
-                maxWidth: 640,
+                fontSize: { xs: "1.05rem", md: "1.25rem" },
+                color: "rgba(240,235,216,0.78)",
+                maxWidth: 680,
                 mx: "auto",
                 mb: 5,
-                lineHeight: 1.7,
+                lineHeight: 1.75,
               }}
             >
-              Explorează sute de posturi la firme de top de avocatură
-              și aplică direct pentru pozițiile care te interesează.
+              Pentru avocați, juriști și departamente in-house care caută cele mai bine plătite
+              posturi din piață — și pentru societăți care recrutează talent juridic de top.
+              Tehnologie de ultimă generație care potrivește competențele cu oportunitățile
+              potrivite, direct pe platformă, transparent și rapid.
             </Typography>
-          </motion.div> */}
+          </motion.div>
 
           {/* CTAs */}
           <motion.div variants={heroItem}>

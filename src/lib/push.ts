@@ -53,12 +53,24 @@ export async function subscribeUserToPush(
     keys: { p256dh: string; auth: string };
   };
 
-  // push_subscriptions added by migration — not yet in generated types
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.id) {
+    console.warn("subscribeUserToPush: no authenticated user.");
+    return false;
+  }
+
+  const { error } = await supabase
     .from("push_subscriptions")
     .upsert(
-      { endpoint, p256dh: keys.p256dh, auth: keys.auth, user_agent: navigator.userAgent },
+      {
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+        user_agent: navigator.userAgent,
+        user_id: user.id,
+      },
       { onConflict: "endpoint" }
     );
 
@@ -88,9 +100,7 @@ export async function unsubscribeUserFromPush(
   const { endpoint } = subscription;
   await subscription.unsubscribe();
 
-  // push_subscriptions added by migration — not yet in generated types
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("push_subscriptions")
     .delete()
     .eq("endpoint", endpoint);

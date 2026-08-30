@@ -331,3 +331,21 @@ export const claimCompany = async (
   return { company_id: row.company_id, slug: row.slug };
 };
 
+/**
+ * Upload a company logo and return its public URL.
+ *
+ * RLS: company members can upload to the logos bucket.
+ */
+export const uploadCompanyLogo = async (
+  supabase: SupabaseClient<Database>,
+  companyId: string,
+  file: File
+): Promise<string> => {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${companyId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from("logos").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("logos").getPublicUrl(path);
+  return data.publicUrl;
+};
+

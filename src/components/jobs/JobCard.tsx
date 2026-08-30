@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { societatePath } from "@/lib/paths";
 import Link from "next/link";
 import {
   Card,
@@ -99,7 +99,7 @@ export function JobCard({
           {job.companies?.slug ? (
             <Typography
               component={Link}
-              href={`/societate/${job.companies.slug}`}
+              href={societatePath(job.companies.slug)}
               variant="body2"
               color="text.secondary"
               sx={{

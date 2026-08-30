@@ -39,9 +39,11 @@ import {
   getUserCompaniesWithJobCount,
   updateCompany,
   archiveCompany,
+  uploadCompanyLogo,
   type CompanyWithJobCount,
 } from "@/services/companies.service";
 import { slugify, parseSupabaseError, truncate } from "@/lib/utils";
+import { societatePath } from "@/lib/paths";
 import { EditSideDrawer } from "@/components/layout/EditSideDrawer";
 import { ConfirmDialog } from "@/components/layout/ConfirmDialog";
 import { AddEditCompany } from "@/components/forms/AddEditCompany";
@@ -107,7 +109,7 @@ function CompanyActions({ company, onEdit, onArchive }: CompanyActionsProps) {
         >
           <MuiMenuItem
             component={Link}
-            href={`/societate/${company.slug}`}
+            href={societatePath(company.slug)}
             target="_blank"
             onClick={() => setMenuAnchor(null)}
             sx={{ gap: 1.5, py: 1 }}
@@ -227,7 +229,7 @@ export function CompanyClient() {
       }
       await load();
     } catch (err) {
-      setMessage({ type: "error", text: String(err) });
+      setMessage({ type: "error", text: parseSupabaseError(err) });
     } finally {
       setArchiving(false);
       setArchiveTarget(null);
@@ -240,14 +242,7 @@ export function CompanyClient() {
 
   const uploadLogo = useCallback(
     async (companyId: string, file: File): Promise<string | null> => {
-      const ext = file.name.split(".").pop();
-      const path = `${companyId}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage
-        .from("logos")
-        .upload(path, file, { upsert: true });
-      if (error) throw error;
-      const { data } = supabase.storage.from("logos").getPublicUrl(path);
-      return data.publicUrl;
+      return uploadCompanyLogo(supabase, companyId, file);
     },
     [supabase]
   );
@@ -282,7 +277,7 @@ export function CompanyClient() {
             founded_year: data.founded_year ? Number(data.founded_year) : null,
             ...(logoUrl ? { logo_url: logoUrl } : {}),
           });
-          setMessage({ type: "success", text: "Societate actualizată." });
+          setMessage(null);
           showToast("Societate actualizată cu succes.");
           void supabase.functions
             .invoke("company-followers-notify", {
@@ -323,7 +318,7 @@ export function CompanyClient() {
             }
           }
 
-          setMessage({ type: "success", text: "Societate creată." });
+          setMessage(null);
           showToast("Societate creată cu succes.");
           void dispatchNotification(supabase, {
             type: NOTIFICATION_TYPES.COMPANY_CREATED,

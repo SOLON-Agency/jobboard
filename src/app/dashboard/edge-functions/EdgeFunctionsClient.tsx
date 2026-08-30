@@ -19,8 +19,8 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import MailOutlineIcon from "@mui/icons-material/MailOutlined";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,7 +129,7 @@ export function EdgeFunctionsClient() {
     } finally {
       setLoadingData(false);
     }
-  }, [supabase, user?.id]);
+  }, [supabase, user]);
 
   useEffect(() => {
     if (!authLoading && user?.id) void loadData();
@@ -152,8 +152,6 @@ export function EdgeFunctionsClient() {
     setJobAppPending(true);
     setJobAppResult(null);
     try {
-      // TODO: The "job-application" Edge Function folder is missing from supabase/functions/
-      // — ensure it is deployed separately before this test invocation can succeed.
       const { data, error } = await supabase.functions.invoke("job-application", {
         body: { job_id: resolvedJobId },
       });

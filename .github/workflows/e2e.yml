@@ -1,23 +1,30 @@
 name: E2E Tests
 
 # ── Triggers ──────────────────────────────────────────────────────────────────
-# Runs only on pushes to main so production is always tested after every deploy.
+# - push to main → wait for Vercel Production, then run smoke + full e2e
+# - PR targeting test → wait for that PR's Vercel Preview URL, then run both
 on:
   push:
     branches: ['main']
+  pull_request:
+    branches: ['test']
 
 # ── Permissions ───────────────────────────────────────────────────────────────
 # `checks: write`        → dorny/test-reporter can create check runs
 # `pull-requests: write` → dorny/test-reporter can annotate PRs
 # `contents: read`       → checkout
+# `deployments: read`    → vercel/wait-for-deployment-action
+# `statuses: read`       → vercel/wait-for-deployment-action (deployment id)
 permissions:
   checks: write
   pull-requests: write
   contents: read
+  deployments: read
+  statuses: read
 
 jobs:
   e2e:
-    name: E2E Tests (production)
+    name: E2E Tests (${{ github.event_name == 'pull_request' && 'preview' || 'production' }})
     runs-on: ubuntu-latest
 
     steps:
@@ -36,25 +43,34 @@ jobs:
       - name: Install Puppeteer browser
         run: npx puppeteer browsers install chrome
 
-      # ── Wait for deployment ────────────────────────────────────────────────
-      # Give Vercel (or whichever host) time to finish deploying the new build
-      # before hitting the production URL with tests.
-      - name: Wait 120 s for deployment to propagate
-        run: sleep 120
+      # ── Resolve deployment URL ─────────────────────────────────────────────
+      # Polls GitHub Deployments (Vercel integration) until the commit is live.
+      # PRs → Preview URL for this SHA; push to main → Production URL.
+      - name: Wait for Vercel deployment
+        id: deployment
+        uses: vercel/wait-for-deployment-action@0e2b0c5c5cce31f1648108aeec56467187aca037
+        with:
+          environment: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+          timeout: '600'
+          require-deployment-id: 'false'
+
+      - name: Target URL
+        run: echo "E2E_BASE_URL=${{ steps.deployment.outputs.deployment-url }}"
 
       # ── Smoke Tests ────────────────────────────────────────────────────────
       - name: Run smoke tests
         id: smoke
-        run: node e2e/smoke.js
+        run: npm run test:smoke
         continue-on-error: true
         env:
-          E2E_BASE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          E2E_BASE_URL: ${{ steps.deployment.outputs.deployment-url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Upload smoke screenshots (on failure)
         if: steps.smoke.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-screenshots
+          name: smoke-screenshots-${{ github.event_name }}-${{ github.run_id }}
           path: e2e/screenshots/
           if-no-files-found: ignore
           retention-days: 7
@@ -63,7 +79,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-results
+          name: smoke-results-${{ github.event_name }}-${{ github.run_id }}
           path: e2e/results/smoke.xml
           if-no-files-found: warn
           retention-days: 30
@@ -71,18 +87,19 @@ jobs:
       # ── Full E2E Tests ─────────────────────────────────────────────────────
       - name: Run full E2E suite
         id: full
-        run: node e2e/full.js
+        run: npm run test:e2e
         continue-on-error: true
         env:
-          E2E_BASE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          E2E_BASE_URL: ${{ steps.deployment.outputs.deployment-url }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
       - name: Upload failure screenshots
         if: steps.full.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
-          name: full-screenshots
+          name: full-screenshots-${{ github.event_name }}-${{ github.run_id }}
           path: e2e/screenshots/
           if-no-files-found: ignore
           retention-days: 7
@@ -91,7 +108,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: full-results
+          name: full-results-${{ github.event_name }}-${{ github.run_id }}
           path: e2e/results/
           if-no-files-found: warn
           retention-days: 30
@@ -101,7 +118,7 @@ jobs:
         if: always() && hashFiles('e2e/results/smoke.xml') != ''
         uses: dorny/test-reporter@v1
         with:
-          name: 🔥 Smoke Tests
+          name: Smoke Tests (${{ github.event_name == 'pull_request' && 'preview' || 'production' }})
           path: e2e/results/smoke.xml
           reporter: java-junit
           fail-on-error: 'true'
@@ -110,7 +127,7 @@ jobs:
         if: always() && hashFiles('e2e/results/*.xml') != ''
         uses: dorny/test-reporter@v1
         with:
-          name: 🧪 Full E2E Tests
+          name: Full E2E Tests (${{ github.event_name == 'pull_request' && 'preview' || 'production' }})
           path: 'e2e/results/*.xml'
           reporter: java-junit
           fail-on-error: 'true'

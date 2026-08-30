@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -34,6 +34,7 @@ import { CompanyDescription } from "@/components/companies/CompanyDescription";
 import { CompanyPageTracker } from "@/components/companies/CompanyPageTracker";
 import { CompanyFavouriteButton } from "@/components/companies/CompanyFavouriteButton";
 import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
+import { MetaCell } from "@/components/common/MetaCell";
 import { jobTypeLabels, jobTypeChipSx, experienceLevelLabels } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import { withTitlePrefix } from "@/lib/page-title";
@@ -44,26 +45,6 @@ export const revalidate = 60;
 interface Props {
   params: Promise<{ slug: string }>;
 }
-
-// ── Small helper: two-line meta cell ────────────────────────────────────────
-
-const MetaCell = ({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) => (
-  <Box>
-    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 0.25 }}>
-      {icon}
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        sx={{ fontWeight: 600, letterSpacing: 0.4 }}
-      >
-        {label}
-      </Typography>
-    </Stack>
-    <Typography variant="body2" fontWeight={700} color="text.primary">
-      {value}
-    </Typography>
-  </Box>
-);
 
 // ── Derived job-type / experience chips from published jobs ──────────────────
 

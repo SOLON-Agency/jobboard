@@ -1,5 +1,5 @@
 import { Box, Container, Typography } from "@mui/material";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import MailOutlineIcon from "@mui/icons-material/MailOutlined";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { NewsletterSignup } from "./NewsletterSignup";
 
