@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Chip, Paper, Stack, Typography } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import type { ExperienceItem } from "@/services/experience.service";
 
 interface ExperienceTimelineProps {

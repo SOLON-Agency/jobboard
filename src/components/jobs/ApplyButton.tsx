@@ -19,7 +19,7 @@ import {
   type Theme,
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";

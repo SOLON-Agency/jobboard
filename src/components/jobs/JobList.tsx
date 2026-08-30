@@ -23,7 +23,7 @@ import {
 } from "@mui/material";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import GridViewIcon from "@mui/icons-material/GridView";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import PublishIcon from "@mui/icons-material/Publish";
@@ -186,7 +186,7 @@ export function JobList({
     await toggleJob(jobId);
   };
 
-  const ListSkeleton = () => (
+  const ListSkeleton = (
     <Stack spacing={1.5}>
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton key={i} variant="rounded" height={80} sx={{ borderRadius: 2 }} />
@@ -194,7 +194,7 @@ export function JobList({
     </Stack>
   );
 
-  const GridSkeleton = () => (
+  const GridSkeleton = (
     <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
       {Array.from({ length: 6 }).map((_, i) => (
         <Skeleton key={i} variant="rounded" height={200} sx={{ borderRadius: 2 }} />
@@ -288,7 +288,7 @@ export function JobList({
 
       {/* Content */}
       {loading ? (
-        activeView === "list" ? <ListSkeleton /> : <GridSkeleton />
+        activeView === "list" ? ListSkeleton : GridSkeleton
       ) : jobs.length === 0 ? (
         emptyState ?? (
           <Box sx={{ textAlign: "center", py: 10 }}>

@@ -16,7 +16,7 @@ import {
   type SelectChangeEvent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useRole } from "@/hooks/useRole";

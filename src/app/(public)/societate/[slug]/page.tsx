@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutlined";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";

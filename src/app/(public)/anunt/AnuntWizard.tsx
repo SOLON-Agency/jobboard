@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { PasswordField } from "@/components/common/PasswordField";
 import CheckIcon from "@mui/icons-material/Check";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";

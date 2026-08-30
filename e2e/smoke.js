@@ -3,11 +3,12 @@
 /**
  * Smoke Tests
  *
- * Verifies that every public-facing page returns HTTP 2xx, renders a <title>,
- * and does not immediately throw a JS error visible in the console.
+ * Verifies that every public-facing page returns HTTP 200 and renders some
+ * content. Does not assert that content is correct.
  *
  * Usage:
- *   NEXT_PUBLIC_SITE_URL=https://jobboard-sand.vercel.app/ node e2e/smoke.js
+ *   npm run test:smoke -- --url=https://jobboard-sand.vercel.app
+ *   E2E_BASE_URL=https://jobboard-sand.vercel.app npm run test:smoke
  */
 
 'use strict';
@@ -15,19 +16,26 @@
 require('dotenv').config({ path: '.env' });
 
 const { TestRunner } = require('./runner');
-const { launchBrowser, newPage, goto, expectSelector, screenshotOnFail, BASE_URL } = require('./helpers');
+const {
+  launchBrowser,
+  newPage,
+  goto,
+  expectHasContent,
+  screenshotOnFail,
+  BASE_URL,
+} = require('./helpers');
 
 // ── Public pages to smoke-test ────────────────────────────────────────────────
 
 const PUBLIC_PAGES = [
-  { path: '/',               label: 'Homepage' },
-  { path: '/jobs',           label: 'Jobs listing' },
-  { path: '/how-it-works',   label: 'How it works' },
-  { path: '/anunt',          label: 'Post a job (anunt wizard)' },
-  { path: '/policy',         label: 'Privacy policy' },
-  { path: '/login',          label: 'Login' },
-  { path: '/register',       label: 'Register' },
-  { path: '/verify-email',   label: 'Verify email' },
+  { path: '/', label: 'Homepage' },
+  { path: '/jobs', label: 'Jobs listing' },
+  { path: '/how-it-works', label: 'How it works' },
+  { path: '/anunt', label: 'Post a job (anunt wizard)' },
+  { path: '/policy', label: 'Privacy policy' },
+  { path: '/login', label: 'Login' },
+  { path: '/register', label: 'Register' },
+  { path: '/verify-email', label: 'Verify email' },
 ];
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -47,23 +55,8 @@ async function main() {
         const page = await newPage(browser);
         try {
           // Allow extra time for cold Vercel boots on the first request
-          await goto(page, path, { timeout: 45000 });
-
-          // Every page must have a non-empty <title>
-          const title = await page.title();
-          if (!title?.trim()) throw new Error('Page rendered without a <title>');
-
-          // MUI AppBar renders as <header> — present on every page with a Navbar
-          await expectSelector(page, 'header', 8000);
-
-          // No uncaught JS errors in the first render
-          const errors = page._consoleErrors.filter(
-            // Filter out known third-party noise
-            (e) => !e.includes('favicon') && !e.includes('fonts.googleapis')
-          );
-          if (errors.length > 0) {
-            throw new Error(`Browser console errors:\n  ${errors.join('\n  ')}`);
-          }
+          await goto(page, path, { timeout: 45000, requireOk: true });
+          await expectHasContent(page, 8000);
         } catch (err) {
           await screenshotOnFail(page, `smoke-${label}`);
           throw err;

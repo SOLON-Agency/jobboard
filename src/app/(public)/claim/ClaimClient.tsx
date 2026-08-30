@@ -16,7 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import { claimCompanyAction } from "./actions";
 import { useToast } from "@/contexts/ToastContext";
 

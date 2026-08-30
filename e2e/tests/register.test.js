@@ -3,12 +3,14 @@
 /**
  * Register Test Suite
  *
- * Tests the sign-up flow end-to-end:
+ * Tests the sign-up flow end-to-end (user story: create an account):
  * 1. Register page renders with all fields
  * 2. Validation errors appear for empty / mismatched fields
  * 3. A new unique account can be created and the user lands on
  *    /verify-email (email confirmation required) or /dashboard
  *    (when confirmation is disabled in the project).
+ *
+ * Docs: e2e/docs/register.md
  */
 
 'use strict';
@@ -22,14 +24,51 @@ const {
   goto,
   expectSelector,
   screenshotOnFail,
-  waitForNav,
+  BASE_URL,
 } = require('../helpers');
 
-// Use a unique e-mail per run to avoid "already registered" errors
-const TEST_EMAIL = `e2e+${Date.now()}@test-legaljobs.ro`;
 const TEST_PASSWORD = 'E2eTest123!';
 
+function uniqueEmail() {
+  return `e2e+${Date.now()}-${Math.random().toString(36).slice(2, 8)}@test-legaljobs.ro`;
+}
+
+/** Fill the register form fields (RHF + MUI). */
+async function fillRegisterForm(page, { fullName, email, password, confirmPassword }) {
+  await page.type('input[name="fullName"]', fullName);
+  await page.type('input[name="email"]', email);
+  await page.type('input[name="password"]', password);
+  await page.type('input[name="confirmPassword"]', confirmPassword);
+}
+
+/**
+ * After submit, wait for soft client navigation to verify-email or dashboard.
+ * Fails fast if an error Alert appears.
+ */
+async function waitForRegisterSuccess(page, timeout = 30000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const alertText = await page.evaluate(() => {
+      const alert = document.querySelector('.MuiAlert-standardError, [role="alert"].MuiAlert-root');
+      return alert?.textContent?.trim() || null;
+    });
+    if (alertText) {
+      throw new Error(`Registration failed with alert: ${alertText}`);
+    }
+
+    const url = page.url();
+    if (url.includes('/verify-email') || url.includes('/dashboard')) {
+      return url;
+    }
+
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  throw new Error(`Timed out waiting for verify-email or dashboard; still at ${page.url()}`);
+}
+
 async function main() {
+  console.log(`\nRegister suite → ${BASE_URL}`);
+
   const runner = new TestRunner('Register');
   const browser = await launchBrowser();
 
@@ -61,7 +100,6 @@ async function main() {
           try {
             await goto(page, '/register');
             await page.click('button[type="submit"]');
-            // At least one MUI helper text error should appear
             await expectSelector(page, '.MuiFormHelperText-root.Mui-error', 5000);
           } finally {
             await page.close();
@@ -76,10 +114,12 @@ async function main() {
           const page = await newPage(browser);
           try {
             await goto(page, '/register');
-            await page.type('input[name="fullName"]', 'Test User');
-            await page.type('input[name="email"]', TEST_EMAIL);
-            await page.type('input[name="password"]', TEST_PASSWORD);
-            await page.type('input[name="confirmPassword"]', 'DifferentPassword!');
+            await fillRegisterForm(page, {
+              fullName: 'Test User',
+              email: uniqueEmail(),
+              password: TEST_PASSWORD,
+              confirmPassword: 'DifferentPassword!',
+            });
             await page.click('button[type="submit"]');
             await expectSelector(page, '.MuiFormHelperText-root.Mui-error', 5000);
           } finally {
@@ -93,18 +133,17 @@ async function main() {
         name: 'Can register a new account and reach verify-email or dashboard',
         fn: async () => {
           const page = await newPage(browser);
+          const email = uniqueEmail();
           try {
             await goto(page, '/register');
-            await page.type('input[name="fullName"]', 'E2E Test User');
-            await page.type('input[name="email"]', TEST_EMAIL);
-            await page.type('input[name="password"]', TEST_PASSWORD);
-            await page.type('input[name="confirmPassword"]', TEST_PASSWORD);
-            await waitForNav(page, () => page.click('button[type="submit"]'));
-
-            const url = page.url();
-            if (!url.includes('/verify-email') && !url.includes('/dashboard')) {
-              throw new Error(`Unexpected URL after registration: ${url}`);
-            }
+            await fillRegisterForm(page, {
+              fullName: 'E2E Test User',
+              email,
+              password: TEST_PASSWORD,
+              confirmPassword: TEST_PASSWORD,
+            });
+            await page.click('button[type="submit"]');
+            await waitForRegisterSuccess(page);
           } catch (err) {
             await screenshotOnFail(page, 'register-success');
             throw err;
@@ -113,9 +152,6 @@ async function main() {
           }
         },
       },
-
-      // ── 5. Already-authenticated redirect ─────────────────────────────────
-      // (skipped when no session available — this is a best-effort check)
     ]);
   } finally {
     await browser.close();

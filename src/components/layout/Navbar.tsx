@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AppBar,
   Toolbar,
@@ -48,6 +48,7 @@ export function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const pathname = usePathname();
+  const router = useRouter();
   const isHomepage = pathname === "/";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -100,13 +101,13 @@ export function Navbar() {
     setAnchorEl(null);
   };
   const redirectToDashboard = () => {
-    window.location.href = "/dashboard";
+    router.push("/dashboard");
   };
 
   const handleSignOut = async () => {
     handleMenuClose();
     await signOut();
-    window.location.href = "/";
+    router.push("/");
   };
 
   return (

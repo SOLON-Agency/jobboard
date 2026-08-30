@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
 
 interface ErrorProps {
   error: Error & { digest?: string };

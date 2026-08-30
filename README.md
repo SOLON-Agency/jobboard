@@ -330,6 +330,8 @@ npm run codegen               # database.ts (CLI) + database.zod.ts (supazod)
 npm run lint                  # ESLint
 npm test                      # Vitest (single run)
 npm run test:watch            # Vitest watch mode
+npm run test:smoke -- --url=<URL>   # Smoke: public pages HTTP 200 + content
+npm run test:e2e -- --url=<URL>     # Full e2e suites against URL (see e2e/README.md)
 npm run supabase:deploy:all   # Deploy all Edge Functions
 npm run env:sync              # Sync .env to current git branch (TEST vs PROD Supabase)
 npm run vercel:env            # Pull Development FLAGS into .env (then run env:sync)

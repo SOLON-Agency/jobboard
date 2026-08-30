@@ -6,7 +6,7 @@ import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import appSettings from "@/config/app.settings.json";
 
 export function BannerSection() {

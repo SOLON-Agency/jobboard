@@ -6,6 +6,7 @@ import { getServerRole } from "@/lib/roles";
 import { assertFeatureEnabled } from "@/lib/feature-flags";
 import { blogPostSchema, type BlogPostFormData } from "@/components/forms/validations/blog.schema";
 import { readingTimeMinutes, autoExcerpt } from "@/lib/blog/markdown";
+import type { TablesUpdate } from "@/types/database";
 
 function requireAdmin(role: string): void {
   if (role !== "admin") throw new Error("Acces interzis: rol de administrator necesar");
@@ -177,7 +178,7 @@ export async function togglePublish(
   const nextStatus = currentStatus === "published" ? "draft" : "published";
   const isFreshPublish = nextStatus === "published";
 
-  const updatePayload: Record<string, unknown> = { status: nextStatus };
+  const updatePayload: TablesUpdate<"blog_posts"> = { status: nextStatus };
   if (isFreshPublish) updatePayload.published_at = new Date().toISOString();
 
   const { data: post, error } = await supabase

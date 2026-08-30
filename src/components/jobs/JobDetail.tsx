@@ -13,7 +13,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
@@ -38,7 +38,7 @@ import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import { useToast } from "@/contexts/ToastContext";
 import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 
 type JobWithCompany = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;

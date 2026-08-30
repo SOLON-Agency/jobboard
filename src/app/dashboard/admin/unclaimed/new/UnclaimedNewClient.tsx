@@ -15,7 +15,7 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { AddEditCompany, type AddEditCompanyHandle, type CompanyFormData } from "@/components/forms/AddEditCompany";

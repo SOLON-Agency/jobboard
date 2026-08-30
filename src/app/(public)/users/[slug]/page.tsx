@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import { createClient } from "@/lib/supabase/server";
 import { experienceLevelLabels } from "@/lib/utils";

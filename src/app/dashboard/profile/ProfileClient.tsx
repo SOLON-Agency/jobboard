@@ -128,6 +128,8 @@ export function ProfileClient() {
       void dispatchNotification(supabase, {
         type: NOTIFICATION_TYPES.PROFILE_UPDATED,
         recipients: [user.id],
+        // Idempotency key must be unique per save; Date.now is intentional in this handler.
+        // eslint-disable-next-line react-hooks/purity -- event-handler side effect, not render
         idempotencyKey: `profile-updated/${user.id}/${Date.now()}`,
       }).catch((e: unknown) => console.warn("notify-updated failed:", e));
       setTimeout(closeDrawer, 900);
