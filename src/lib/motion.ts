@@ -109,6 +109,10 @@ export const slideVariantsReduced: Variants = {
   exit: { opacity: 0 },
 };
 
+/** Returns 0 when reduced motion is preferred, otherwise the given duration. */
+export const resolveMotionDuration = (reduced: boolean | null, duration = 0.55): number =>
+  reduced ? 0 : duration;
+
 /** Standard carousel transition config. */
 export const carouselTransition = {
   type: "tween" as const,

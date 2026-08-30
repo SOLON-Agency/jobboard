@@ -21,7 +21,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +36,7 @@ import {
   type ExperienceItem,
 } from "@/services/experience.service";
 import { parseSupabaseError, truncate } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 import { experienceSchema, type ExperienceFormData } from "./validations/experience.schema";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export function AddEditExperience({
 }: AddEditExperienceProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [items, setItems] = useState<ExperienceItem[]>(initialItems ?? []);
 
@@ -144,7 +146,7 @@ export function AddEditExperience({
         await createExperienceItem(supabase, { ...payload, user_id: user.id, sort_order: items.length });
       }
       await reload();
-      setMessage({ type: "success", text: editingId ? "Actualizat cu succes." : "Adăugat cu succes." });
+      showToast(editingId ? "Actualizat cu succes." : "Adăugat cu succes.");
       setTimeout(closeDrawer, 800);
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });

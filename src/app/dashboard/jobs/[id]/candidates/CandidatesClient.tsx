@@ -26,7 +26,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutlined";
 import { useSupabase } from "@/hooks/useSupabase";
 import {
   getJobApplications,

@@ -32,15 +32,13 @@ import {
   type DashboardTableColumn,
 } from "@/components/dashboard/ResponsiveDashboardTable";
 
-type ReleaseAnnouncement = {
-  id: string;
-  version: string;
-  title: string;
-  body_html: string;
-  draft: boolean;
-  created_at: string;
-  sent_at: string | null;
-};
+import {
+  listReleaseAnnouncements,
+  listAllProfileIds,
+  publishReleaseAnnouncement,
+  updateReleaseAnnouncement,
+  type ReleaseAnnouncement,
+} from "@/services/releases.service";
 
 export function AdminReleasesClient() {
   const supabase = useSupabase();
@@ -56,25 +54,16 @@ export function AdminReleasesClient() {
   const [editBodyHtml, setEditBodyHtml] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const releasesTable = () => (supabase as any).from("app_release_announcements");
-
   const loadReleases = useCallback(async () => {
     setLoading(true);
-    const { data, error } = (await releasesTable()
-      .select("*")
-      .order("created_at", { ascending: false })) as {
-      data: ReleaseAnnouncement[] | null;
-      error: { message: string } | null;
-    };
-
-    if (error) {
+    try {
+      const data = await listReleaseAnnouncements(supabase);
+      setReleases(data);
+    } catch {
       showToast("Nu s-au putut încărca anunțurile.", "error", 5000);
-    } else {
-      setReleases(data ?? []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, showToast]);
 
   useEffect(() => {
@@ -84,23 +73,8 @@ export function AdminReleasesClient() {
   const handlePublish = async (release: ReleaseAnnouncement) => {
     setPublishingId(release.id);
     try {
-      // Mark as published in DB
-      const { error: updateError } = (await releasesTable()
-        .update({ draft: false, sent_at: new Date().toISOString() })
-        .eq("id", release.id)) as { error: { message: string } | null };
-
-      if (updateError) {
-        showToast(`Eroare la publicare: ${updateError.message}`, "error", 5000);
-        return;
-      }
-
-      // Fetch all user IDs to notify
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id")
-        .not("id", "is", null);
-
-      const recipientIds = (profiles ?? []).map((p: { id: string }) => p.id);
+      await publishReleaseAnnouncement(supabase, release.id);
+      const recipientIds = await listAllProfileIds(supabase);
 
       if (recipientIds.length > 0) {
         await dispatchNotification(supabase, {
@@ -117,6 +91,9 @@ export function AdminReleasesClient() {
 
       showToast(`Anunțul v${release.version} a fost publicat și trimis la ${recipientIds.length} utilizatori.`, "success");
       await loadReleases();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Eroare la publicare.";
+      showToast(`Eroare la publicare: ${message}`, "error", 5000);
     } finally {
       setPublishingId(null);
     }
@@ -132,18 +109,19 @@ export function AdminReleasesClient() {
   const handleEditSave = async () => {
     if (!editingRelease) return;
     setEditSaving(true);
-    const { error } = (await releasesTable()
-      .update({ title: editTitle, body_html: editBodyHtml })
-      .eq("id", editingRelease.id)) as { error: { message: string } | null };
-
-    if (error) {
-      showToast("Nu s-a putut salva.", "error", 5000);
-    } else {
+    try {
+      await updateReleaseAnnouncement(supabase, editingRelease.id, {
+        title: editTitle,
+        body_html: editBodyHtml,
+      });
       showToast("Anunț actualizat.", "success");
       setEditDialogOpen(false);
       await loadReleases();
+    } catch {
+      showToast("Nu s-a putut salva.", "error", 5000);
+    } finally {
+      setEditSaving(false);
     }
-    setEditSaving(false);
   };
 
   const columns: DashboardTableColumn<ReleaseAnnouncement>[] = [

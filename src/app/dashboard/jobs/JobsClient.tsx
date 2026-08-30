@@ -16,7 +16,7 @@ import {
   type SelectChangeEvent,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useRole } from "@/hooks/useRole";
@@ -192,7 +192,7 @@ export function JobsClient() {
             expires_at: expiresAt,
             status: rescheduledStatus,
           });
-          setMessage({ type: "success", text: "Anunț actualizat." });
+          setMessage(null);
           showToast("Anunț actualizat cu succes.");
           if (user) {
             void dispatchNotification(supabase, {
@@ -257,7 +257,7 @@ export function JobsClient() {
               : status === "published"
               ? "Anunț programat — va fi publicat automat la data selectată."
               : "Anunț salvat ca ciornă.";
-          setMessage({ type: "success", text: successMsg });
+          setMessage(null);
           showToast(successMsg);
         }
         await invalidateEmployerJobs();

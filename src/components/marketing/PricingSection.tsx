@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Box, Button, Container, Paper, Stack, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { fadeUp } from "@/lib/motion";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import RocketLaunchOutlinedIcon from "@mui/icons-material/RocketLaunchOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import appSettings from "@/config/app.settings.json";

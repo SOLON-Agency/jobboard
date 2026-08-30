@@ -22,48 +22,48 @@ describe("slugify", () => {
 describe("formatSalary", () => {
   it("formats salary range", () => {
     const result = formatSalary(3000, 5000, "EUR");
-    expect(result).toContain("3,000");
-    expect(result).toContain("5,000");
+    expect(result).toContain("3.000");
+    expect(result).toContain("5.000");
   });
 
   it("formats minimum only", () => {
     const result = formatSalary(3000, null, "EUR");
-    expect(result).toContain("From");
-    expect(result).toContain("3,000");
+    expect(result).toContain("de la");
+    expect(result).toMatch(/3[.,]000/);
   });
 
   it("formats maximum only", () => {
     const result = formatSalary(null, 5000, "EUR");
-    expect(result).toContain("Up to");
+    expect(result).toContain("până la");
   });
 
-  it("returns not specified for null values", () => {
-    expect(formatSalary(null, null)).toBe("Not specified");
+  it("returns empty string for null values", () => {
+    expect(formatSalary(null, null)).toBe("");
   });
 });
 
 describe("timeAgo", () => {
-  it("returns 'Just now' for recent dates", () => {
-    expect(timeAgo(new Date().toISOString())).toBe("Just now");
+  it("returns 'Chiar acum' for recent dates", () => {
+    expect(timeAgo(new Date().toISOString())).toBe("Chiar acum");
   });
 
   it("returns minutes ago", () => {
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-    expect(timeAgo(twoMinutesAgo)).toBe("2 minutes ago");
+    expect(timeAgo(twoMinutesAgo)).toBe("acum 2 minute");
   });
 
   it("returns hours ago", () => {
     const threeHoursAgo = new Date(Date.now() - 3 * 3600 * 1000).toISOString();
-    expect(timeAgo(threeHoursAgo)).toBe("3 hours ago");
+    expect(timeAgo(threeHoursAgo)).toBe("acum 3 ore");
   });
 });
 
 describe("jobTypeLabels", () => {
   it("has all expected job types", () => {
-    expect(jobTypeLabels["full-time"]).toBe("Full Time");
-    expect(jobTypeLabels["part-time"]).toBe("Part Time");
-    expect(jobTypeLabels["contract"]).toBe("Contract");
-    expect(jobTypeLabels["internship"]).toBe("Internship");
+    expect(jobTypeLabels["full-time"]).toBe("Normă întreagă");
+    expect(jobTypeLabels["part-time"]).toBe("Jumătate de normă");
+    expect(jobTypeLabels["contract"]).toBe("Colaborator");
+    expect(jobTypeLabels["internship"]).toBe("Practică");
     expect(jobTypeLabels["freelance"]).toBe("Freelance");
   });
 });

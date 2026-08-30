@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import { createClient } from "@/lib/supabase/server";
 import { experienceLevelLabels } from "@/lib/utils";
@@ -22,6 +22,7 @@ import { generatePersonJsonLd, generateBreadcrumbJsonLd } from "@/lib/seo";
 import { EducationTimeline } from "@/components/profile/EducationTimeline";
 import { ExperienceTimeline } from "@/components/profile/ExperienceTimeline";
 import { ProfileActions } from "./ProfileActions";
+import { MetaCell } from "@/components/common/MetaCell";
 import { withTitlePrefix } from "@/lib/page-title";
 import type { Metadata } from "next";
 
@@ -32,27 +33,6 @@ export const revalidate = 60;
 interface Props {
   params: Promise<{ slug: string }>;
 }
-
-// ── Two-line meta cell (mirrors company page MetaCell) ───────────────────────
-
-const MetaCell = ({ label, value, icon = null }: { label: string; value: string; icon?: React.ReactNode }) => (
-  <Box>
-    <Stack direction="row" alignItems="center" spacing={0.5}>
-      {icon && icon}
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        sx={{ fontWeight: 600, letterSpacing: 0.4, display: "block", mb: 0.25 }}
-      >
-        {label}
-      </Typography>
-    </Stack>
-    
-    <Typography variant="body2" fontWeight={700} color="text.primary">
-      {value}
-    </Typography>
-  </Box>
-);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
