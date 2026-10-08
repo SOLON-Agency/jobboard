@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutlined";
 import { useSupabase } from "@/hooks/useSupabase";
 import { ROLE_LABELS, ROLE_ORDER, type UserRole } from "@/lib/roles";
 import { formatDate, parseSupabaseError } from "@/lib/utils";

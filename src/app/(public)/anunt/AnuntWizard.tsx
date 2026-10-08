@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { PasswordField } from "@/components/common/PasswordField";
 import CheckIcon from "@mui/icons-material/Check";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import BusinessIcon from "@mui/icons-material/Business";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
@@ -49,7 +49,9 @@ import {
   type CompanyFormData,
 } from "@/components/forms/AddEditCompany";
 import { createJob } from "@/services/jobs.service";
-import { createCompany, updateCompany } from "@/services/companies.service";
+import { createCompany, updateCompany, uploadCompanyLogo } from "@/services/companies.service";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 import { createBenefit } from "@/services/benefits.service";
 import { slugify, parseSupabaseError, formatSalary } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -640,17 +642,8 @@ export function AnuntWizard() {
       );
 
       if (companyLogoFile) {
-        const ext = companyLogoFile.name.split(".").pop() ?? "jpg";
-        const path = `${company.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("logos")
-          .upload(path, companyLogoFile, { upsert: true });
-        if (!upErr) {
-          const { data: urlData } = supabase.storage
-            .from("logos")
-            .getPublicUrl(path);
-          await updateCompany(supabase, company.id, { logo_url: urlData.publicUrl });
-        }
+        const logoUrl = await uploadCompanyLogo(supabase, company.id, companyLogoFile);
+        await updateCompany(supabase, company.id, { logo_url: logoUrl });
       }
 
       const jobSlug = `${slugify(jobData.title)}-${slugify(companyData.name)}-${Date.now().toString(36)}`;
@@ -679,11 +672,12 @@ export function AnuntWizard() {
         );
       }
 
-      void supabase.functions
-        .invoke("send-email", {
-          body: { event: "company_created", company_id: company.id },
-        })
-        .catch((e: unknown) => console.warn("notify-created failed:", e));
+      void dispatchNotification(supabase, {
+        type: NOTIFICATION_TYPES.COMPANY_CREATED,
+        recipients: [user.id],
+        data: { company_name: companyData.name, company_id: company.id },
+        idempotencyKey: `company-created/${company.id}`,
+      }).catch((e: unknown) => console.warn("notify-created failed:", e));
 
       void supabase.functions
         .invoke("alerts-job-match", { body: { job_id: job.id } })

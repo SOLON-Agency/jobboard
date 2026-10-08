@@ -109,3 +109,56 @@ export const updateMyProfile = async (
   if (error) throw error;
   return data;
 };
+
+/**
+ * Upload a profile avatar and return its public URL.
+ *
+ * RLS: authenticated users can upload to the avatars bucket.
+ */
+export const uploadAvatar = async (
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  file: File
+): Promise<string> => {
+  const path = `${userId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+};
+
+/**
+ * Upload a CV and return its public URL.
+ *
+ * RLS: authenticated users can upload to the cvs bucket.
+ */
+export const uploadCv = async (
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  file: File
+): Promise<string> => {
+  const path = `${userId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("cvs").getPublicUrl(path);
+  return data.publicUrl;
+};
+
+/**
+ * Create a short-lived signed URL for downloading a CV from storage.
+ * Accepts either a full public URL or a storage path within the cvs bucket.
+ */
+export const getCvSignedDownloadUrl = async (
+  supabase: SupabaseClient<Database>,
+  cvUrl: string,
+  expiresInSeconds = 300
+): Promise<string | null> => {
+  const pathMatch = cvUrl.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
+  const storagePath = pathMatch?.[1] ?? cvUrl;
+  const { data, error } = await supabase.storage
+    .from("cvs")
+    .createSignedUrl(storagePath, expiresInSeconds, { download: true });
+
+  if (error) throw error;
+  return data?.signedUrl ?? null;
+};

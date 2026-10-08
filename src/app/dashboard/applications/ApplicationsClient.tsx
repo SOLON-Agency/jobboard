@@ -25,14 +25,14 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import BlockOutlinedIcon from "@mui/icons-material/BlockOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";

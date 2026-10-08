@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
@@ -42,13 +44,10 @@ async function maybeNotifyAccountCreated(supabase: Awaited<ReturnType<typeof imp
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.id) return;
-    await supabase.functions.invoke("notifications", {
-      body: {
-        type: "account_created",
-        recipients: [user.id],
-        data: { site_url: process.env.NEXT_PUBLIC_SITE_URL ?? "" },
-        idempotency_key: `account-created/${user.id}`,
-      },
+    await dispatchNotification(supabase, {
+      type: NOTIFICATION_TYPES.ACCOUNT_CREATED,
+      recipients: [user.id],
+      idempotencyKey: `account-created/${user.id}`,
     });
   } catch (e) {
     console.warn("auth/callback: account_created notify failed:", e);
@@ -59,13 +58,10 @@ async function maybeNotifyPasswordReset(supabase: Awaited<ReturnType<typeof impo
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.id) return;
-    await supabase.functions.invoke("notifications", {
-      body: {
-        type: "password_reset_ok",
-        recipients: [user.id],
-        data: { site_url: process.env.NEXT_PUBLIC_SITE_URL ?? "" },
-        idempotency_key: `password-reset/${user.id}/${Date.now()}`,
-      },
+    await dispatchNotification(supabase, {
+      type: NOTIFICATION_TYPES.PASSWORD_RESET_OK,
+      recipients: [user.id],
+      idempotencyKey: `password-reset/${user.id}/${Date.now()}`,
     });
   } catch (e) {
     console.warn("auth/callback: password_reset_ok notify failed:", e);

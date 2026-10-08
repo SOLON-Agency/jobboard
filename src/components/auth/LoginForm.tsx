@@ -96,7 +96,8 @@ export function LoginForm() {
             required
             error={!!errors.email}
             helperText={errors.email?.message}
-            inputProps={{ "aria-required": "true" }}
+            inputProps={{ "aria-required": "true", "aria-describedby": errors.email ? "login-email-error" : undefined }}
+            FormHelperTextProps={{ id: "login-email-error" }}
             sx={{ mb: 2 }}
           />
           <PasswordField
@@ -106,8 +107,8 @@ export function LoginForm() {
             required
             error={!!errors.password}
             helperText={errors.password?.message}
-            inputProps={{ "aria-required": "true" }}
-            sx={{ mb: 3 }}
+            inputProps={{ "aria-required": "true", "aria-describedby": errors.password ? "login-password-error" : undefined }}
+            FormHelperTextProps={{ id: "login-password-error" }}
           />
           <Button
             type="submit"

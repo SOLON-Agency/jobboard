@@ -18,8 +18,8 @@ import {
 } from "@mui/material";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlined";
 import type { Tables } from "@/types/database";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { AddEditFaq } from "@/components/forms/AddEditFaq";

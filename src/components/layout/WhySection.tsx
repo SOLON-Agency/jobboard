@@ -2,8 +2,8 @@
 
 import React from "react";
 import { Box, Container, Paper, Typography } from "@mui/material";
-import { motion } from "framer-motion";
-import { fadeUp } from "@/lib/motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { fadeUp, resolveMotionDuration } from "@/lib/motion";
 import SearchIcon from "@mui/icons-material/Search";
 import BusinessIcon from "@mui/icons-material/Business";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
@@ -50,6 +50,8 @@ const features = [
 ];
 
 export function WhySection() {
+  const reduced = useReducedMotion();
+
   return (
     <Box
       component="section"
@@ -101,6 +103,7 @@ export function WhySection() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: resolveMotionDuration(reduced) }}
             >
               <Paper
                 variant="outlined"

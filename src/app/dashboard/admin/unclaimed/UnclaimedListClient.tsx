@@ -10,9 +10,9 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import { useToast } from "@/contexts/ToastContext";
 import { deleteUnclaimedCompanyAction } from "./actions";
 import type { UnclaimedCompanyRow } from "@/services/companies.service";

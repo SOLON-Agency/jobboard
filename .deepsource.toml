@@ -1,0 +1,103 @@
+version = 1
+
+# ---------------------------------------------------------------------------
+# DeepSource configuration — jobboard (LegalJobs)
+#
+# Stack: Next.js 16 (App Router) · React 19 · TypeScript (strict) · MUI v7
+#        Redux Toolkit · Supabase (Postgres migrations + Deno Edge Functions)
+#        Vitest + Testing Library · ESLint 9 (eslint-config-next)
+#
+# Dependency vulnerability scanning (SCA) is driven by the JavaScript analyzer
+# and reads `package.json` + `package-lock.json` (both present at the repo
+# root). See:
+#   https://docs.deepsource.com/docs/platform/reference/vulnerability-scanning
+# ---------------------------------------------------------------------------
+
+# Paths DeepSource should never analyze. Generated code, build output,
+# vendored deps, coverage artifacts, and lockfiles are excluded to keep
+# results signal-rich. Lockfiles stay readable by the SCA scanner regardless.
+exclude_patterns = [
+  "node_modules/**",
+  ".next/**",
+  "out/**",
+  "build/**",
+  "dist/**",
+  "coverage/**",
+  "public/**",
+  ".vercel/**",
+  ".git/**",
+  # Generated Supabase types and their Zod mirrors (npm run codegen).
+  "src/types/database.ts",
+  "src/types/database.zod.ts",
+  # Deno-runtime Edge Functions use URL/`npm:`/`jsr:` imports and the Deno
+  # global, which the Node/browser JavaScript analyzer cannot resolve.
+  "supabase/functions/**",
+  # Misc generated / config noise.
+  "next-env.d.ts",
+  "**/*.min.js",
+]
+
+# Files that hold tests or test fixtures. Marking them prevents test code
+# from skewing maintainability/anti-pattern issue counts while keeping them
+# eligible for test-coverage reporting.
+test_patterns = [
+  "src/__tests__/**",
+  "**/__tests__/**",
+  "**/*.test.ts",
+  "**/*.test.tsx",
+  "**/*.spec.ts",
+  "**/*.spec.tsx",
+  "e2e/**",
+]
+
+# ---------------------------------------------------------------------------
+# Analyzers
+# ---------------------------------------------------------------------------
+
+# JavaScript/TypeScript — primary analyzer. Also powers OSS dependency
+# vulnerability scanning against package.json + package-lock.json.
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  # App runs both server-side (App Router RSC, route handlers, Node scripts)
+  # and in the browser, plus the Vitest test runner.
+  environment = [
+    "nodejs",
+    "browser",
+    "vitest",
+  ]
+  plugins = ["react"]
+  dialect = "typescript"
+  module_system = "es-modules"
+
+# Secrets — scans for hardcoded credentials. Critical here: the service-role
+# key, Resend API key, and VAPID keys must live only in Supabase Edge secrets.
+[[analyzers]]
+name = "secrets"
+enabled = true
+
+# Test coverage — ingests coverage uploaded by CI (Vitest + @vitest/coverage).
+[[analyzers]]
+name = "test-coverage"
+enabled = true
+
+# SQL — lints the Postgres migrations under supabase/migrations/.
+[[analyzers]]
+name = "sql"
+enabled = true
+
+  [analyzers.meta]
+  dialect = "postgres"
+
+# ---------------------------------------------------------------------------
+# Transformers (auto-formatting)
+#
+# Disabled: this repo standardizes on ESLint 9 flat config (eslint-config-next)
+# with `--max-warnings 0` and does not use Prettier. Enabling Prettier here
+# would fight the existing lint rules. Re-enable if Prettier is adopted.
+# ---------------------------------------------------------------------------
+# [[transformers]]
+# name = "prettier"
+# enabled = true

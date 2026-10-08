@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AppBar,
   Toolbar,
@@ -29,6 +29,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ChatIcon from "@mui/icons-material/Chat";
 import { useAuth } from "@/hooks/useAuth";
+import { getProfileAvatar } from "@/services/profiles.service";
 import { useSupabase } from "@/hooks/useSupabase";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import appSettings from "@/config/app.settings.json";
@@ -47,6 +48,7 @@ export function Navbar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const pathname = usePathname();
+  const router = useRouter();
   const isHomepage = pathname === "/";
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -59,12 +61,9 @@ export function Navbar() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => setFetchedAvatarUrl(data?.avatar_url ?? null));
+    getProfileAvatar(supabase, user.id).then((profile) =>
+      setFetchedAvatarUrl(profile?.avatar_url ?? null)
+    );
   }, [user, supabase]);
 
   useEffect(() => {
@@ -102,13 +101,13 @@ export function Navbar() {
     setAnchorEl(null);
   };
   const redirectToDashboard = () => {
-    window.location.href = "/dashboard";
+    router.push("/dashboard");
   };
 
   const handleSignOut = async () => {
     handleMenuClose();
     await signOut();
-    window.location.href = "/";
+    router.push("/");
   };
 
   return (

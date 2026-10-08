@@ -26,13 +26,8 @@ export const supabaseFromBoundaryIgnores = [
   "src/app/(public)/users/[[]slug]/page.tsx",
   "src/app/(public)/anunt/AnuntWizard.tsx",
   "src/app/dashboard/profile/NotificationsSettings.tsx",
-  "src/app/dashboard/profile/ProfileClient.tsx",
   "src/app/dashboard/jobs/[[]id]/candidates/CandidatesClient.tsx",
   "src/app/dashboard/forms/[[]id]/responses/ResponsesClient.tsx",
-  "src/app/dashboard/admin/releases/AdminReleasesClient.tsx",
   "src/app/dashboard/company/CompanyClient.tsx",
-  "src/components/forms/ApplicationForm.tsx",
   "src/components/forms/AddEditJob.tsx",
-  "src/components/jobs/ApplyButton.tsx",
-  "src/components/layout/Navbar.tsx",
 ];

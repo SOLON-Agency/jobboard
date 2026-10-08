@@ -1,13 +1,9 @@
 "use server";
 
-import { z } from "zod";
+import type { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { assertFeatureEnabled } from "@/lib/feature-flags";
-
-const inputSchema = z.object({
-  email: z.string().email().max(254),
-  source: z.string().max(40).optional(),
-});
+import { newsletterSchema } from "@/components/forms/validations/newsletter.schema";
 
 export type SubscribeResult =
   | { status: "subscribed" }
@@ -20,11 +16,11 @@ export type SubscribeResult =
  * RLS: anon INSERT is permitted on newsletter_subscribers.
  */
 export async function subscribeToNewsletter(
-  input: z.infer<typeof inputSchema>
+  input: z.infer<typeof newsletterSchema>
 ): Promise<SubscribeResult> {
   assertFeatureEnabled("blog");
 
-  const parsed = inputSchema.safeParse(input);
+  const parsed = newsletterSchema.safeParse(input);
   if (!parsed.success) {
     return { status: "error", message: "Adresă de email invalidă" };
   }

@@ -17,7 +17,7 @@ import {
 import BookmarkRemoveIcon from "@mui/icons-material/BookmarkRemove";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import BusinessIcon from "@mui/icons-material/Business";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 
 
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";

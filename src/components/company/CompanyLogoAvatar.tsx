@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Avatar, type AvatarProps } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import { normalizeCompanyLogoUrl } from "@/lib/companyLogo";
 
 export interface CompanyLogoAvatarProps {
