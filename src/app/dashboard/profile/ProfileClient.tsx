@@ -39,17 +39,21 @@ import { EditSkills } from "@/components/profile/EditSkills";
 import { getEducationItems, type EducationItem } from "@/services/education.service";
 import { getExperienceItems, type ExperienceItem } from "@/services/experience.service";
 import { getProfileSkills, type ProfileSkillWithName } from "@/services/skills.service";
-import type { Tables } from "@/types/database";
+import { getMyProfile, getCvSignedDownloadUrl, updateMyProfile, uploadAvatar, uploadCv } from "@/services/profiles.service";
+import { parseSupabaseError } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { NOTIFICATION_TYPES } from "@/lib/notifications/types";
+import type { Tables } from "@/types/database";
 import { NotificationsSettings } from "./NotificationsSettings";
 
 export function ProfileClient() {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
   const [education, setEducation] = useState<EducationItem[]>([]);
@@ -71,13 +75,13 @@ export function ProfileClient() {
 
   const loadProfile = useCallback(async () => {
     if (!user) return;
-    const [{ data }, eduData, expData, skillsData] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).single(),
+    const [profileData, eduData, expData, skillsData] = await Promise.all([
+      getMyProfile(supabase, user.id),
       getEducationItems(supabase, user.id).catch(() => [] as EducationItem[]),
       getExperienceItems(supabase, user.id).catch(() => [] as ExperienceItem[]),
       getProfileSkills(supabase, user.id).catch(() => [] as ProfileSkillWithName[]),
     ]);
-    if (data) setProfile(data);
+    if (profileData) setProfile(profileData);
     setEducation(eduData);
     setExperience(expData);
     setSkills(skillsData);
@@ -110,29 +114,27 @@ export function ProfileClient() {
   const onSubmit = async (data: ProfileFormData) => {
     if (!user) return;
     setMessage(null);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
+    try {
+      await updateMyProfile(supabase, user.id, {
         full_name: data.full_name || null,
         headline: data.headline || null,
         bio: data.bio || null,
         location: data.location || null,
         experience_level: data.experience_level || null,
         is_public: data.is_public,
-      })
-      .eq("id", user.id);
-
-    if (error) {
-      setMessage({ type: "error", text: error.message });
-    } else {
+      });
       await loadProfile();
-      setMessage({ type: "success", text: "Profil actualizat cu succes." });
+      showToast("Profil actualizat cu succes.");
       void dispatchNotification(supabase, {
         type: NOTIFICATION_TYPES.PROFILE_UPDATED,
         recipients: [user.id],
+        // Idempotency key must be unique per save; Date.now is intentional in this handler.
+        // eslint-disable-next-line react-hooks/purity -- event-handler side effect, not render
         idempotencyKey: `profile-updated/${user.id}/${Date.now()}`,
       }).catch((e: unknown) => console.warn("notify-updated failed:", e));
       setTimeout(closeDrawer, 900);
+    } catch (error) {
+      setMessage({ type: "error", text: parseSupabaseError(error) });
     }
   };
 
@@ -140,20 +142,16 @@ export function ProfileClient() {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!user || !e.target.files?.[0]) return;
       const file = e.target.files[0];
-      const path = `${user.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-
-      if (error) {
+      try {
+        const avatarUrl = await uploadAvatar(supabase, user.id, file);
+        await updateMyProfile(supabase, user.id, { avatar_url: avatarUrl });
+        await loadProfile();
+        showToast("Avatar actualizat.");
+      } catch {
         setMessage({ type: "error", text: "Eroare la încărcarea avatarului." });
-        return;
       }
-
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-      await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("id", user.id);
-      await loadProfile();
-      setMessage({ type: "success", text: "Avatar actualizat." });
     },
-    [user, supabase, loadProfile]
+    [user, supabase, loadProfile, showToast]
   );
 
   const handleCvUpload = useCallback(
@@ -167,37 +165,33 @@ export function ProfileClient() {
       setCvUploading(true);
       setMessage(null);
       try {
-        const path = `${user.id}/${Date.now()}-${file.name}`;
-        const { error } = await supabase.storage.from("cvs").upload(path, file, { upsert: true });
-
-        if (error) {
-          setMessage({ type: "error", text: "Eroare la încărcarea CV-ului." });
-          return;
-        }
-
-        const { data: urlData } = supabase.storage.from("cvs").getPublicUrl(path);
-        await supabase.from("profiles").update({ cv_url: urlData.publicUrl }).eq("id", user.id);
+        const cvUrl = await uploadCv(supabase, user.id, file);
+        await updateMyProfile(supabase, user.id, { cv_url: cvUrl });
         await loadProfile();
-        setMessage({ type: "success", text: "CV încărcat cu succes." });
+        showToast("CV încărcat cu succes.");
+      } catch {
+        setMessage({ type: "error", text: "Eroare la încărcarea CV-ului." });
       } finally {
         setCvUploading(false);
       }
     },
-    [user, supabase, loadProfile]
+    [user, supabase, loadProfile, showToast]
   );
-  
+
   const handleCvDownload = useCallback(async () => {
     if (!profile?.cv_url) return;
-    const pathMatch = profile.cv_url.match(/\/storage\/v1\/object\/public\/cvs\/(.+)$/);
-    if (!pathMatch) { window.open(profile.cv_url, "_blank"); return; }
-    const { data } = await supabase.storage
-      .from("cvs")
-      .createSignedUrl(pathMatch[1], 300, { download: true });
-    if (data?.signedUrl) {
-      const a = document.createElement("a");
-      a.href = data.signedUrl;
-      a.click();
+    try {
+      const signedUrl = await getCvSignedDownloadUrl(supabase, profile.cv_url);
+      if (signedUrl) {
+        const a = document.createElement("a");
+        a.href = signedUrl;
+        a.click();
+        return;
+      }
+    } catch {
+      // Fall back to opening the public URL when signing fails.
     }
+    window.open(profile.cv_url, "_blank");
   }, [profile, supabase]);
 
   const openViewProfile = () => {

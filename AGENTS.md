@@ -14,6 +14,8 @@ Before changing routing, data fetching, or config:
 1. Prefer the official docs for the **installed** major version: [Next.js documentation](https://nextjs.org/docs).
 2. Heed deprecation warnings from `next build` and ESLint (`eslint-config-next`).
 3. Do not assume file locations or APIs from pre-v15 tutorials without verifying against this repo and current docs.
+
+**Dependency upgrades:** use the project skill `/update-dependencies` (`.agents/skills/update-dependencies/`). Keep `next` and `eslint-config-next` aligned; require Node ≥ 22.12; pin MUI to v7, TypeScript to ~5.9, and ESLint to v9 until their next majors are verified.
 <!-- END:nextjs-agent-rules -->
 
 ---
@@ -520,5 +522,9 @@ npm run build        # Production build
 npm run lint         # ESLint
 npm test             # Vitest (once)
 npm run test:watch   # Vitest watch mode
+npm run test:smoke -- --url=<URL>   # Public pages: HTTP 200 + content
+npm run test:e2e -- --url=<URL>     # Full Puppeteer suites (register first)
 npm run supabase:deploy:all   # Deploy all Edge Functions
 ```
+
+E2E details: [`e2e/README.md`](e2e/README.md). Agent skill for new cases: `.agents/skills/e2e/` (`/e2e`).

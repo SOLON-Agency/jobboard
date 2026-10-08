@@ -251,3 +251,236 @@ export const getEmployerCandidates = async (
     profiles: profileById.get(a.user_id) ?? null,
   })) as unknown as EmployerCandidate[];
 };
+
+// ── Apply flow ─────────────────────────────────────────────────────────────────
+
+/** Unique violation on `applications` (not form_responses). */
+export const isApplicationsDuplicateError = (err: unknown): boolean => {
+  if (!err || typeof err !== "object") return false;
+  const { code, message = "" } = err as { code?: string; message?: string };
+  if (code !== "23505") return false;
+  const m = message.toLowerCase();
+  if (m.includes("form_response")) return false;
+  return m.includes("application") || /job_id|user_id/.test(m);
+};
+
+/**
+ * Record an external-URL or email application (no internal form).
+ *
+ * RLS: authenticated users can insert their own application rows.
+ */
+export const createExternalApplication = async (
+  supabase: SupabaseClient<Database>,
+  jobId: string,
+  userId: string
+): Promise<Tables<"applications">> => {
+  const { data, error } = await supabase
+    .from("applications")
+    .insert({
+      job_id: jobId,
+      user_id: userId,
+      form_data: null,
+      status: "pending",
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Upload an application form attachment and return its public URL.
+ *
+ * RLS: authenticated users can upload to the attachments bucket.
+ */
+export const uploadApplicationAttachment = async (
+  supabase: SupabaseClient<Database>,
+  jobId: string,
+  fieldId: string,
+  file: File
+): Promise<string> => {
+  const path = `${jobId}/${fieldId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from("attachments").upload(path, file);
+  if (error) throw error;
+  const { data } = supabase.storage.from("attachments").getPublicUrl(path);
+  return data.publicUrl;
+};
+
+/** Fire-and-forget job-application Edge Function invoke. */
+export const notifyJobApplication = (
+  supabase: SupabaseClient<Database>,
+  jobId: string,
+  accessToken?: string | null
+): void => {
+  const invokeOpts =
+    accessToken != null
+      ? {
+          body: { job_id: jobId },
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      : { body: { job_id: jobId } };
+
+  void supabase.functions
+    .invoke("job-application", invokeOpts)
+    .catch((err: unknown) => console.warn("job-application:", err));
+};
+
+export type SubmitInternalFormInput = {
+  jobId: string;
+  userId: string;
+  userEmail: string;
+  userFullName: string;
+  fieldValues: Record<string, string>;
+};
+
+export type SubmitInternalFormResult =
+  | { ok: true; jobId: string }
+  | { ok: false; status: number; message: string; code?: string };
+
+/**
+ * Submit an internal-form job application: validates job/form, writes responses, inserts application.
+ *
+ * RLS: authenticated applicant can insert form_responses, form_response_values, and applications.
+ */
+export const submitInternalFormApplication = async (
+  supabase: SupabaseClient<Database>,
+  input: SubmitInternalFormInput
+): Promise<SubmitInternalFormResult> => {
+  const { jobId, userId, userEmail, userFullName, fieldValues } = input;
+
+  const { data: job, error: jobErr } = await supabase
+    .from("job_listings")
+    .select("id, title, company_id, application_form_id, status, is_archived")
+    .eq("id", jobId)
+    .single();
+
+  if (jobErr || !job) {
+    return { ok: false, status: 404, message: "Anunț inexistent." };
+  }
+
+  if (!job.application_form_id) {
+    return { ok: false, status: 400, message: "Acest anunț nu folosește un formular intern." };
+  }
+
+  if (job.status !== "published" || job.is_archived) {
+    return { ok: false, status: 403, message: "Nu poți aplica la acest anunț." };
+  }
+
+  const { data: formRow, error: formErr } = await supabase
+    .from("forms")
+    .select("id, status, is_archived")
+    .eq("id", job.application_form_id)
+    .single();
+
+  if (formErr || !formRow || formRow.is_archived || formRow.status !== "published") {
+    return { ok: false, status: 403, message: "Formularul de aplicare nu este disponibil." };
+  }
+
+  const { data: fields, error: fieldsErr } = await supabase
+    .from("form_fields")
+    .select("id, label, is_required, field_type")
+    .eq("form_id", job.application_form_id)
+    .order("sort_order", { ascending: true });
+
+  if (fieldsErr) {
+    console.error("submitInternalFormApplication form_fields:", fieldsErr);
+    return { ok: false, status: 500, message: "Nu s-au putut încărca câmpurile formularului." };
+  }
+
+  const fieldList = fields ?? [];
+
+  for (const f of fieldList) {
+    if (f.is_required) {
+      const v = fieldValues[f.id]?.trim();
+      if (!v) {
+        return { ok: false, status: 400, message: `Câmp obligatoriu: ${f.label}` };
+      }
+    }
+  }
+
+  if (await hasApplied(supabase, job.id, userId)) {
+    return {
+      ok: false,
+      status: 409,
+      message: "Ai aplicat deja la acest anunț.",
+      code: "23505",
+    };
+  }
+
+  const { data: responseRow, error: respErr } = await supabase
+    .from("form_responses")
+    .insert({
+      form_id: job.application_form_id,
+      job_listing_id: job.id,
+      respondent_email: userEmail,
+      respondent_name: userFullName,
+    })
+    .select("id")
+    .single();
+
+  if (respErr) {
+    console.error("submitInternalFormApplication form_responses:", respErr);
+    if (respErr.code === "23505") {
+      return {
+        ok: false,
+        status: 409,
+        message: "Ai aplicat deja la acest anunț.",
+        code: "23505",
+      };
+    }
+    return {
+      ok: false,
+      status: 400,
+      message: respErr.message ?? "Nu s-a putut înregistra răspunsul.",
+    };
+  }
+
+  if (fieldList.length > 0) {
+    const valueRows = fieldList.map((f) => ({
+      response_id: responseRow.id,
+      field_id: f.id,
+      value: fieldValues[f.id] ?? null,
+    }));
+
+    const { error: valErr } = await supabase.from("form_response_values").insert(valueRows);
+    if (valErr) {
+      console.error("submitInternalFormApplication form_response_values:", valErr);
+      return {
+        ok: false,
+        status: 500,
+        message: valErr.message ?? "Nu s-au putut salva răspunsurile.",
+      };
+    }
+  }
+
+  const formDataJson = Object.fromEntries(
+    fieldList.map((f) => [f.label, fieldValues[f.id] ?? ""])
+  );
+
+  const { error: appErr } = await supabase.from("applications").insert({
+    job_id: job.id,
+    user_id: userId,
+    form_data: formDataJson,
+    status: "pending",
+  });
+
+  if (appErr) {
+    console.error("submitInternalFormApplication applications:", appErr);
+    if (appErr.code === "23505") {
+      return {
+        ok: false,
+        status: 409,
+        message: "Ai aplicat deja la acest anunț.",
+        code: "23505",
+      };
+    }
+    return {
+      ok: false,
+      status: 500,
+      message: appErr.message ?? "Nu s-a putut înregistra candidatura.",
+    };
+  }
+
+  return { ok: true, jobId: job.id };
+};

@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import type { Tables } from "@/types/database";
 import { formatSalary, truncate } from "@/lib/utils";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";

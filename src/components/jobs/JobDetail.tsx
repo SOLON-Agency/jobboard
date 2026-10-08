@@ -13,7 +13,7 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
@@ -24,6 +24,7 @@ import AttachMoneyOutlinedIcon from "@mui/icons-material/AttachMoneyOutlined";
 import BusinessCenterOutlinedIcon from "@mui/icons-material/BusinessCenterOutlined";
 import WifiOutlinedIcon from "@mui/icons-material/WifiOutlined";
 import type { Tables } from "@/types/database";
+import { societatePath } from "@/lib/paths";
 import type { BenefitItem } from "@/services/benefits.service";
 import {
   formatSalary,
@@ -37,7 +38,7 @@ import { CompanyLogoAvatar } from "@/components/company/CompanyLogoAvatar";
 import { useToast } from "@/contexts/ToastContext";
 import { useFavouritesFeature } from "@/contexts/FavouritesFeatureContext";
 import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlined";
 
 type JobWithCompany = Tables<"job_listings"> & {
   companies: Tables<"companies"> | null;
@@ -384,7 +385,7 @@ export function JobDetail({
               variant="subtitle1"
               fontWeight={700}
               component={job.companies?.slug ? Link : "span"}
-              href={job.companies?.slug ? `/societate/${job.companies.slug}` : undefined}
+              href={job.companies?.slug ? societatePath(job.companies.slug) : undefined}
               sx={{
                 textDecoration: "none",
                 color: "inherit",

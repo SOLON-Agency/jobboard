@@ -36,6 +36,7 @@ import {
   type EducationItem,
 } from "@/services/education.service";
 import { parseSupabaseError, truncate } from "@/lib/utils";
+import { useToast } from "@/contexts/ToastContext";
 import { educationSchema, type EducationFormData } from "./validations/education.schema";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export function AddEditEducation({
 }: AddEditEducationProps) {
   const { user } = useAuth();
   const supabase = useSupabase();
+  const { showToast } = useToast();
 
   const [items, setItems] = useState<EducationItem[]>(initialItems ?? []);
 
@@ -144,7 +146,7 @@ export function AddEditEducation({
         await createEducationItem(supabase, { ...payload, user_id: user.id, sort_order: items.length });
       }
       await reload();
-      setMessage({ type: "success", text: editingId ? "Actualizat cu succes." : "Adăugat cu succes." });
+      showToast(editingId ? "Actualizat cu succes." : "Adăugat cu succes.");
       setTimeout(closeDrawer, 800);
     } catch (err) {
       setMessage({ type: "error", text: parseSupabaseError(err) });

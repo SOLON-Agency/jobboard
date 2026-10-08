@@ -13,7 +13,7 @@ import {
   LinearProgress,
   Avatar,
 } from "@mui/material";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import SendIcon from "@mui/icons-material/Send";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
@@ -21,7 +21,7 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import BookmarkOutlinedIcon from "@mui/icons-material/BookmarkOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";

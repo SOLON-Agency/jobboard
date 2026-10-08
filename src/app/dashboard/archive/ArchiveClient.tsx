@@ -15,7 +15,7 @@ import {
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { SvgIconComponent } from "@mui/icons-material";
 import BusinessIcon from "@mui/icons-material/Business";
-import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import InboxIcon from "@mui/icons-material/Inbox";

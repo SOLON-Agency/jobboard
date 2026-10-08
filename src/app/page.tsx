@@ -4,7 +4,7 @@ import { WhySection } from "@/components/layout/WhySection";
 import { BannerSection } from "@/components/layout/BannerSection";
 import { PlatformAdvantagesSection } from "@/components/marketing/PlatformAdvantagesSection";
 import { AudienceSection } from "@/components/marketing/AudienceSection";
-import { PricingSection } from "@/components/marketing/PricingSection";
+// import { PricingSection } from "@/components/marketing/PricingSection";
 import { FaqSection } from "@/components/marketing/FaqSection";
 import { BlogPreviewSection } from "@/components/marketing/BlogPreviewSection";
 import { RecruitingAgenciesSection } from "@/components/marketing/RecruitingAgenciesSection";
@@ -72,7 +72,7 @@ export default async function HomePage() {
       <WhySection />
       <PlatformAdvantagesSection />
       <AudienceSection />
-      <PricingSection />
+      {/* <PricingSection /> */}
       {/* <TestimonialsSection /> */}
       <RecruitingAgenciesSection />
       <FaqSection items={faqHomeItems} />

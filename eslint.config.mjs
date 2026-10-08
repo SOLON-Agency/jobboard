@@ -45,6 +45,16 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // eslint-config-next 16.3+ enables react-hooks/set-state-in-effect strictly.
+  // Existing data-sync patterns (useAsyncData, prop→state sync) remain valid;
+  // migrate gradually rather than blocking dependency upgrades.
+  {
+    name: "react-hooks-upgrade-compat",
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

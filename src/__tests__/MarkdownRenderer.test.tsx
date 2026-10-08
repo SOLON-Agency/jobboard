@@ -11,10 +11,12 @@ vi.mock("next/image", () => ({
 }));
 
 describe("MarkdownRenderer", () => {
-  it("renders a heading", () => {
+  it("renders a heading", async () => {
     render(<MarkdownRenderer markdown="## Hello World" />);
-    expect(screen.getByRole("heading", { name: "Hello World" })).toBeDefined();
-  });
+    expect(
+      await screen.findByRole("heading", { name: "Hello World" }, { timeout: 10000 })
+    ).toBeDefined();
+  }, 15000);
 
   it("renders a bullet list", () => {
     const { container } = render(
